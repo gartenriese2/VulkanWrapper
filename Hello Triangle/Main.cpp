@@ -1,46 +1,116 @@
-#include <iostream>
-#include <stdlib.h>
-
 #include <vulkan/vulkan.hpp>
 
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
+#include <iostream>
+#include <stdexcept>
+#include <functional>
 
-#define GLM_FORCE_RADIANS
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#include <glm/vec4.hpp>
-#include <glm/mat4x4.hpp>
+template <typename T>
+class VDeleter
+{
+public:
+    VDeleter() : VDeleter([](T, VkAllocationCallbacks *) {}) {}
+
+    VDeleter(std::function<void(T, VkAllocationCallbacks *)> deletef)
+    {
+        this->deleter = [=](T obj) { deletef(obj, nullptr); };
+    }
+
+    VDeleter(const VDeleter<VkInstance>& instance, std::function<void(VkInstance, T, VkAllocationCallbacks *)> deletef)
+    {
+        this->deleter = [&instance, deletef](T obj) { deletef(instance, obj, nullptr); };
+    }
+
+    VDeleter(const VDeleter<VkDevice>& device, std::function<void(VkDevice, T, VkAllocationCallbacks *)> deletef)
+    {
+        this->deleter = [&device, deletef](T obj) { deletef(device, obj, nullptr); };
+    }
+
+    ~VDeleter()
+    {
+        cleanup();
+    }
+
+    const T * operator &() const
+    {
+        return &object;
+    }
+
+    T * replace()
+    {
+        cleanup();
+        return &object;
+    }
+
+    operator T() const
+    {
+            return object;
+    }
+
+    void operator=(T rhs)
+    {
+        if (rhs != object)
+        {
+            cleanup();
+            object = rhs;
+        }
+    }
+
+    template<typename V>
+    bool operator==(V rhs)
+    {
+        return object == T(rhs);
+    }
+
+private:
+
+    T object{ VK_NULL_HANDLE };
+    std::function<void(T)> deleter;
+
+    void cleanup()
+    {
+        if (object != VK_NULL_HANDLE)
+        {
+            deleter(object);
+        }
+
+        object = VK_NULL_HANDLE;
+    }
+};
+
+class HelloTriangleApplication
+{
+public:
+    void run()
+    {
+        initVulkan();
+        mainLoop();
+    }
+
+private:
+    void initVulkan()
+    {
+        
+    }
+
+    void mainLoop()
+    {
+        
+    }
+};
 
 int main()
 {
-    if (glfwInit() == GLFW_FALSE)
+    HelloTriangleApplication app;
+
+    try
     {
-        std::cout << "Failed to init glfw.\n";
+        app.run();
+    }
+    catch (const std::runtime_error & e)
+    {
+        std::cerr << e.what() << std::endl;
         return EXIT_FAILURE;
     }
-
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    auto * window = glfwCreateWindow(800, 600, "Vulkan window", nullptr, nullptr);
-
-    const auto extensionProperties = vk::enumerateInstanceExtensionProperties();
-    std::cout << "The following extensions are supported:\n";
-    for (const auto & property : extensionProperties)
-    {
-        std::cout << '\t' << property.extensionName << '\n';
-    }
-
-    glm::mat4 matrix;
-    glm::vec4 vec;
-    auto test = matrix * vec;
-
-    while (!glfwWindowShouldClose(window))
-    {
-        glfwPollEvents();
-    }
-
-    glfwDestroyWindow(window);
-
-    glfwTerminate();
 
     return EXIT_SUCCESS;
 }
