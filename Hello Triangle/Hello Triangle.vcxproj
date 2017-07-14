@@ -19,7 +19,13 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="instance.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="window.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="instance.hpp" />
+    <ClInclude Include="window.hpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
@@ -93,6 +99,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>C:\VulkanSDK\1.0.51.0\Include;$(SolutionDir)extern\glm-0.9.8.4;$(SolutionDir)extern\GLFW-3.2.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -108,6 +115,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>C:\VulkanSDK\1.0.51.0\Include;$(SolutionDir)extern\glm-0.9.8.4;$(SolutionDir)extern\GLFW-3.2.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -125,6 +133,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>C:\VulkanSDK\1.0.51.0\Include;$(SolutionDir)extern\glm-0.9.8.4;$(SolutionDir)extern\GLFW-3.2.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -144,6 +153,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>C:\VulkanSDK\1.0.51.0\Include;$(SolutionDir)extern\glm-0.9.8.4;$(SolutionDir)extern\GLFW-3.2.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

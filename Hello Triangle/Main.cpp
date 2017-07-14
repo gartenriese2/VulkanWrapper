@@ -1,8 +1,15 @@
 #include <vulkan/vulkan.hpp>
 
+#include <GLFW/glfw3.h>
+
 #include <iostream>
 #include <stdexcept>
 #include <functional>
+#include "instance.hpp"
+#include "window.hpp"
+
+constexpr int32_t WIDTH = 800;
+constexpr int32_t HEIGHT = 600;
 
 template <typename T>
 class VDeleter
@@ -82,19 +89,55 @@ class HelloTriangleApplication
 public:
     void run()
     {
+        initWindow();
         initVulkan();
         mainLoop();
     }
 
 private:
+    std::unique_ptr<bmvk::Window> m_windowPtr;
+    std::unique_ptr<bmvk::Instance> m_instancePtr;
+    
+    void initWindow()
+    {
+        try
+        {
+            m_windowPtr = std::make_unique<bmvk::Window>(WIDTH, HEIGHT);
+        }
+        catch (const std::runtime_error & e)
+        {
+            std::cout << e.what() << '\n';
+        }
+
+        std::cout << "Created GLFW window!\n";
+    }
+
+    void createInstance()
+    {
+        try
+        {
+            m_instancePtr = std::make_unique<bmvk::Instance>("Hello Triangle", VK_MAKE_VERSION(1, 0, 0), "No Engine", VK_MAKE_VERSION(1, 0, 0), m_windowPtr);
+        }
+        catch (const std::runtime_error & e)
+        {
+            std::cout << e.what() << '\n';
+            return;
+        }
+
+        std::cout << "Created instance!\n";
+    }
+
     void initVulkan()
     {
-        
+        createInstance();
     }
 
     void mainLoop()
     {
-        
+        while (!m_windowPtr->shouldClose())
+        {
+            m_windowPtr->pollEvents();
+        }
     }
 };
 
