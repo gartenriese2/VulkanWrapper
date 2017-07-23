@@ -4,8 +4,8 @@
 
 namespace bmvk
 {
-    constexpr auto standardValidationLayerName = "VK_LAYER_LUNARG_standard_validation";
-    constexpr auto debugExtensionName = "VK_EXT_debug_report";
+    constexpr auto k_standardValidationLayerName = "VK_LAYER_LUNARG_standard_validation";
+    constexpr auto k_debugExtensionName = "VK_EXT_debug_report";
 
     Instance::Instance(const std::string& appName, const uint32_t appVersion, const std::string& engineName, const uint32_t engineVersion, const std::unique_ptr<Window> & windowPtr, const bool enableValidationLayers)
     {
@@ -18,14 +18,9 @@ namespace bmvk
             extensionsAsCstrings.emplace_back(string.c_str());
         }
 
-        const auto layers = getLayers(enableValidationLayers);
-        std::vector<const char*> layersAsCstrings;
-        for (const auto& string : layers)
-        {
-            layersAsCstrings.emplace_back(string.c_str());
-        }
+        initializeLayerNames(enableValidationLayers);
 
-        vk::InstanceCreateInfo info{ vk::InstanceCreateFlags(), &appInfo, static_cast<uint32_t>(layersAsCstrings.size()), layersAsCstrings.data(), static_cast<uint32_t>(extensionsAsCstrings.size()), extensionsAsCstrings.data()};
+        vk::InstanceCreateInfo info{ vk::InstanceCreateFlags(), &appInfo, static_cast<uint32_t>(m_layerNames.size()), m_layerNames.data(), static_cast<uint32_t>(extensionsAsCstrings.size()), extensionsAsCstrings.data()};
         m_instance = vk::createInstance(info);
 
         vkExtInitInstance(getCInstance());
@@ -68,7 +63,7 @@ namespace bmvk
             auto hasDebugExtension{ false };
             for (const auto & extension : availableExtensions)
             {
-                if (strcmp(extension.extensionName, debugExtensionName) == 0)
+                if (strcmp(extension.extensionName, k_debugExtensionName) == 0)
                 {
                     hasDebugExtension = true;
                     break;
@@ -80,18 +75,17 @@ namespace bmvk
                 throw std::runtime_error("debug extension not available!");
             }
 
-            extensions.emplace_back(debugExtensionName);
+            extensions.emplace_back(k_debugExtensionName);
         }
 
         return extensions;
     }
 
-    std::vector<std::string> Instance::getLayers(const bool enableValidationLayers) const
+    void Instance::initializeLayerNames(const bool enableValidationLayers)
     {
-        std::vector<std::string> layers;
         if (!enableValidationLayers)
         {
-            return layers;
+            return;
         }
 
         const auto availableLayers = vk::enumerateInstanceLayerProperties();
@@ -105,7 +99,7 @@ namespace bmvk
         auto hasValidationLayer{ false };
         for (const auto & prop : availableLayers)
         {
-            if (strcmp(prop.layerName, standardValidationLayerName) == 0)
+            if (strcmp(prop.layerName, k_standardValidationLayerName) == 0)
             {
                 hasValidationLayer = true;
                 break;
@@ -114,11 +108,9 @@ namespace bmvk
 
         if (!hasValidationLayer)
         {
-            throw std::runtime_error(static_cast<std::string>(standardValidationLayerName) + " not available!");
+            throw std::runtime_error(static_cast<std::string>(k_standardValidationLayerName) + " not available!");
         }
 
-        layers.emplace_back(standardValidationLayerName);
-
-        return layers;
+        m_layerNames.emplace_back(k_standardValidationLayerName);
     }
 } // namespace bmvk

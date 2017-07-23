@@ -78,6 +78,7 @@
 #include "instance.hpp"
 #include "debugReport.hpp"
 #include "physicalDevice.hpp"
+#include "device.hpp"
 
 const int WIDTH = 800;
 const int HEIGHT = 600;
@@ -102,8 +103,7 @@ private:
     std::unique_ptr<bmvk::Instance> m_instancePtr;
     std::unique_ptr<bmvk::DebugReport> m_debugReportPtr;
     std::unique_ptr<bmvk::PhysicalDevice> m_physicalDevicePtr;
-    vk::Device m_device;
-    vk::Queue m_queue;
+    std::unique_ptr<bmvk::Device> m_devicePtr;
 
     void initWindow()
     {
@@ -130,7 +130,6 @@ private:
 
         pickPhysicalDevice();
         createLogicalDevice();
-        m_queue = m_device.getQueue(m_physicalDevicePtr->getQueueFamilyIndex(), 0);
     }
 
     void mainLoop()
@@ -185,20 +184,9 @@ private:
     }
 
     void createLogicalDevice() {
-        const auto queuePriority = 1.0f;
-        vk::DeviceQueueCreateInfo queueCreateInfo(vk::DeviceQueueCreateFlags(), m_physicalDevicePtr->getQueueFamilyIndex(), 1, &queuePriority);
-        vk::PhysicalDeviceFeatures deviceFeatures;
-        std::vector<const char*> validationLayers;
-        auto standardValidationLayerName = "VK_LAYER_LUNARG_standard_validation";
-        if (enableValidationLayers)
-        {
-            validationLayers.emplace_back(standardValidationLayerName);
-        }
-        vk::DeviceCreateInfo createInfo(vk::DeviceCreateFlags(), 1, &queueCreateInfo, static_cast<uint32_t>(validationLayers.size()), validationLayers.data(), 0, nullptr, &deviceFeatures);
-
         try
         {
-            m_device = m_physicalDevicePtr->createDevice(createInfo);
+            m_devicePtr = m_physicalDevicePtr->createLogicalDevice(m_instancePtr, enableValidationLayers);
         }
         catch (const std::runtime_error & e)
         {

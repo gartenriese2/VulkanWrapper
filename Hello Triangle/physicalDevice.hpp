@@ -2,6 +2,7 @@
 
 #include <vulkan/vulkan.hpp>
 #include "instance.hpp"
+#include "device.hpp"
 
 namespace bmvk
 {
@@ -18,7 +19,7 @@ namespace bmvk
         auto getCPhysicalDevice() noexcept { return static_cast<VkPhysicalDevice>(m_physicalDevice); }
         auto getQueueFamilyIndex() const { return m_queueFamilyIndex; }
 
-        vk::Device createDevice(const vk::DeviceCreateInfo & info);
+        std::unique_ptr<Device> createLogicalDevice(const std::unique_ptr<Instance> & instancePtr, const bool enableValidationLayers) const;
     private:
         vk::PhysicalDevice m_physicalDevice;
         uint32_t m_queueFamilyIndex;

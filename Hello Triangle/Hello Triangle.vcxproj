@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="debugReport.cpp" />
+    <ClCompile Include="device.cpp" />
     <ClCompile Include="instance.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="physicalDevice.cpp" />
@@ -28,6 +29,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="debugReport.hpp" />
+    <ClInclude Include="device.hpp" />
     <ClInclude Include="instance.hpp" />
     <ClInclude Include="physicalDevice.hpp" />
     <ClInclude Include="vulkan_ext.h" />

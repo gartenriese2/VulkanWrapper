@@ -17,11 +17,13 @@ namespace bmvk
 
         auto & getInstance() noexcept { return m_instance; }
         auto getCInstance() noexcept { return static_cast<VkInstance>(m_instance); }
+        const auto & getLayerNames() noexcept { return m_layerNames; }
     private:
         vk::Instance m_instance;
+        std::vector<const char*> m_layerNames;
 
         std::vector<std::string> getExtensions(const bool enableValidationLayers, const std::unique_ptr<Window> & windowPtr) const;
-        std::vector<std::string> getLayers(const bool enableValidationLayers) const;
+        void initializeLayerNames(const bool enableValidationLayers);
     };
 
     static_assert(std::is_nothrow_move_constructible_v<Instance>);
