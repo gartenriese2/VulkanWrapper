@@ -44,5 +44,4 @@ namespace bmvk
         auto glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
         return std::vector<std::string>{glfwExtensions, glfwExtensions + glfwExtensionCount};
     }
-
 }

@@ -31,8 +31,8 @@ namespace bmvk
         std::unique_ptr<GLFWwindow, GLFWwindowDeleter> m_window;
     };
 
-    static_assert(std::is_nothrow_move_constructible<Window>());
-    static_assert(!std::is_copy_constructible<Window>());
-    static_assert(std::is_nothrow_move_assignable<Window>());
-    static_assert(!std::is_copy_assignable<Window>());
+    static_assert(std::is_nothrow_move_constructible_v<Window>);
+    static_assert(!std::is_copy_constructible_v<Window>);
+    static_assert(std::is_nothrow_move_assignable_v<Window>);
+    static_assert(!std::is_copy_assignable_v<Window>);
 }

@@ -19,12 +19,18 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="debugReport.cpp" />
     <ClCompile Include="instance.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="physicalDevice.cpp" />
+    <ClCompile Include="vulkan_ext.c" />
     <ClCompile Include="window.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="debugReport.hpp" />
     <ClInclude Include="instance.hpp" />
+    <ClInclude Include="physicalDevice.hpp" />
+    <ClInclude Include="vulkan_ext.h" />
     <ClInclude Include="window.hpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
