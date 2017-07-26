@@ -1,20 +1,23 @@
 #pragma once
 #include <vulkan/vulkan.hpp>
+#include "queue.hpp"
 
 namespace bmvk
 {
     class Device
     {
     public:
-        Device(vk::Device device);
+        explicit Device(vk::Device device, const std::uint32_t queueFamilyIndex);
         Device(const Device &) = delete;
         Device(Device && other) = default;
         Device & operator=(const Device &) = delete;
         Device & operator=(Device && other) = default;
         ~Device() {}
+
+        std::unique_ptr<Queue> createQueue() const;
     private:
         vk::Device m_device;
-        vk::Queue m_queue;
+        uint32_t m_queueFamilyIndex;
     };
 
     static_assert(std::is_move_constructible_v<Device>);

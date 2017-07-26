@@ -36,6 +36,9 @@
     <ClCompile Include="device.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="queue.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="instance.hpp">
@@ -54,6 +57,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="device.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="queue.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

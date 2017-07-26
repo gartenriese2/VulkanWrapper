@@ -104,6 +104,7 @@ private:
     std::unique_ptr<bmvk::DebugReport> m_debugReportPtr;
     std::unique_ptr<bmvk::PhysicalDevice> m_physicalDevicePtr;
     std::unique_ptr<bmvk::Device> m_devicePtr;
+    std::unique_ptr<bmvk::Queue> m_queuePtr;
 
     void initWindow()
     {
@@ -130,6 +131,7 @@ private:
 
         pickPhysicalDevice();
         createLogicalDevice();
+        createQueue();
     }
 
     void mainLoop()
@@ -195,6 +197,21 @@ private:
         }
         
         std::cout << "Created logical device!\n";
+    }
+
+    void createQueue()
+    {
+        try
+        {
+            m_queuePtr = m_devicePtr->createQueue();
+        }
+        catch (const std::runtime_error & e)
+        {
+            std::cerr << e.what() << '\n';
+            throw;
+        }
+
+        std::cout << "Created queue!\n";
     }
 };
 

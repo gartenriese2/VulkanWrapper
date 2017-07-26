@@ -33,7 +33,7 @@ namespace bmvk
         vk::PhysicalDeviceFeatures deviceFeatures;
         const auto layers = instancePtr->getLayerNames();
         vk::DeviceCreateInfo info(vk::DeviceCreateFlags(), 1, &queueCreateInfo, static_cast<uint32_t>(layers.size()), layers.data(), 0, nullptr, &deviceFeatures);
-        return std::make_unique<Device>(m_physicalDevice.createDevice(info));
+        return std::make_unique<Device>(m_physicalDevice.createDevice(info), m_queueFamilyIndex);
     }
 
     std::tuple<bool, int> PhysicalDevice::isDeviceSuitable(const vk::PhysicalDevice & device) const
