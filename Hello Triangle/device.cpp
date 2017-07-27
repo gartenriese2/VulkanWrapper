@@ -8,8 +8,8 @@ namespace bmvk
         m_device = std::move(device);
     }
 
-    std::unique_ptr<Queue> Device::createQueue() const
+    Queue Device::createQueue() const
     {
-        return std::make_unique<Queue>(m_device.getQueue(m_queueFamilyIndex, 0));
+        return Queue(m_device.getQueue(m_queueFamilyIndex, 0));
     }
 }

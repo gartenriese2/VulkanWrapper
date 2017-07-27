@@ -91,136 +91,45 @@ const bool enableValidationLayers = true;
 
 class HelloTriangleApplication {
 public:
+    HelloTriangleApplication()
+      : m_window{ WIDTH, HEIGHT },
+        m_instance{ "Hello Triangle", VK_MAKE_VERSION(1, 0, 0), "bmvk", VK_MAKE_VERSION(1, 0, 0), m_window, enableValidationLayers },
+        m_debugReport{ m_instance, vk::DebugReportFlagBitsEXT::eError | vk::DebugReportFlagBitsEXT::eWarning | vk::DebugReportFlagBitsEXT::eInformation, enableValidationLayers },
+        m_surface{ m_window.createSurface(m_instance) },
+        m_physicalDevice{ m_instance.getSuitablePhysicalDevice() },
+        m_device{ m_physicalDevice.createLogicalDevice(m_instance.getLayerNames(), enableValidationLayers) },
+        m_queue{ m_device.createQueue() }
+    {
+    }
+
     void run()
     {
-        initWindow();
-        initVulkan();
         mainLoop();
     }
 
 private:
-    std::unique_ptr<bmvk::Window> m_windowPtr;
-    std::unique_ptr<bmvk::Instance> m_instancePtr;
-    std::unique_ptr<bmvk::DebugReport> m_debugReportPtr;
-    std::unique_ptr<bmvk::PhysicalDevice> m_physicalDevicePtr;
-    std::unique_ptr<bmvk::Device> m_devicePtr;
-    std::unique_ptr<bmvk::Queue> m_queuePtr;
-
-    void initWindow()
-    {
-        try
-        {
-            m_windowPtr = std::make_unique<bmvk::Window>(WIDTH, HEIGHT);
-        }
-        catch (const std::runtime_error & e)
-        {
-            std::cerr << e.what() << '\n';
-            throw;
-        }
-            
-        std::cout << "Created GLFW window!\n";
-    }
-
-    void initVulkan()
-    {
-        createInstance();
-        if (enableValidationLayers)
-        {
-            setupDebugReport();
-        }
-
-        pickPhysicalDevice();
-        createLogicalDevice();
-        createQueue();
-    }
+    bmvk::Window m_window;
+    bmvk::Instance m_instance;
+    bmvk::DebugReport m_debugReport;
+    bmvk::Surface m_surface;
+    bmvk::PhysicalDevice m_physicalDevice;
+    bmvk::Device m_device;
+    bmvk::Queue m_queue;
 
     void mainLoop()
     {
-        while (!m_windowPtr->shouldClose())
+        while (!m_window.shouldClose())
         {
-            m_windowPtr->pollEvents();
+            m_window.pollEvents();
         }
-    }
-
-    void createInstance()
-    {
-        try
-        {
-            m_instancePtr = std::make_unique<bmvk::Instance>("Hello Triangle", VK_MAKE_VERSION(1, 0, 0), "bmvk", VK_MAKE_VERSION(1, 0, 0), m_windowPtr, enableValidationLayers);
-        }
-        catch (const std::runtime_error & e)
-        {
-            std::cerr << e.what() << '\n';
-            throw;
-        }
-            
-        std::cout << "Created instance!\n";
-    }
-
-    void setupDebugReport()
-    {
-        try
-        {
-            m_debugReportPtr = std::make_unique<bmvk::DebugReport>(m_instancePtr, vk::DebugReportFlagBitsEXT::eError | vk::DebugReportFlagBitsEXT::eWarning | vk::DebugReportFlagBitsEXT::eInformation);
-        }
-        catch (const std::runtime_error & e)
-        {
-            std::cerr << e.what() << '\n';
-            throw;
-        }
-    }
-
-    void pickPhysicalDevice()
-    {
-        try
-        {
-            m_physicalDevicePtr = std::make_unique<bmvk::PhysicalDevice>(m_instancePtr);
-        }
-        catch (const std::runtime_error & e)
-        {
-            std::cerr << e.what() << '\n';
-            throw;
-        }
-
-        std::cout << "Picked physical device!\n";
-    }
-
-    void createLogicalDevice() {
-        try
-        {
-            m_devicePtr = m_physicalDevicePtr->createLogicalDevice(m_instancePtr, enableValidationLayers);
-        }
-        catch (const std::runtime_error & e)
-        {
-            std::cerr << e.what() << '\n';
-            throw;
-        }
-        
-        std::cout << "Created logical device!\n";
-    }
-
-    void createQueue()
-    {
-        try
-        {
-            m_queuePtr = m_devicePtr->createQueue();
-        }
-        catch (const std::runtime_error & e)
-        {
-            std::cerr << e.what() << '\n';
-            throw;
-        }
-
-        std::cout << "Created queue!\n";
     }
 };
 
 int main()
 {
-    HelloTriangleApplication app;
-
     try
     {
+        HelloTriangleApplication app;
         app.run();
     }
     catch (const std::runtime_error & e)

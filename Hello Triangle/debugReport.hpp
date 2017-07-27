@@ -1,13 +1,15 @@
 #pragma once
 
-#include "instance.hpp"
+#include <vulkan/vulkan.hpp>
 
 namespace bmvk
 {
+    class Instance;
+
     class DebugReport
     {
     public:
-        explicit DebugReport(const std::unique_ptr<Instance> & instancePtr, vk::DebugReportFlagsEXT flags);
+        explicit DebugReport(const Instance & instance, vk::DebugReportFlagsEXT flags, const bool enableValidationLayers);
         DebugReport(const DebugReport &) = delete;
         DebugReport(DebugReport && other) = default;
         DebugReport & operator=(const DebugReport &) = delete;

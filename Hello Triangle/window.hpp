@@ -1,12 +1,16 @@
 #pragma once
 
 #include <type_traits>
+#include <vulkan/vulkan.h>
 #include <GLFW/glfw3.h>
 #include <memory>
 #include <vector>
+#include "surface.hpp"
 
 namespace bmvk
 {
+    class Instance;
+
     class Window
     {
     public:
@@ -20,6 +24,7 @@ namespace bmvk
         bool shouldClose() const;
         void pollEvents() const;
         std::vector<std::string> getRequiredExtensions() const;
+        Surface createSurface(const Instance & instance) const;
     private:
         struct GLFWwindowDeleter {
             void operator()(GLFWwindow * ptr) const

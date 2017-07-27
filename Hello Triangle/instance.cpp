@@ -1,17 +1,18 @@
 #include <iostream>
 #include "instance.hpp"
 #include "vulkan_ext.h"
+#include "window.hpp"
 
 namespace bmvk
 {
     constexpr auto k_standardValidationLayerName = "VK_LAYER_LUNARG_standard_validation";
     constexpr auto k_debugExtensionName = "VK_EXT_debug_report";
 
-    Instance::Instance(const std::string& appName, const uint32_t appVersion, const std::string& engineName, const uint32_t engineVersion, const std::unique_ptr<Window> & windowPtr, const bool enableValidationLayers)
+    Instance::Instance(const std::string& appName, const uint32_t appVersion, const std::string& engineName, const uint32_t engineVersion, const Window & window, const bool enableValidationLayers)
     {
         vk::ApplicationInfo appInfo{ appName.c_str(), appVersion, engineName.c_str(), engineVersion, VK_API_VERSION_1_0 };
 
-        const auto extensions = getExtensions(enableValidationLayers, windowPtr);
+        const auto extensions = getExtensions(enableValidationLayers, window);
         std::vector<const char*> extensionsAsCstrings{};
         for (const auto& string : extensions)
         {
@@ -31,7 +32,36 @@ namespace bmvk
         m_instance.destroy();
     }
 
-    std::vector<std::string> Instance::getExtensions(const bool enableValidationLayers, const std::unique_ptr<Window> & windowPtr) const
+    PhysicalDevice Instance::getSuitablePhysicalDevice() const
+    {
+        const auto physicalDevices = m_instance.enumeratePhysicalDevices();
+
+        auto foundSuitablePhysicalDevice{ false };
+        vk::PhysicalDevice chosenPhysicalDevice;
+        uint32_t chosenIndex;
+        for (auto physicalDevice : physicalDevices)
+        {
+            bool isSuitable;
+            int queueFamilyIndex;
+            std::tie(isSuitable, queueFamilyIndex) = PhysicalDevice::isDeviceSuitable(physicalDevice);
+            if (isSuitable)
+            {
+                foundSuitablePhysicalDevice = true;
+                chosenPhysicalDevice = physicalDevice;
+                chosenIndex = queueFamilyIndex;
+                break;
+            }
+        }
+
+        if (!foundSuitablePhysicalDevice)
+        {
+            throw std::runtime_error("No suitable physical device found");
+        }
+
+        return PhysicalDevice(chosenPhysicalDevice, chosenIndex);
+    }
+
+    std::vector<std::string> Instance::getExtensions(const bool enableValidationLayers, const Window & window) const
     {
         const auto availableExtensions{ vk::enumerateInstanceExtensionProperties() };
 
@@ -43,7 +73,7 @@ namespace bmvk
             }
         }
 
-        const auto glfwExtensions = windowPtr->getRequiredExtensions();
+        const auto glfwExtensions = window.getRequiredExtensions();
         for (const auto & neededExtension : glfwExtensions)
         {
             if (std::find_if(availableExtensions.cbegin(), availableExtensions.cend(), [&](const auto & ex) { return ex.extensionName == neededExtension; }) == availableExtensions.cend())

@@ -14,7 +14,7 @@ namespace bmvk
         Device & operator=(Device && other) = default;
         ~Device() {}
 
-        std::unique_ptr<Queue> createQueue() const;
+        Queue createQueue() const;
     private:
         vk::Device m_device;
         uint32_t m_queueFamilyIndex;

@@ -1,4 +1,5 @@
 #include "debugReport.hpp"
+#include "instance.hpp"
 #include <iostream>
 
 namespace bmvk
@@ -30,11 +31,18 @@ namespace bmvk
         return VK_FALSE;
     }
 
-    DebugReport::DebugReport(const std::unique_ptr<Instance> & instancePtr, vk::DebugReportFlagsEXT flags)
+    DebugReport::DebugReport(const Instance & instance, vk::DebugReportFlagsEXT flags, const bool enableValidationLayers)
     {
         static_assert(std::is_move_constructible<vk::DebugReportFlagsEXT>());
 
+        if (!enableValidationLayers)
+        {
+            return;
+        }
+
         vk::DebugReportCallbackCreateInfoEXT createInfo(std::move(flags), debugCallback);
-        m_uniqueCallback = std::move(instancePtr->getInstance().createDebugReportCallbackEXTUnique(createInfo));
+        m_uniqueCallback = std::move(instance.getInstance().createDebugReportCallbackEXTUnique(createInfo));
+
+        std::cout << "Created debug report!\n";
     }
 }

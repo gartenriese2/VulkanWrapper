@@ -1,6 +1,7 @@
 #include "window.hpp"
 #include <algorithm>
 #include <stdexcept>
+#include "instance.hpp"
 
 namespace bmvk
 {
@@ -43,5 +44,16 @@ namespace bmvk
         auto glfwExtensionCount = 0u;
         auto glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
         return std::vector<std::string>{glfwExtensions, glfwExtensions + glfwExtensionCount};
+    }
+
+    Surface Window::createSurface(const Instance & instance) const
+    {
+        VkSurfaceKHR cSurface;
+        if (glfwCreateWindowSurface(instance.getCInstance(), m_window.get(), nullptr, &cSurface) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create window surface!");
+        }
+
+        const vk::SurfaceKHR surface{ cSurface };
+        return Surface{ surface };
     }
 }
