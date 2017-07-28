@@ -23,7 +23,7 @@ namespace bmvk
         auto getCInstance() const noexcept { return static_cast<VkInstance>(m_instance); }
         const auto & getLayerNames() noexcept { return m_layerNames; }
 
-        PhysicalDevice getSuitablePhysicalDevice() const;
+        PhysicalDevice getSuitablePhysicalDevice(const vk::SurfaceKHR & surface) const;
     private:
         vk::Instance m_instance;
         std::vector<const char*> m_layerNames;

@@ -32,7 +32,7 @@ namespace bmvk
         m_instance.destroy();
     }
 
-    PhysicalDevice Instance::getSuitablePhysicalDevice() const
+    PhysicalDevice Instance::getSuitablePhysicalDevice(const vk::SurfaceKHR & surface) const
     {
         const auto physicalDevices = m_instance.enumeratePhysicalDevices();
 
@@ -43,7 +43,7 @@ namespace bmvk
         {
             bool isSuitable;
             int queueFamilyIndex;
-            std::tie(isSuitable, queueFamilyIndex) = PhysicalDevice::isDeviceSuitable(physicalDevice);
+            std::tie(isSuitable, queueFamilyIndex) = PhysicalDevice::isDeviceSuitable(physicalDevice, surface);
             if (isSuitable)
             {
                 foundSuitablePhysicalDevice = true;

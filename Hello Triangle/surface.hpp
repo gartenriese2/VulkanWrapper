@@ -13,6 +13,8 @@ namespace bmvk
         Surface & operator=(const Surface &) = delete;
         Surface & operator=(Surface && other) = default;
         ~Surface();
+
+        const auto & getSurface() const noexcept { return m_surface; }
     private:
         vk::SurfaceKHR m_surface;
     };

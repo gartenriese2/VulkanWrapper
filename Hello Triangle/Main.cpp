@@ -96,7 +96,7 @@ public:
         m_instance{ "Hello Triangle", VK_MAKE_VERSION(1, 0, 0), "bmvk", VK_MAKE_VERSION(1, 0, 0), m_window, enableValidationLayers },
         m_debugReport{ m_instance, vk::DebugReportFlagBitsEXT::eError | vk::DebugReportFlagBitsEXT::eWarning | vk::DebugReportFlagBitsEXT::eInformation, enableValidationLayers },
         m_surface{ m_window.createSurface(m_instance) },
-        m_physicalDevice{ m_instance.getSuitablePhysicalDevice() },
+        m_physicalDevice{ m_instance.getSuitablePhysicalDevice(m_surface.getSurface()) },
         m_device{ m_physicalDevice.createLogicalDevice(m_instance.getLayerNames(), enableValidationLayers) },
         m_queue{ m_device.createQueue() }
     {

@@ -17,7 +17,7 @@ namespace bmvk
         return Device(m_physicalDevice.createDevice(info), m_queueFamilyIndex);
     }
 
-    std::tuple<bool, int> PhysicalDevice::isDeviceSuitable(const vk::PhysicalDevice & device)
+    std::tuple<bool, int> PhysicalDevice::isDeviceSuitable(const vk::PhysicalDevice & device, const vk::SurfaceKHR & surface)
     {
         const auto features = device.getFeatures();
         const auto properties = device.getProperties();
@@ -35,6 +35,7 @@ namespace bmvk
             ++index;
         }
 
-        return std::make_tuple(properties.deviceType == vk::PhysicalDeviceType::eDiscreteGpu && foundQueue, index);
+        const auto hasPresentationSupport{ device.getSurfaceSupportKHR(index, surface) };
+        return std::make_tuple(properties.deviceType == vk::PhysicalDeviceType::eDiscreteGpu && foundQueue && hasPresentationSupport, index);
     }
 }

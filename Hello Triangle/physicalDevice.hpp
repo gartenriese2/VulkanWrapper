@@ -20,7 +20,7 @@ namespace bmvk
 
         Device createLogicalDevice(const std::vector<const char*> & layerNames, const bool enableValidationLayers) const;
 
-        static std::tuple<bool, int> isDeviceSuitable(const vk::PhysicalDevice & device);
+        static std::tuple<bool, int> isDeviceSuitable(const vk::PhysicalDevice & device, const vk::SurfaceKHR & surface);
     private:
         vk::PhysicalDevice m_physicalDevice;
         uint32_t m_queueFamilyIndex;
