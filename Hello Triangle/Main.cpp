@@ -105,14 +105,19 @@ public:
         const auto presentModes{ m_physicalDevice.getPresentModes(m_surface.getSurface()) };
         m_swapchainImageFormat = bmvk::PhysicalDevice::chooseSwapSurfaceFormat(formats);
         m_swapchainExtent = bmvk::PhysicalDevice::chooseSwapExtent(capabilities, WIDTH, HEIGHT);
-        m_swapchain = m_device.createSwapchain(
+        m_device.createSwapchain(
             m_surface.getSurface(),
             bmvk::PhysicalDevice::chooseImageCount(capabilities),
             m_swapchainImageFormat,
             m_swapchainExtent,
             capabilities,
             bmvk::PhysicalDevice::chooseSwapPresentMode(presentModes));
-        m_swapchainImages = m_device.getSwapchainImages(m_swapchain);
+        m_swapchainImages = m_device.getSwapchainImages();
+        m_swapchainImageViews.resize(m_swapchainImages.size());
+        for (size_t i = 0; i < m_swapchainImages.size(); i++) {
+            const auto info = vk::ImageViewCreateInfo{ vk::ImageViewCreateFlags(), m_swapchainImages[i], vk::ImageViewType::e2D, m_swapchainImageFormat.format, vk::ComponentMapping(), vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1) };
+            m_swapchainImageViews[i] = m_device.createImageView(info);
+        }
     }
 
     void run()
@@ -130,8 +135,8 @@ private:
     bmvk::Queue m_queue;
     vk::SurfaceFormatKHR m_swapchainImageFormat;
     vk::Extent2D m_swapchainExtent;
-    vk::SwapchainKHR m_swapchain;
     std::vector<vk::Image> m_swapchainImages;
+    std::vector<vk::UniqueImageView> m_swapchainImageViews;
 
     void mainLoop()
     {

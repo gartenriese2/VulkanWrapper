@@ -8,12 +8,20 @@ namespace bmvk
     {
     }
 
+    Device::~Device()
+    {
+        if (m_swapchainCreated)
+        {
+            m_device.destroySwapchainKHR(m_swapchain);
+        }
+    }
+
     Queue Device::createQueue() const
     {
         return Queue(m_device.getQueue(m_queueFamilyIndex, 0));
     }
 
-    vk::SwapchainKHR Device::createSwapchain(const vk::SurfaceKHR & surface, const uint32_t imageCount, const vk::SurfaceFormatKHR & surfaceFormat, const vk::Extent2D & extent, const vk::SurfaceCapabilitiesKHR & capabilities, const vk::PresentModeKHR & presentMode)
+    void Device::createSwapchain(const vk::SurfaceKHR & surface, const uint32_t imageCount, const vk::SurfaceFormatKHR & surfaceFormat, const vk::Extent2D & extent, const vk::SurfaceCapabilitiesKHR & capabilities, const vk::PresentModeKHR & presentMode)
     {
         vk::SwapchainCreateInfoKHR info
         {
@@ -35,11 +43,17 @@ namespace bmvk
             nullptr
         };
 
-        return m_device.createSwapchainKHR(info);
+        m_swapchain = m_device.createSwapchainKHR(info);
+        m_swapchainCreated = true;
     }
 
-    std::vector<vk::Image> Device::getSwapchainImages(const vk::SwapchainKHR & swapchain) const
+    std::vector<vk::Image> Device::getSwapchainImages() const
     {
-        return m_device.getSwapchainImagesKHR(swapchain);
+        return m_swapchainCreated ? m_device.getSwapchainImagesKHR(m_swapchain) : std::vector<vk::Image>();
+    }
+
+    vk::UniqueImageView Device::createImageView(vk::ImageViewCreateInfo info) const
+    {
+        return m_device.createImageViewUnique(info);
     }
 }

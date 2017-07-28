@@ -12,14 +12,17 @@ namespace bmvk
         Device(Device && other) = default;
         Device & operator=(const Device &) = delete;
         Device & operator=(Device && other) = default;
-        ~Device() {}
+        ~Device();
 
         Queue createQueue() const;
-        vk::SwapchainKHR createSwapchain(const vk::SurfaceKHR & surface, const uint32_t imageCount, const vk::SurfaceFormatKHR & surfaceFormat, const vk::Extent2D & extent, const vk::SurfaceCapabilitiesKHR & capabilities, const vk::PresentModeKHR & presentMode);
-        std::vector<vk::Image> getSwapchainImages(const vk::SwapchainKHR & swapchain) const;
+        void createSwapchain(const vk::SurfaceKHR & surface, const uint32_t imageCount, const vk::SurfaceFormatKHR & surfaceFormat, const vk::Extent2D & extent, const vk::SurfaceCapabilitiesKHR & capabilities, const vk::PresentModeKHR & presentMode);
+        std::vector<vk::Image> getSwapchainImages() const;
+        vk::UniqueImageView createImageView(vk::ImageViewCreateInfo info) const;
     private:
         vk::Device m_device;
         uint32_t m_queueFamilyIndex;
+        vk::SwapchainKHR m_swapchain;
+        bool m_swapchainCreated = false;
     };
 
     static_assert(std::is_move_constructible_v<Device>);
