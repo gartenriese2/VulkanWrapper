@@ -94,7 +94,7 @@ public:
     HelloTriangleApplication()
       : m_window{ WIDTH, HEIGHT },
         m_instance{ "Hello Triangle", VK_MAKE_VERSION(1, 0, 0), "bmvk", VK_MAKE_VERSION(1, 0, 0), m_window, enableValidationLayers },
-        m_debugReport{ m_instance, vk::DebugReportFlagBitsEXT::eError | vk::DebugReportFlagBitsEXT::eWarning | vk::DebugReportFlagBitsEXT::eInformation, enableValidationLayers },
+        m_debugReport{ m_instance, vk::DebugReportFlagBitsEXT::eError | vk::DebugReportFlagBitsEXT::eWarning | vk::DebugReportFlagBitsEXT::eInformation | vk::DebugReportFlagBitsEXT::eDebug | vk::DebugReportFlagBitsEXT::ePerformanceWarning, enableValidationLayers },
         m_surface{ m_window.createSurface(m_instance) },
         m_physicalDevice{ m_instance.getSuitablePhysicalDevice(m_surface.getSurface()) },
         m_device{ m_physicalDevice.createLogicalDevice(m_instance.getLayerNames(), enableValidationLayers) },
@@ -103,11 +103,13 @@ public:
         const auto capabilities{ m_physicalDevice.getSurfaceCapabilities(m_surface.getSurface()) };
         const auto formats{ m_physicalDevice.getSurfaceFormats(m_surface.getSurface()) };
         const auto presentModes{ m_physicalDevice.getPresentModes(m_surface.getSurface()) };
+        m_swapchainImageFormat = bmvk::PhysicalDevice::chooseSwapSurfaceFormat(formats);
+        m_swapchainExtent = bmvk::PhysicalDevice::chooseSwapExtent(capabilities, WIDTH, HEIGHT);
         m_swapchain = m_device.createSwapchain(
             m_surface.getSurface(),
             bmvk::PhysicalDevice::chooseImageCount(capabilities),
-            bmvk::PhysicalDevice::chooseSwapSurfaceFormat(formats),
-            bmvk::PhysicalDevice::chooseSwapExtent(capabilities, WIDTH, HEIGHT),
+            m_swapchainImageFormat,
+            m_swapchainExtent,
             capabilities,
             bmvk::PhysicalDevice::chooseSwapPresentMode(presentModes));
         m_swapchainImages = m_device.getSwapchainImages(m_swapchain);
@@ -126,6 +128,8 @@ private:
     bmvk::PhysicalDevice m_physicalDevice;
     bmvk::Device m_device;
     bmvk::Queue m_queue;
+    vk::SurfaceFormatKHR m_swapchainImageFormat;
+    vk::Extent2D m_swapchainExtent;
     vk::SwapchainKHR m_swapchain;
     std::vector<vk::Image> m_swapchainImages;
 
