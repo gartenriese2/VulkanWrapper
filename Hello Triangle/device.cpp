@@ -37,4 +37,9 @@ namespace bmvk
 
         return m_device.createSwapchainKHR(info);
     }
+
+    std::vector<vk::Image> Device::getSwapchainImages(const vk::SwapchainKHR & swapchain) const
+    {
+        return m_device.getSwapchainImagesKHR(swapchain);
+    }
 }

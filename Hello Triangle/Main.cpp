@@ -110,6 +110,7 @@ public:
             bmvk::PhysicalDevice::chooseSwapExtent(capabilities, WIDTH, HEIGHT),
             capabilities,
             bmvk::PhysicalDevice::chooseSwapPresentMode(presentModes));
+        m_swapchainImages = m_device.getSwapchainImages(m_swapchain);
     }
 
     void run()
@@ -126,6 +127,7 @@ private:
     bmvk::Device m_device;
     bmvk::Queue m_queue;
     vk::SwapchainKHR m_swapchain;
+    std::vector<vk::Image> m_swapchainImages;
 
     void mainLoop()
     {
