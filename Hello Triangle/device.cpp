@@ -3,9 +3,9 @@
 namespace bmvk
 {
     Device::Device(vk::Device device, const std::uint32_t queueFamilyIndex)
-        : m_queueFamilyIndex{queueFamilyIndex}
+      : m_device{ device },
+        m_queueFamilyIndex{ queueFamilyIndex }
     {
-        m_device = std::move(device);
     }
 
     Queue Device::createQueue() const

@@ -24,6 +24,8 @@ namespace bmvk
     private:
         vk::PhysicalDevice m_physicalDevice;
         uint32_t m_queueFamilyIndex;
+
+        static bool checkDeviceExtensionSupport(const vk::PhysicalDevice & device);
     };
 
     static_assert(std::is_nothrow_move_constructible_v<PhysicalDevice>);

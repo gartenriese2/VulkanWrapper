@@ -1,7 +1,10 @@
 #include "physicalDevice.hpp"
+#include <set>
 
 namespace bmvk
 {
+    constexpr auto k_swapchainExtensionName{ VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+
     PhysicalDevice::PhysicalDevice(const vk::PhysicalDevice & physicalDevice, const uint32_t queueFamilyIndex)
         : m_physicalDevice{ physicalDevice },
           m_queueFamilyIndex{ queueFamilyIndex }
@@ -13,7 +16,8 @@ namespace bmvk
         const auto queuePriority = 1.0f;
         vk::DeviceQueueCreateInfo queueCreateInfo(vk::DeviceQueueCreateFlags(), getQueueFamilyIndex(), 1, &queuePriority);
         vk::PhysicalDeviceFeatures deviceFeatures;
-        vk::DeviceCreateInfo info(vk::DeviceCreateFlags(), 1, &queueCreateInfo, static_cast<uint32_t>(layerNames.size()), layerNames.data(), 0, nullptr, &deviceFeatures);
+        std::vector<const char *> extensionNames{ k_swapchainExtensionName };
+        vk::DeviceCreateInfo info(vk::DeviceCreateFlags(), 1, &queueCreateInfo, static_cast<uint32_t>(layerNames.size()), layerNames.data(), static_cast<uint32_t>(extensionNames.size()), extensionNames.data(), &deviceFeatures);
         return Device(m_physicalDevice.createDevice(info), m_queueFamilyIndex);
     }
 
@@ -36,6 +40,13 @@ namespace bmvk
         }
 
         const auto hasPresentationSupport{ device.getSurfaceSupportKHR(index, surface) };
-        return std::make_tuple(properties.deviceType == vk::PhysicalDeviceType::eDiscreteGpu && foundQueue && hasPresentationSupport, index);
+        const auto hasRequiredExtensions{ checkDeviceExtensionSupport(device) };
+        return std::make_tuple(properties.deviceType == vk::PhysicalDeviceType::eDiscreteGpu && foundQueue && hasPresentationSupport && hasRequiredExtensions, index);
+    }
+
+    bool PhysicalDevice::checkDeviceExtensionSupport(const vk::PhysicalDevice & device)
+    {
+        const auto availableExtensions = device.enumerateDeviceExtensionProperties();
+        return !(std::find_if(availableExtensions.cbegin(), availableExtensions.cend(), [&](const auto & ex) { return std::strcmp(ex.extensionName, k_swapchainExtensionName) == 0; }) == availableExtensions.cend());
     }
 }
