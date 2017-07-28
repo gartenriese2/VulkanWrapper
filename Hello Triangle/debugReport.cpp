@@ -21,6 +21,14 @@ namespace bmvk
         {
             messageString += "INFORMATION: [" + pLayerPrefixString + "] Code " + std::to_string(code) + " : " + msg;
         }
+        else if (flags & VK_DEBUG_REPORT_DEBUG_BIT_EXT)
+        {
+            messageString += "DEBUG: [" + pLayerPrefixString + "] Code " + std::to_string(code) + " : " + msg;
+        }
+        else if (flags & VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT)
+        {
+            messageString += "PERFORMANCE_WARNING: [" + pLayerPrefixString + "] Code " + std::to_string(code) + " : " + msg;
+        }
         else
         {
             return VK_FALSE;

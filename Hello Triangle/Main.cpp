@@ -100,6 +100,16 @@ public:
         m_device{ m_physicalDevice.createLogicalDevice(m_instance.getLayerNames(), enableValidationLayers) },
         m_queue{ m_device.createQueue() }
     {
+        const auto capabilities{ m_physicalDevice.getSurfaceCapabilities(m_surface.getSurface()) };
+        const auto formats{ m_physicalDevice.getSurfaceFormats(m_surface.getSurface()) };
+        const auto presentModes{ m_physicalDevice.getPresentModes(m_surface.getSurface()) };
+        m_swapchain = m_device.createSwapchain(
+            m_surface.getSurface(),
+            bmvk::PhysicalDevice::chooseImageCount(capabilities),
+            bmvk::PhysicalDevice::chooseSwapSurfaceFormat(formats),
+            bmvk::PhysicalDevice::chooseSwapExtent(capabilities, WIDTH, HEIGHT),
+            capabilities,
+            bmvk::PhysicalDevice::chooseSwapPresentMode(presentModes));
     }
 
     void run()
@@ -115,6 +125,7 @@ private:
     bmvk::PhysicalDevice m_physicalDevice;
     bmvk::Device m_device;
     bmvk::Queue m_queue;
+    vk::SwapchainKHR m_swapchain;
 
     void mainLoop()
     {
