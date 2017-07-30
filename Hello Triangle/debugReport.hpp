@@ -9,7 +9,7 @@ namespace bmvk
     class DebugReport
     {
     public:
-        explicit DebugReport(const Instance & instance, vk::DebugReportFlagsEXT flags, const bool enableValidationLayers);
+        explicit DebugReport(const Instance & instance, vk::DebugReportFlagsEXT flags);
         DebugReport(const DebugReport &) = delete;
         DebugReport(DebugReport && other) = default;
         DebugReport & operator=(const DebugReport &) = delete;

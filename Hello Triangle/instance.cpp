@@ -25,10 +25,24 @@ namespace bmvk
         m_instance = vk::createInstance(info);
 
         vkExtInitInstance(getCInstance());
+
+        if (enableValidationLayers)
+        {
+            m_debugReportPtr = std::make_unique<DebugReport>(*this, vk::DebugReportFlagBitsEXT::eError | vk::DebugReportFlagBitsEXT::eWarning | vk::DebugReportFlagBitsEXT::eInformation | vk::DebugReportFlagBitsEXT::eDebug | vk::DebugReportFlagBitsEXT::ePerformanceWarning);
+        }
+        
+        m_surface = window.createSurface(*this);
+        m_physicalDevice = getSuitablePhysicalDevice(m_surface.getSurface());
     }
 
     Instance::~Instance()
     {
+        m_instance.destroySurfaceKHR(m_surface.getSurface());
+        if (m_debugReportPtr != nullptr)
+        {
+            m_debugReportPtr.reset();
+        }
+
         m_instance.destroy();
     }
 

@@ -33,6 +33,9 @@ namespace bmvk
         vk::PhysicalDevice m_physicalDevice;
         uint32_t m_queueFamilyIndex;
 
+        friend class Instance;
+        PhysicalDevice() {}
+
         static bool checkDeviceExtensionSupport(const vk::PhysicalDevice & device);
         static bool checkSwapChainSupport(const vk::PhysicalDevice& device, const vk::SurfaceKHR& surface);
     };

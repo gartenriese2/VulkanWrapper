@@ -76,7 +76,6 @@
 
 #include "window.hpp"
 #include "instance.hpp"
-#include "debugReport.hpp"
 #include "physicalDevice.hpp"
 #include "device.hpp"
 
@@ -94,30 +93,11 @@ public:
     HelloTriangleApplication()
       : m_window{ WIDTH, HEIGHT },
         m_instance{ "Hello Triangle", VK_MAKE_VERSION(1, 0, 0), "bmvk", VK_MAKE_VERSION(1, 0, 0), m_window, enableValidationLayers },
-        m_debugReport{ m_instance, vk::DebugReportFlagBitsEXT::eError | vk::DebugReportFlagBitsEXT::eWarning | vk::DebugReportFlagBitsEXT::eInformation | vk::DebugReportFlagBitsEXT::eDebug | vk::DebugReportFlagBitsEXT::ePerformanceWarning, enableValidationLayers },
-        m_surface{ m_window.createSurface(m_instance) },
-        m_physicalDevice{ m_instance.getSuitablePhysicalDevice(m_surface.getSurface()) },
-        m_device{ m_physicalDevice.createLogicalDevice(m_instance.getLayerNames(), enableValidationLayers) },
+        m_device{ m_instance.getPhysicalDevice().createLogicalDevice(m_instance.getLayerNames(), enableValidationLayers) },
         m_queue{ m_device.createQueue() }
     {
-        const auto capabilities{ m_physicalDevice.getSurfaceCapabilities(m_surface.getSurface()) };
-        const auto formats{ m_physicalDevice.getSurfaceFormats(m_surface.getSurface()) };
-        const auto presentModes{ m_physicalDevice.getPresentModes(m_surface.getSurface()) };
-        m_swapchainImageFormat = bmvk::PhysicalDevice::chooseSwapSurfaceFormat(formats);
-        m_swapchainExtent = bmvk::PhysicalDevice::chooseSwapExtent(capabilities, WIDTH, HEIGHT);
-        m_device.createSwapchain(
-            m_surface.getSurface(),
-            bmvk::PhysicalDevice::chooseImageCount(capabilities),
-            m_swapchainImageFormat,
-            m_swapchainExtent,
-            capabilities,
-            bmvk::PhysicalDevice::chooseSwapPresentMode(presentModes));
-        m_swapchainImages = m_device.getSwapchainImages();
-        m_swapchainImageViews.resize(m_swapchainImages.size());
-        for (size_t i = 0; i < m_swapchainImages.size(); i++) {
-            const auto info = vk::ImageViewCreateInfo{ vk::ImageViewCreateFlags(), m_swapchainImages[i], vk::ImageViewType::e2D, m_swapchainImageFormat.format, vk::ComponentMapping(), vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1) };
-            m_swapchainImageViews[i] = m_device.createImageView(info);
-        }
+        createSwapchain();
+        createGraphicsPipeline();
     }
 
     void run()
@@ -128,9 +108,6 @@ public:
 private:
     bmvk::Window m_window;
     bmvk::Instance m_instance;
-    bmvk::DebugReport m_debugReport;
-    bmvk::Surface m_surface;
-    bmvk::PhysicalDevice m_physicalDevice;
     bmvk::Device m_device;
     bmvk::Queue m_queue;
     vk::SurfaceFormatKHR m_swapchainImageFormat;
@@ -144,6 +121,33 @@ private:
         {
             m_window.pollEvents();
         }
+    }
+
+    void createSwapchain()
+    {
+        const auto capabilities{ m_instance.getPhysicalDevice().getSurfaceCapabilities(m_instance.getSurface().getSurface()) };
+        const auto formats{ m_instance.getPhysicalDevice().getSurfaceFormats(m_instance.getSurface().getSurface()) };
+        const auto presentModes{ m_instance.getPhysicalDevice().getPresentModes(m_instance.getSurface().getSurface()) };
+        m_swapchainImageFormat = bmvk::PhysicalDevice::chooseSwapSurfaceFormat(formats);
+        m_swapchainExtent = bmvk::PhysicalDevice::chooseSwapExtent(capabilities, WIDTH, HEIGHT);
+        m_device.createSwapchain(
+            m_instance.getSurface().getSurface(),
+            bmvk::PhysicalDevice::chooseImageCount(capabilities),
+            m_swapchainImageFormat,
+            m_swapchainExtent,
+            capabilities,
+            bmvk::PhysicalDevice::chooseSwapPresentMode(presentModes));
+        m_swapchainImages = m_device.getSwapchainImages();
+        m_swapchainImageViews.resize(m_swapchainImages.size());
+        for (size_t i = 0; i < m_swapchainImages.size(); i++) {
+            const auto info = vk::ImageViewCreateInfo{ vk::ImageViewCreateFlags(), m_swapchainImages[i], vk::ImageViewType::e2D, m_swapchainImageFormat.format, vk::ComponentMapping(), vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1) };
+            m_swapchainImageViews[i] = m_device.createImageView(info);
+        }
+    }
+
+    void createGraphicsPipeline()
+    {
+
     }
 };
 

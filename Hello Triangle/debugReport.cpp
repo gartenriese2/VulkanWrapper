@@ -9,6 +9,11 @@ namespace bmvk
         std::string messageString;
         std::string pLayerPrefixString(layerPrefix);
 
+        if (strcmp(layerPrefix, "loader") == 0)
+        {
+            return VK_FALSE;
+        }
+
         if (flags & VK_DEBUG_REPORT_ERROR_BIT_EXT)
         {
             messageString += "ERROR: [" + pLayerPrefixString + "] Code " + std::to_string(code) + " : " + msg;
@@ -39,14 +44,9 @@ namespace bmvk
         return VK_FALSE;
     }
 
-    DebugReport::DebugReport(const Instance & instance, vk::DebugReportFlagsEXT flags, const bool enableValidationLayers)
+    DebugReport::DebugReport(const Instance & instance, vk::DebugReportFlagsEXT flags)
     {
         static_assert(std::is_move_constructible<vk::DebugReportFlagsEXT>());
-
-        if (!enableValidationLayers)
-        {
-            return;
-        }
 
         vk::DebugReportCallbackCreateInfoEXT createInfo(std::move(flags), debugCallback);
         m_uniqueCallback = std::move(instance.getInstance().createDebugReportCallbackEXTUnique(createInfo));

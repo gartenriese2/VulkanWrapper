@@ -14,6 +14,8 @@ namespace bmvk
         {
             m_device.destroySwapchainKHR(m_swapchain);
         }
+
+        m_device.destroy();
     }
 
     Queue Device::createQueue() const

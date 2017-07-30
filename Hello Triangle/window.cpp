@@ -49,7 +49,8 @@ namespace bmvk
     Surface Window::createSurface(const Instance & instance) const
     {
         VkSurfaceKHR cSurface;
-        if (glfwCreateWindowSurface(instance.getCInstance(), m_window.get(), nullptr, &cSurface) != VK_SUCCESS) {
+        if (glfwCreateWindowSurface(instance.getCInstance(), m_window.get(), nullptr, &cSurface) != VK_SUCCESS)
+        {
             throw std::runtime_error("failed to create window surface!");
         }
 

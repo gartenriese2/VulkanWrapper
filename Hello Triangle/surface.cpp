@@ -6,10 +6,4 @@ namespace bmvk
         : m_surface{std::move(surface)}
     {
     }
-
-    Surface::~Surface()
-    {
-
-    }
-
 }

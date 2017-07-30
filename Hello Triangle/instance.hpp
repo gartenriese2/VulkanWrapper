@@ -2,6 +2,8 @@
 
 #include <vulkan/vulkan.hpp>
 #include "physicalDevice.hpp"
+#include "surface.hpp"
+#include "debugReport.hpp"
 
 namespace bmvk
 {
@@ -21,11 +23,18 @@ namespace bmvk
         const auto & getInstance() const noexcept { return m_instance; }
         auto getCInstance() noexcept { return static_cast<VkInstance>(m_instance); }
         auto getCInstance() const noexcept { return static_cast<VkInstance>(m_instance); }
+
+        const auto & getSurface() const noexcept { return m_surface; }
+        const auto & getPhysicalDevice() const noexcept { return m_physicalDevice; }
+
         const auto & getLayerNames() noexcept { return m_layerNames; }
 
         PhysicalDevice getSuitablePhysicalDevice(const vk::SurfaceKHR & surface) const;
     private:
         vk::Instance m_instance;
+        std::unique_ptr<DebugReport> m_debugReportPtr;
+        Surface m_surface;
+        PhysicalDevice m_physicalDevice;
         std::vector<const char*> m_layerNames;
 
         std::vector<std::string> getExtensions(const bool enableValidationLayers, const Window & window) const;
