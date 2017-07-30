@@ -14,6 +14,8 @@ namespace bmvk
         Device & operator=(Device && other) = default;
         ~Device();
 
+        explicit operator vk::Device() const noexcept { return m_device; }
+
         Queue createQueue() const;
         void createSwapchain(const vk::SurfaceKHR & surface, const uint32_t imageCount, const vk::SurfaceFormatKHR & surfaceFormat, const vk::Extent2D & extent, const vk::SurfaceCapabilitiesKHR & capabilities, const vk::PresentModeKHR & presentMode);
         std::vector<vk::Image> getSwapchainImages() const;

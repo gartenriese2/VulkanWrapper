@@ -73,6 +73,7 @@
 
 #include <iostream>
 #include <stdexcept>
+#include <fstream>
 
 #include "window.hpp"
 #include "instance.hpp"
@@ -87,6 +88,24 @@ const bool enableValidationLayers = false;
 #else
 const bool enableValidationLayers = true;
 #endif
+
+static std::vector<char> readFile(const std::string& filename)
+{
+    std::ifstream file(filename, std::ios::ate | std::ios::binary);
+
+    if (!file.is_open())
+    {
+        throw std::runtime_error("failed to open file!");
+    }
+
+    auto fileSize = static_cast<size_t>(file.tellg());
+    std::vector<char> buffer(fileSize);
+    file.seekg(0);
+    file.read(buffer.data(), fileSize);
+    file.close();
+
+    return buffer;
+}
 
 class HelloTriangleApplication {
 public:
@@ -147,7 +166,22 @@ private:
 
     void createGraphicsPipeline()
     {
+        const auto vertShaderCode{ readFile("../shaders/triangleshader.vert.spv") };
+        const auto fragShaderCode{ readFile("../shaders/triangleshader.frag.spv") };
 
+        const auto vertShaderModule{ createShaderModule(vertShaderCode) };
+        const auto fragShaderModule{ createShaderModule(fragShaderCode) };
+
+        vk::PipelineShaderStageCreateInfo vertShaderStageInfo{ vk::PipelineShaderStageCreateFlags(), vk::ShaderStageFlagBits::eVertex, vertShaderModule.get(), "main" };
+        vk::PipelineShaderStageCreateInfo fragShaderStageInfo{ vk::PipelineShaderStageCreateFlags(), vk::ShaderStageFlagBits::eFragment, fragShaderModule.get(), "main" };
+
+        vk::PipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageInfo, fragShaderStageInfo };
+    }
+
+    vk::UniqueShaderModule createShaderModule(const std::vector<char> & code) const
+    {
+        vk::ShaderModuleCreateInfo info{ vk::ShaderModuleCreateFlags(), code.size(), reinterpret_cast<const uint32_t *>(code.data()) };
+        return static_cast<vk::Device>(m_device).createShaderModuleUnique(info);
     }
 };
 
