@@ -116,6 +116,7 @@ public:
         m_queue{ m_device.createQueue() }
     {
         createSwapchain();
+        createRenderPass();
         createGraphicsPipeline();
     }
 
@@ -133,6 +134,9 @@ private:
     vk::Extent2D m_swapchainExtent;
     std::vector<vk::Image> m_swapchainImages;
     std::vector<vk::UniqueImageView> m_swapchainImageViews;
+    vk::UniqueRenderPass m_renderPass;
+    vk::UniquePipelineLayout m_pipelineLayout;
+    vk::UniquePipeline m_graphicsPipeline;
 
     void mainLoop()
     {
@@ -164,6 +168,15 @@ private:
         }
     }
 
+    void createRenderPass()
+    {
+        vk::AttachmentDescription colorAttachment{ vk::AttachmentDescriptionFlags(), m_swapchainImageFormat.format, vk::SampleCountFlagBits::e1, vk::AttachmentLoadOp::eClear, vk::AttachmentStoreOp::eStore, vk::AttachmentLoadOp::eDontCare, vk::AttachmentStoreOp::eDontCare, vk::ImageLayout::eUndefined, vk::ImageLayout::ePresentSrcKHR };
+        vk::AttachmentReference colorAttachmentRef{ 0, vk::ImageLayout::eColorAttachmentOptimal };
+        vk::SubpassDescription subpass{ vk::SubpassDescriptionFlags(), vk::PipelineBindPoint::eGraphics, 0, nullptr, 1, &colorAttachmentRef };
+        vk::RenderPassCreateInfo renderPassInfo{ vk::RenderPassCreateFlags(), 1, &colorAttachment, 1, &subpass };
+        m_renderPass = static_cast<vk::Device>(m_device).createRenderPassUnique(renderPassInfo);
+    }
+
     void createGraphicsPipeline()
     {
         const auto vertShaderCode{ readFile("../shaders/triangleshader.vert.spv") };
@@ -176,6 +189,21 @@ private:
         vk::PipelineShaderStageCreateInfo fragShaderStageInfo{ vk::PipelineShaderStageCreateFlags(), vk::ShaderStageFlagBits::eFragment, fragShaderModule.get(), "main" };
 
         vk::PipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageInfo, fragShaderStageInfo };
+
+        vk::PipelineVertexInputStateCreateInfo vertexInputInfo;
+        vk::PipelineInputAssemblyStateCreateInfo inputAssembly{ vk::PipelineInputAssemblyStateCreateFlags(), vk::PrimitiveTopology::eTriangleList };
+        vk::Viewport viewport{ 0.f, 0.f, static_cast<float>(m_swapchainExtent.width), static_cast<float>(m_swapchainExtent.height), 0.f, 1.f };
+        vk::Rect2D scissor{ vk::Offset2D(), m_swapchainExtent };
+        vk::PipelineViewportStateCreateInfo viewportState{ vk::PipelineViewportStateCreateFlags(), 1, &viewport, 1, &scissor };
+        vk::PipelineRasterizationStateCreateInfo rasterizer{ vk::PipelineRasterizationStateCreateFlags(), false, false, vk::PolygonMode::eFill, vk::CullModeFlagBits::eBack, vk::FrontFace::eClockwise, false, 0.f, 0.f, 0.f, 1.f };
+        vk::PipelineMultisampleStateCreateInfo multisampling;
+        vk::PipelineColorBlendAttachmentState colorBlendAttachment{ false, vk::BlendFactor::eSrcAlpha, vk::BlendFactor::eOneMinusSrcAlpha, vk::BlendOp::eAdd, vk::BlendFactor::eOne, vk::BlendFactor::eZero, vk::BlendOp::eAdd, vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA };
+        vk::PipelineColorBlendStateCreateInfo colorBlending{ vk::PipelineColorBlendStateCreateFlags(), false, vk::LogicOp::eCopy, 1, &colorBlendAttachment };
+        vk::PipelineLayoutCreateInfo pipelineLayoutInfo;
+        m_pipelineLayout = static_cast<vk::Device>(m_device).createPipelineLayoutUnique(pipelineLayoutInfo);
+
+        vk::GraphicsPipelineCreateInfo pipelineInfo{ vk::PipelineCreateFlags(), 2, shaderStages, &vertexInputInfo, &inputAssembly, nullptr, &viewportState, &rasterizer, &multisampling, nullptr, &colorBlending, nullptr, m_pipelineLayout.get(), m_renderPass.get(), 0, nullptr, -1 };
+        m_graphicsPipeline = static_cast<vk::Device>(m_device).createGraphicsPipelineUnique(nullptr, pipelineInfo);
     }
 
     vk::UniqueShaderModule createShaderModule(const std::vector<char> & code) const
