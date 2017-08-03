@@ -3,6 +3,8 @@
 #include <stdexcept>
 #include "instance.hpp"
 
+class HelloTriangleApplication;
+
 namespace bmvk
 {
     constexpr int32_t k_minWidth { 320 };
@@ -16,7 +18,7 @@ namespace bmvk
         }
 
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-        glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+        glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
         m_window.reset(glfwCreateWindow(std::max(k_minWidth, width), std::max(k_minHeight, height), "Vulkan", nullptr, nullptr));
         if (m_window.get() == nullptr)
         {
@@ -37,6 +39,23 @@ namespace bmvk
     void Window::pollEvents() const
     {
         glfwPollEvents();
+    }
+
+    std::tuple<int, int> Window::getSize() const
+    {
+        int width, height;
+        glfwGetWindowSize(m_window.get(), &width, &height);
+        return std::make_tuple(width, height);
+    }
+
+    void Window::setWindowUserPointer(void * pointer) const
+    {
+        glfwSetWindowUserPointer(m_window.get(), pointer);
+    }
+
+    void Window::setWindowSizeCallback(GLFWwindowsizefun fun) const
+    {
+        glfwSetWindowSizeCallback(m_window.get(), fun);
     }
 
     std::vector<std::string> Window::getRequiredExtensions() const

@@ -115,12 +115,15 @@ public:
         m_device{ m_instance.getPhysicalDevice().createLogicalDevice(m_instance.getLayerNames(), enableValidationLayers) },
         m_queue{ m_device.createQueue() }
     {
+        m_window.setWindowUserPointer(this);
+        m_window.setWindowSizeCallback(onWindowResized);
         createSwapchain();
         createRenderPass();
         createGraphicsPipeline();
         createFramebuffers();
         createCommandPool();
         createCommandBuffers();
+        createSemaphores();
     }
 
     void run()
@@ -143,13 +146,30 @@ private:
     std::vector<vk::UniqueFramebuffer> m_swapChainFramebuffers;
     vk::UniqueCommandPool m_commandPool;
     std::vector<vk::UniqueCommandBuffer> m_commandBuffers;
+    vk::UniqueSemaphore m_imageAvailableSemaphore;
+    vk::UniqueSemaphore m_renderFinishedSemaphore;
+
+    static void onWindowResized(GLFWwindow * window, int width, int height)
+    {
+        if (width == 0 || height == 0)
+        {
+            return;
+        }
+
+        auto app = reinterpret_cast<HelloTriangleApplication *>(glfwGetWindowUserPointer(window));
+        app->recreateSwapChain();
+    }
 
     void mainLoop()
     {
         while (!m_window.shouldClose())
         {
             m_window.pollEvents();
+            // do cpu work here
+            drawFrame();
         }
+
+        static_cast<vk::Device>(m_device).waitIdle();
     }
 
     void createSwapchain()
@@ -158,7 +178,9 @@ private:
         const auto formats{ m_instance.getPhysicalDevice().getSurfaceFormats(m_instance.getSurface().getSurface()) };
         const auto presentModes{ m_instance.getPhysicalDevice().getPresentModes(m_instance.getSurface().getSurface()) };
         m_swapchainImageFormat = bmvk::PhysicalDevice::chooseSwapSurfaceFormat(formats);
-        m_swapchainExtent = bmvk::PhysicalDevice::chooseSwapExtent(capabilities, WIDTH, HEIGHT);
+        int width, height;
+        std::tie(width, height) = m_window.getSize();
+        m_swapchainExtent = bmvk::PhysicalDevice::chooseSwapExtent(capabilities, width, height);
         m_device.createSwapchain(
             m_instance.getSurface().getSurface(),
             bmvk::PhysicalDevice::chooseImageCount(capabilities),
@@ -179,7 +201,8 @@ private:
         vk::AttachmentDescription colorAttachment{ vk::AttachmentDescriptionFlags(), m_swapchainImageFormat.format, vk::SampleCountFlagBits::e1, vk::AttachmentLoadOp::eClear, vk::AttachmentStoreOp::eStore, vk::AttachmentLoadOp::eDontCare, vk::AttachmentStoreOp::eDontCare, vk::ImageLayout::eUndefined, vk::ImageLayout::ePresentSrcKHR };
         vk::AttachmentReference colorAttachmentRef{ 0, vk::ImageLayout::eColorAttachmentOptimal };
         vk::SubpassDescription subpass{ vk::SubpassDescriptionFlags(), vk::PipelineBindPoint::eGraphics, 0, nullptr, 1, &colorAttachmentRef };
-        vk::RenderPassCreateInfo renderPassInfo{ vk::RenderPassCreateFlags(), 1, &colorAttachment, 1, &subpass };
+        vk::SubpassDependency dependency{ VK_SUBPASS_EXTERNAL, 0, vk::PipelineStageFlagBits::eColorAttachmentOutput, vk::PipelineStageFlagBits::eColorAttachmentOutput, vk::AccessFlags(), vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite };
+        vk::RenderPassCreateInfo renderPassInfo{ vk::RenderPassCreateFlags(), 1, &colorAttachment, 1, &subpass, 1, &dependency };
         m_renderPass = static_cast<vk::Device>(m_device).createRenderPassUnique(renderPassInfo);
     }
 
@@ -253,6 +276,89 @@ private:
             m_commandBuffers[i].get().endRenderPass();
             m_commandBuffers[i].get().end();
         }
+    }
+
+    void createSemaphores()
+    {
+        vk::SemaphoreCreateInfo semaphoreInfo;
+        m_imageAvailableSemaphore = static_cast<vk::Device>(m_device).createSemaphoreUnique(semaphoreInfo);
+        m_renderFinishedSemaphore = static_cast<vk::Device>(m_device).createSemaphoreUnique(semaphoreInfo);
+    }
+
+    void drawFrame()
+    {
+        static_cast<vk::Queue>(m_queue).waitIdle();
+
+        uint32_t imageIndex;
+        try
+        {
+            static_cast<vk::Device>(m_device).acquireNextImageKHR(m_device.getSwapchain(), std::numeric_limits<uint64_t>::max(), m_imageAvailableSemaphore.get(), nullptr, &imageIndex);
+        }
+        catch (const vk::OutOfDateKHRError &)
+        {
+            recreateSwapChain();
+            return;
+        }
+
+        vk::Semaphore waitSemaphores[]{ m_imageAvailableSemaphore.get() };
+        vk::PipelineStageFlags waitStages[]{ vk::PipelineStageFlagBits::eColorAttachmentOutput };
+        auto usedCommandBuffer = m_commandBuffers[imageIndex].get();
+        vk::Semaphore signalSemaphores[]{ m_renderFinishedSemaphore.get() };
+        vk::SubmitInfo submitInfo{ 1, waitSemaphores, waitStages, 1, &usedCommandBuffer, 1, signalSemaphores };
+        static_cast<vk::Queue>(m_queue).submit(1, &submitInfo, nullptr);
+        vk::SwapchainKHR swapchains[]{ m_device.getSwapchain() };
+        vk::PresentInfoKHR presentInfo{ 1, signalSemaphores, 1, swapchains, &imageIndex };
+        vk::Result result;
+        auto notOutOfDate{ false };
+        try
+        {
+            result = static_cast<vk::Queue>(m_queue).presentKHR(presentInfo);
+            notOutOfDate = true;
+        }
+        catch (const vk::OutOfDateKHRError &)
+        {
+            recreateSwapChain();
+        }
+
+        if (notOutOfDate && result == vk::Result::eSuboptimalKHR)
+        {
+            recreateSwapChain();
+        }
+    }
+
+    void recreateSwapChain()
+    {
+        static_cast<vk::Device>(m_device).waitIdle();
+
+        cleanupSwapChain();
+
+        createSwapchain();
+        createRenderPass();
+        createGraphicsPipeline();
+        createFramebuffers();
+        createCommandBuffers();
+    }
+
+    void cleanupSwapChain() {
+        for (auto & fb : m_swapChainFramebuffers)
+        {
+            fb.reset(nullptr);
+        }
+
+        for (auto & buffer : m_commandBuffers)
+        {
+            buffer.reset(nullptr);
+        }
+
+        m_graphicsPipeline.reset(nullptr);
+        m_pipelineLayout.reset(nullptr);
+        m_renderPass.reset(nullptr);
+        for (auto & imageView : m_swapchainImageViews)
+        {
+            imageView.reset(nullptr);
+        }
+
+        static_cast<vk::Device>(m_device).destroySwapchainKHR(m_device.getSwapchain());
     }
 };
 

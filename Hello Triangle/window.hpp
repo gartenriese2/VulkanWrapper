@@ -23,6 +23,9 @@ namespace bmvk
 
         bool shouldClose() const;
         void pollEvents() const;
+        std::tuple<int, int> getSize() const;
+        void setWindowUserPointer(void * pointer) const;
+        void setWindowSizeCallback(GLFWwindowsizefun fun) const;
         std::vector<std::string> getRequiredExtensions() const;
         Surface createSurface(const Instance & instance) const;
     private:
