@@ -118,6 +118,7 @@ public:
         createSwapchain();
         createRenderPass();
         createGraphicsPipeline();
+        createFramebuffers();
     }
 
     void run()
@@ -137,6 +138,7 @@ private:
     vk::UniqueRenderPass m_renderPass;
     vk::UniquePipelineLayout m_pipelineLayout;
     vk::UniquePipeline m_graphicsPipeline;
+    std::vector<vk::UniqueFramebuffer> m_swapChainFramebuffers;
 
     void mainLoop()
     {
@@ -210,6 +212,17 @@ private:
     {
         vk::ShaderModuleCreateInfo info{ vk::ShaderModuleCreateFlags(), code.size(), reinterpret_cast<const uint32_t *>(code.data()) };
         return static_cast<vk::Device>(m_device).createShaderModuleUnique(info);
+    }
+
+    void createFramebuffers()
+    {
+        m_swapChainFramebuffers.resize(m_swapchainImageViews.size());
+        for (size_t i = 0; i < m_swapchainImageViews.size(); ++i)
+        {
+            vk::ImageView attachments[] { m_swapchainImageViews[i].get() };
+            vk::FramebufferCreateInfo framebufferInfo{ vk::FramebufferCreateFlags(), m_renderPass.get(), 1, attachments, m_swapchainExtent.width, m_swapchainExtent.height, 1 };
+            m_swapChainFramebuffers[i] = static_cast<vk::Device>(m_device).createFramebufferUnique(framebufferInfo);
+        }
     }
 };
 
