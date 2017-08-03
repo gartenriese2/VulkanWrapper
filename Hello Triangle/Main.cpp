@@ -119,6 +119,8 @@ public:
         createRenderPass();
         createGraphicsPipeline();
         createFramebuffers();
+        createCommandPool();
+        createCommandBuffers();
     }
 
     void run()
@@ -139,6 +141,8 @@ private:
     vk::UniquePipelineLayout m_pipelineLayout;
     vk::UniquePipeline m_graphicsPipeline;
     std::vector<vk::UniqueFramebuffer> m_swapChainFramebuffers;
+    vk::UniqueCommandPool m_commandPool;
+    std::vector<vk::UniqueCommandBuffer> m_commandBuffers;
 
     void mainLoop()
     {
@@ -222,6 +226,32 @@ private:
             vk::ImageView attachments[] { m_swapchainImageViews[i].get() };
             vk::FramebufferCreateInfo framebufferInfo{ vk::FramebufferCreateFlags(), m_renderPass.get(), 1, attachments, m_swapchainExtent.width, m_swapchainExtent.height, 1 };
             m_swapChainFramebuffers[i] = static_cast<vk::Device>(m_device).createFramebufferUnique(framebufferInfo);
+        }
+    }
+
+    void createCommandPool()
+    {
+        auto queueFamilyIndices{ m_instance.getPhysicalDevice().getQueueFamilyIndex() };
+        vk::CommandPoolCreateInfo poolInfo{ vk::CommandPoolCreateFlags(), queueFamilyIndices };
+        m_commandPool = static_cast<vk::Device>(m_device).createCommandPoolUnique(poolInfo);
+    }
+
+    void createCommandBuffers()
+    {
+        m_commandBuffers.resize(m_swapChainFramebuffers.size());
+        vk::CommandBufferAllocateInfo allocInfo{ m_commandPool.get(), vk::CommandBufferLevel::ePrimary, static_cast<uint32_t>(m_commandBuffers.size()) };
+        m_commandBuffers = static_cast<vk::Device>(m_device).allocateCommandBuffersUnique(allocInfo);
+        for (size_t i = 0; i < m_commandBuffers.size(); ++i)
+        {
+            vk::CommandBufferBeginInfo beginInfo{ vk::CommandBufferUsageFlagBits::eSimultaneousUse };
+            m_commandBuffers[i].get().begin(beginInfo);
+            vk::ClearValue clearColor{ vk::ClearColorValue(std::array<float, 4>{ 0.f, 0.f, 0.f, 1.f }) };
+            vk::RenderPassBeginInfo renderPassInfo{ m_renderPass.get(), m_swapChainFramebuffers[i].get(), vk::Rect2D({0, 0}, m_swapchainExtent), 1, &clearColor };
+            m_commandBuffers[i].get().beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
+            m_commandBuffers[i].get().bindPipeline(vk::PipelineBindPoint::eGraphics, m_graphicsPipeline.get());
+            m_commandBuffers[i].get().draw(3, 1, 0, 0);
+            m_commandBuffers[i].get().endRenderPass();
+            m_commandBuffers[i].get().end();
         }
     }
 };
