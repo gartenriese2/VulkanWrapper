@@ -2,17 +2,16 @@
 
 #include <type_traits>
 #include <vulkan/vulkan.hpp>
+#include <glm/glm.hpp>
 
 #include "window.hpp"
-#include "instance.hpp"
-#include "device.hpp"
 #include "queue.hpp"
 #include "swapchain.hpp"
-#include <glm/glm.hpp>
+#include "demo.hpp"
 
 namespace bmvk
 {
-    class VertexbufferDemo
+    class VertexbufferDemo : Demo
     {
     public:
         VertexbufferDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height);
@@ -22,7 +21,7 @@ namespace bmvk
         VertexbufferDemo & operator=(VertexbufferDemo && other) = default;
         ~VertexbufferDemo() {}
 
-        void run();
+        void run() override;
         void recreateSwapChain();
     private:
         struct Vertex
@@ -50,9 +49,6 @@ namespace bmvk
             { { -0.5f, 0.5f },{ 0.0f, 0.0f, 1.0f } }
         };
 
-        Window m_window;
-        Instance m_instance;
-        Device m_device;
         Queue m_queue;
         Swapchain m_swapchain;
         vk::UniqueRenderPass m_renderPass;
@@ -69,7 +65,6 @@ namespace bmvk
         void createRenderPass();
         void createGraphicsPipeline();
         void createFramebuffers();
-        uint32_t findMemoryType(uint32_t typeFilter, vk::MemoryPropertyFlags properties) const;
         void createVertexBuffer();
         void createCommandBuffers();
 

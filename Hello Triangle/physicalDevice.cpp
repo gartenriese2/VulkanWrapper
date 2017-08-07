@@ -21,6 +21,20 @@ namespace bmvk
         return Device(m_physicalDevice.createDevice(info), m_queueFamilyIndex);
     }
 
+    uint32_t PhysicalDevice::findMemoryType(uint32_t typeFilter, vk::MemoryPropertyFlags properties) const
+    {
+        const auto memProperties{ m_physicalDevice.getMemoryProperties() };
+        for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++)
+        {
+            if (typeFilter & (1 << i) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties)
+            {
+                return i;
+            }
+        }
+
+        throw std::runtime_error("failed to find suitable memory type!");
+    }
+
     std::tuple<bool, int> PhysicalDevice::isDeviceSuitable(const vk::PhysicalDevice & device, const vk::SurfaceKHR & surface)
     {
         const auto features = device.getFeatures();

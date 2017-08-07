@@ -16,9 +16,7 @@ namespace bmvk
     }
 
     VertexbufferDemo::VertexbufferDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height)
-      : m_window{ width, height },
-        m_instance{ "Hello Triangle", VK_MAKE_VERSION(1, 0, 0), "bmvk", VK_MAKE_VERSION(1, 0, 0), m_window, enableValidationLayers },
-        m_device{ m_instance.getPhysicalDevice().createLogicalDevice(m_instance.getLayerNames(), enableValidationLayers) },
+      : Demo{ enableValidationLayers, width, height, "Vertexbuffer Demo" },
         m_queue{ m_device.createQueue() },
         m_swapchain{ m_instance.getPhysicalDevice(), m_instance.getSurface(), m_window, m_device },
         m_commandPool{ m_device.createCommandPool() },
@@ -117,25 +115,13 @@ namespace bmvk
         }
     }
 
-    uint32_t VertexbufferDemo::findMemoryType(uint32_t typeFilter, vk::MemoryPropertyFlags properties) const
-    {
-        const auto memProperties{ static_cast<vk::PhysicalDevice>(m_instance.getPhysicalDevice()).getMemoryProperties() };
-        for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
-            if (typeFilter & (1 << i) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties) {
-                return i;
-            }
-        }
-
-        throw std::runtime_error("failed to find suitable memory type!");
-    }
-
     void VertexbufferDemo::createVertexBuffer()
     {
         vk::BufferCreateInfo bufferInfo{ vk::BufferCreateFlags(), sizeof(vertices[0]) * vertices.size(), vk::BufferUsageFlagBits::eVertexBuffer };
         m_vertexBuffer = static_cast<vk::Device>(m_device).createBufferUnique(bufferInfo);
 
         const auto memRequirements{ static_cast<vk::Device>(m_device).getBufferMemoryRequirements(m_vertexBuffer.get()) };
-        vk::MemoryAllocateInfo allocInfo{ memRequirements.size, findMemoryType(memRequirements.memoryTypeBits, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent) };
+        vk::MemoryAllocateInfo allocInfo{ memRequirements.size, m_instance.getPhysicalDevice().findMemoryType(memRequirements.memoryTypeBits, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent) };
         m_vertexBufferMemory = static_cast<vk::Device>(m_device).allocateMemoryUnique(allocInfo);
 
         static_cast<vk::Device>(m_device).bindBufferMemory(m_vertexBuffer.get(), m_vertexBufferMemory.get(), 0);

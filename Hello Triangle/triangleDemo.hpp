@@ -4,14 +4,13 @@
 #include <vulkan/vulkan.hpp>
 
 #include "window.hpp"
-#include "instance.hpp"
-#include "device.hpp"
 #include "queue.hpp"
 #include "swapchain.hpp"
+#include "demo.hpp"
 
 namespace bmvk
 {
-    class TriangleDemo
+    class TriangleDemo : Demo
     {
     public:
         explicit TriangleDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height);
@@ -21,12 +20,9 @@ namespace bmvk
         TriangleDemo & operator=(TriangleDemo && other) = default;
         ~TriangleDemo() {}
 
-        void run();
+        void run() override;
         void recreateSwapChain();
     private:
-        Window m_window;
-        Instance m_instance;
-        Device m_device;
         Queue m_queue;
         Swapchain m_swapchain;
         vk::UniqueRenderPass m_renderPass;

@@ -10,7 +10,7 @@ namespace bmvk
     constexpr int32_t k_minWidth { 320 };
     constexpr int32_t k_minHeight { 240 };
 
-    Window::Window(const int32_t width, const int32_t height)
+    Window::Window(const int32_t width, const int32_t height, std::string_view name)
     {
         if (glfwInit() == GLFW_FALSE)
         {
@@ -19,7 +19,7 @@ namespace bmvk
 
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
         glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
-        m_window.reset(glfwCreateWindow(std::max(k_minWidth, width), std::max(k_minHeight, height), "Vulkan", nullptr, nullptr));
+        m_window.reset(glfwCreateWindow(std::max(k_minWidth, width), std::max(k_minHeight, height), name.data(), nullptr, nullptr));
         if (m_window.get() == nullptr)
         {
             throw std::runtime_error("glfwCreateWindow failed!");

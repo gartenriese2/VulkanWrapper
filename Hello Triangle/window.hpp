@@ -14,7 +14,7 @@ namespace bmvk
     class Window
     {
     public:
-        Window(const int32_t width, const int32_t height);
+        Window(const int32_t width, const int32_t height, std::string_view name);
         Window(const Window &) = delete;
         Window(Window && other) = default;
         Window & operator=(const Window &) = delete;
