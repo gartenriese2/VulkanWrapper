@@ -165,12 +165,8 @@ private:
     {
         const auto vertShader{ bmvk::Shader("../shaders/triangleshader.vert.spv", m_device) };
         const auto fragShader{ bmvk::Shader("../shaders/triangleshader.frag.spv", m_device) };
-        /*auto vertShaderStageInfo{ vertShader.createPipelineShaderStageCreateInfo(vk::ShaderStageFlagBits::eVertex) };
-        auto fragShaderStageInfo{ fragShader.createPipelineShaderStageCreateInfo(vk::ShaderStageFlagBits::eFragment) };*/
-
-        vk::PipelineShaderStageCreateInfo vertShaderStageInfo{ vk::PipelineShaderStageCreateFlags(), vk::ShaderStageFlagBits::eVertex, vertShader.getModule().get(), "main" };
-        vk::PipelineShaderStageCreateInfo fragShaderStageInfo{ vk::PipelineShaderStageCreateFlags(), vk::ShaderStageFlagBits::eFragment, fragShader.getModule().get(), "main" };
-
+        const auto vertShaderStageInfo{ vertShader.createPipelineShaderStageCreateInfo(vk::ShaderStageFlagBits::eVertex) };
+        const auto fragShaderStageInfo{ fragShader.createPipelineShaderStageCreateInfo(vk::ShaderStageFlagBits::eFragment) };
         vk::PipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageInfo, fragShaderStageInfo };
 
         vk::PipelineVertexInputStateCreateInfo vertexInputInfo;
@@ -187,12 +183,6 @@ private:
 
         vk::GraphicsPipelineCreateInfo pipelineInfo{ vk::PipelineCreateFlags(), 2, shaderStages, &vertexInputInfo, &inputAssembly, nullptr, &viewportState, &rasterizer, &multisampling, nullptr, &colorBlending, nullptr, m_pipelineLayout.get(), m_renderPass.get(), 0, nullptr, -1 };
         m_graphicsPipeline = static_cast<vk::Device>(m_device).createGraphicsPipelineUnique(nullptr, pipelineInfo);
-    }
-
-    vk::UniqueShaderModule createShaderModule(const std::vector<char> & code) const
-    {
-        vk::ShaderModuleCreateInfo info{ vk::ShaderModuleCreateFlags(), code.size(), reinterpret_cast<const uint32_t *>(code.data()) };
-        return static_cast<vk::Device>(m_device).createShaderModuleUnique(info);
     }
 
     void createFramebuffers()
