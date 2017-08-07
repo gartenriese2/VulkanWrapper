@@ -25,7 +25,9 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="physicalDevice.cpp" />
     <ClCompile Include="queue.cpp" />
+    <ClCompile Include="shader.cpp" />
     <ClCompile Include="surface.cpp" />
+    <ClCompile Include="swapchain.cpp" />
     <ClCompile Include="vulkan_ext.c" />
     <ClCompile Include="window.cpp" />
   </ItemGroup>
@@ -35,7 +37,9 @@
     <ClInclude Include="instance.hpp" />
     <ClInclude Include="physicalDevice.hpp" />
     <ClInclude Include="queue.hpp" />
+    <ClInclude Include="shader.hpp" />
     <ClInclude Include="surface.hpp" />
+    <ClInclude Include="swapchain.hpp" />
     <ClInclude Include="vulkan_ext.h" />
     <ClInclude Include="window.hpp" />
   </ItemGroup>

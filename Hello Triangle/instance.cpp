@@ -32,12 +32,12 @@ namespace bmvk
         }
         
         m_surface = window.createSurface(*this);
-        m_physicalDevice = getSuitablePhysicalDevice(m_surface.getSurface());
+        m_physicalDevice = getSuitablePhysicalDevice(static_cast<vk::SurfaceKHR>(m_surface));
     }
 
     Instance::~Instance()
     {
-        m_instance.destroySurfaceKHR(m_surface.getSurface());
+        m_instance.destroySurfaceKHR(static_cast<vk::SurfaceKHR>(m_surface));
         if (m_debugReportPtr != nullptr)
         {
             m_debugReportPtr.reset();

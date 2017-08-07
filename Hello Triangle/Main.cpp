@@ -73,12 +73,12 @@
 
 #include <iostream>
 #include <stdexcept>
-#include <fstream>
 
 #include "window.hpp"
 #include "instance.hpp"
-#include "physicalDevice.hpp"
 #include "device.hpp"
+#include "shader.hpp"
+#include "swapchain.hpp"
 
 const int WIDTH = 800;
 const int HEIGHT = 600;
@@ -89,35 +89,17 @@ const bool enableValidationLayers = false;
 const bool enableValidationLayers = true;
 #endif
 
-static std::vector<char> readFile(const std::string& filename)
-{
-    std::ifstream file(filename, std::ios::ate | std::ios::binary);
-
-    if (!file.is_open())
-    {
-        throw std::runtime_error("failed to open file!");
-    }
-
-    auto fileSize = static_cast<size_t>(file.tellg());
-    std::vector<char> buffer(fileSize);
-    file.seekg(0);
-    file.read(buffer.data(), fileSize);
-    file.close();
-
-    return buffer;
-}
-
 class HelloTriangleApplication {
 public:
     HelloTriangleApplication()
       : m_window{ WIDTH, HEIGHT },
         m_instance{ "Hello Triangle", VK_MAKE_VERSION(1, 0, 0), "bmvk", VK_MAKE_VERSION(1, 0, 0), m_window, enableValidationLayers },
         m_device{ m_instance.getPhysicalDevice().createLogicalDevice(m_instance.getLayerNames(), enableValidationLayers) },
-        m_queue{ m_device.createQueue() }
+        m_queue{ m_device.createQueue() },
+        m_swapchain{ m_instance.getPhysicalDevice(), m_instance.getSurface(), m_window, m_device }
     {
         m_window.setWindowUserPointer(this);
         m_window.setWindowSizeCallback(onWindowResized);
-        createSwapchain();
         createRenderPass();
         createGraphicsPipeline();
         createFramebuffers();
@@ -136,10 +118,7 @@ private:
     bmvk::Instance m_instance;
     bmvk::Device m_device;
     bmvk::Queue m_queue;
-    vk::SurfaceFormatKHR m_swapchainImageFormat;
-    vk::Extent2D m_swapchainExtent;
-    std::vector<vk::Image> m_swapchainImages;
-    std::vector<vk::UniqueImageView> m_swapchainImageViews;
+    bmvk::Swapchain m_swapchain;
     vk::UniqueRenderPass m_renderPass;
     vk::UniquePipelineLayout m_pipelineLayout;
     vk::UniquePipeline m_graphicsPipeline;
@@ -172,33 +151,9 @@ private:
         static_cast<vk::Device>(m_device).waitIdle();
     }
 
-    void createSwapchain()
-    {
-        const auto capabilities{ m_instance.getPhysicalDevice().getSurfaceCapabilities(m_instance.getSurface().getSurface()) };
-        const auto formats{ m_instance.getPhysicalDevice().getSurfaceFormats(m_instance.getSurface().getSurface()) };
-        const auto presentModes{ m_instance.getPhysicalDevice().getPresentModes(m_instance.getSurface().getSurface()) };
-        m_swapchainImageFormat = bmvk::PhysicalDevice::chooseSwapSurfaceFormat(formats);
-        int width, height;
-        std::tie(width, height) = m_window.getSize();
-        m_swapchainExtent = bmvk::PhysicalDevice::chooseSwapExtent(capabilities, width, height);
-        m_device.createSwapchain(
-            m_instance.getSurface().getSurface(),
-            bmvk::PhysicalDevice::chooseImageCount(capabilities),
-            m_swapchainImageFormat,
-            m_swapchainExtent,
-            capabilities,
-            bmvk::PhysicalDevice::chooseSwapPresentMode(presentModes));
-        m_swapchainImages = m_device.getSwapchainImages();
-        m_swapchainImageViews.resize(m_swapchainImages.size());
-        for (size_t i = 0; i < m_swapchainImages.size(); i++) {
-            const auto info = vk::ImageViewCreateInfo{ vk::ImageViewCreateFlags(), m_swapchainImages[i], vk::ImageViewType::e2D, m_swapchainImageFormat.format, vk::ComponentMapping(), vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1) };
-            m_swapchainImageViews[i] = m_device.createImageView(info);
-        }
-    }
-
     void createRenderPass()
     {
-        vk::AttachmentDescription colorAttachment{ vk::AttachmentDescriptionFlags(), m_swapchainImageFormat.format, vk::SampleCountFlagBits::e1, vk::AttachmentLoadOp::eClear, vk::AttachmentStoreOp::eStore, vk::AttachmentLoadOp::eDontCare, vk::AttachmentStoreOp::eDontCare, vk::ImageLayout::eUndefined, vk::ImageLayout::ePresentSrcKHR };
+        vk::AttachmentDescription colorAttachment{ vk::AttachmentDescriptionFlags(), m_swapchain.getImageFormat().format, vk::SampleCountFlagBits::e1, vk::AttachmentLoadOp::eClear, vk::AttachmentStoreOp::eStore, vk::AttachmentLoadOp::eDontCare, vk::AttachmentStoreOp::eDontCare, vk::ImageLayout::eUndefined, vk::ImageLayout::ePresentSrcKHR };
         vk::AttachmentReference colorAttachmentRef{ 0, vk::ImageLayout::eColorAttachmentOptimal };
         vk::SubpassDescription subpass{ vk::SubpassDescriptionFlags(), vk::PipelineBindPoint::eGraphics, 0, nullptr, 1, &colorAttachmentRef };
         vk::SubpassDependency dependency{ VK_SUBPASS_EXTERNAL, 0, vk::PipelineStageFlagBits::eColorAttachmentOutput, vk::PipelineStageFlagBits::eColorAttachmentOutput, vk::AccessFlags(), vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite };
@@ -208,21 +163,20 @@ private:
 
     void createGraphicsPipeline()
     {
-        const auto vertShaderCode{ readFile("../shaders/triangleshader.vert.spv") };
-        const auto fragShaderCode{ readFile("../shaders/triangleshader.frag.spv") };
+        const auto vertShader{ bmvk::Shader("../shaders/triangleshader.vert.spv", m_device) };
+        const auto fragShader{ bmvk::Shader("../shaders/triangleshader.frag.spv", m_device) };
+        /*auto vertShaderStageInfo{ vertShader.createPipelineShaderStageCreateInfo(vk::ShaderStageFlagBits::eVertex) };
+        auto fragShaderStageInfo{ fragShader.createPipelineShaderStageCreateInfo(vk::ShaderStageFlagBits::eFragment) };*/
 
-        const auto vertShaderModule{ createShaderModule(vertShaderCode) };
-        const auto fragShaderModule{ createShaderModule(fragShaderCode) };
-
-        vk::PipelineShaderStageCreateInfo vertShaderStageInfo{ vk::PipelineShaderStageCreateFlags(), vk::ShaderStageFlagBits::eVertex, vertShaderModule.get(), "main" };
-        vk::PipelineShaderStageCreateInfo fragShaderStageInfo{ vk::PipelineShaderStageCreateFlags(), vk::ShaderStageFlagBits::eFragment, fragShaderModule.get(), "main" };
+        vk::PipelineShaderStageCreateInfo vertShaderStageInfo{ vk::PipelineShaderStageCreateFlags(), vk::ShaderStageFlagBits::eVertex, vertShader.getModule().get(), "main" };
+        vk::PipelineShaderStageCreateInfo fragShaderStageInfo{ vk::PipelineShaderStageCreateFlags(), vk::ShaderStageFlagBits::eFragment, fragShader.getModule().get(), "main" };
 
         vk::PipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageInfo, fragShaderStageInfo };
 
         vk::PipelineVertexInputStateCreateInfo vertexInputInfo;
         vk::PipelineInputAssemblyStateCreateInfo inputAssembly{ vk::PipelineInputAssemblyStateCreateFlags(), vk::PrimitiveTopology::eTriangleList };
-        vk::Viewport viewport{ 0.f, 0.f, static_cast<float>(m_swapchainExtent.width), static_cast<float>(m_swapchainExtent.height), 0.f, 1.f };
-        vk::Rect2D scissor{ vk::Offset2D(), m_swapchainExtent };
+        vk::Viewport viewport{ 0.f, 0.f, static_cast<float>(m_swapchain.getExtent().width), static_cast<float>(m_swapchain.getExtent().height), 0.f, 1.f };
+        vk::Rect2D scissor{ vk::Offset2D(), m_swapchain.getExtent() };
         vk::PipelineViewportStateCreateInfo viewportState{ vk::PipelineViewportStateCreateFlags(), 1, &viewport, 1, &scissor };
         vk::PipelineRasterizationStateCreateInfo rasterizer{ vk::PipelineRasterizationStateCreateFlags(), false, false, vk::PolygonMode::eFill, vk::CullModeFlagBits::eBack, vk::FrontFace::eClockwise, false, 0.f, 0.f, 0.f, 1.f };
         vk::PipelineMultisampleStateCreateInfo multisampling;
@@ -243,11 +197,11 @@ private:
 
     void createFramebuffers()
     {
-        m_swapChainFramebuffers.resize(m_swapchainImageViews.size());
-        for (size_t i = 0; i < m_swapchainImageViews.size(); ++i)
+        m_swapChainFramebuffers.resize(m_swapchain.getImageViews().size());
+        for (size_t i = 0; i < m_swapchain.getImageViews().size(); ++i)
         {
-            vk::ImageView attachments[] { m_swapchainImageViews[i].get() };
-            vk::FramebufferCreateInfo framebufferInfo{ vk::FramebufferCreateFlags(), m_renderPass.get(), 1, attachments, m_swapchainExtent.width, m_swapchainExtent.height, 1 };
+            vk::ImageView attachments[] { m_swapchain.getImageViews()[i].get() };
+            vk::FramebufferCreateInfo framebufferInfo{ vk::FramebufferCreateFlags(), m_renderPass.get(), 1, attachments, m_swapchain.getExtent().width, m_swapchain.getExtent().height, 1 };
             m_swapChainFramebuffers[i] = static_cast<vk::Device>(m_device).createFramebufferUnique(framebufferInfo);
         }
     }
@@ -269,7 +223,7 @@ private:
             vk::CommandBufferBeginInfo beginInfo{ vk::CommandBufferUsageFlagBits::eSimultaneousUse };
             m_commandBuffers[i].get().begin(beginInfo);
             vk::ClearValue clearColor{ vk::ClearColorValue(std::array<float, 4>{ 0.f, 0.f, 0.f, 1.f }) };
-            vk::RenderPassBeginInfo renderPassInfo{ m_renderPass.get(), m_swapChainFramebuffers[i].get(), vk::Rect2D({0, 0}, m_swapchainExtent), 1, &clearColor };
+            vk::RenderPassBeginInfo renderPassInfo{ m_renderPass.get(), m_swapChainFramebuffers[i].get(), vk::Rect2D({0, 0}, m_swapchain.getExtent()), 1, &clearColor };
             m_commandBuffers[i].get().beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
             m_commandBuffers[i].get().bindPipeline(vk::PipelineBindPoint::eGraphics, m_graphicsPipeline.get());
             m_commandBuffers[i].get().draw(3, 1, 0, 0);
@@ -292,7 +246,7 @@ private:
         uint32_t imageIndex;
         try
         {
-            static_cast<vk::Device>(m_device).acquireNextImageKHR(m_device.getSwapchain(), std::numeric_limits<uint64_t>::max(), m_imageAvailableSemaphore.get(), nullptr, &imageIndex);
+            static_cast<vk::Device>(m_device).acquireNextImageKHR(static_cast<vk::SwapchainKHR>(m_swapchain), std::numeric_limits<uint64_t>::max(), m_imageAvailableSemaphore.get(), nullptr, &imageIndex);
         }
         catch (const vk::OutOfDateKHRError &)
         {
@@ -306,7 +260,7 @@ private:
         vk::Semaphore signalSemaphores[]{ m_renderFinishedSemaphore.get() };
         vk::SubmitInfo submitInfo{ 1, waitSemaphores, waitStages, 1, &usedCommandBuffer, 1, signalSemaphores };
         static_cast<vk::Queue>(m_queue).submit(1, &submitInfo, nullptr);
-        vk::SwapchainKHR swapchains[]{ m_device.getSwapchain() };
+        vk::SwapchainKHR swapchains[]{ static_cast<vk::SwapchainKHR>(m_swapchain) };
         vk::PresentInfoKHR presentInfo{ 1, signalSemaphores, 1, swapchains, &imageIndex };
         vk::Result result;
         auto notOutOfDate{ false };
@@ -332,7 +286,7 @@ private:
 
         cleanupSwapChain();
 
-        createSwapchain();
+        m_swapchain.recreate(m_instance.getPhysicalDevice(), m_instance.getSurface(), m_window, m_device);
         createRenderPass();
         createGraphicsPipeline();
         createFramebuffers();
@@ -353,12 +307,6 @@ private:
         m_graphicsPipeline.reset(nullptr);
         m_pipelineLayout.reset(nullptr);
         m_renderPass.reset(nullptr);
-        for (auto & imageView : m_swapchainImageViews)
-        {
-            imageView.reset(nullptr);
-        }
-
-        static_cast<vk::Device>(m_device).destroySwapchainKHR(m_device.getSwapchain());
     }
 };
 
