@@ -29,6 +29,7 @@
     <ClCompile Include="surface.cpp" />
     <ClCompile Include="swapchain.cpp" />
     <ClCompile Include="triangleDemo.cpp" />
+    <ClCompile Include="vertexbufferDemo.cpp" />
     <ClCompile Include="vulkan_ext.c" />
     <ClCompile Include="window.cpp" />
   </ItemGroup>
@@ -42,6 +43,7 @@
     <ClInclude Include="surface.hpp" />
     <ClInclude Include="swapchain.hpp" />
     <ClInclude Include="triangleDemo.hpp" />
+    <ClInclude Include="vertexbufferDemo.hpp" />
     <ClInclude Include="vulkan_ext.h" />
     <ClInclude Include="window.hpp" />
   </ItemGroup>

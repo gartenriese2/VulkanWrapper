@@ -15,6 +15,8 @@ namespace bmvk
         PhysicalDevice & operator=(PhysicalDevice && other) = default;
         ~PhysicalDevice() {}
 
+        explicit operator vk::PhysicalDevice() const noexcept { return m_physicalDevice; }
+
         auto getCPhysicalDevice() noexcept { return static_cast<VkPhysicalDevice>(m_physicalDevice); }
         auto getQueueFamilyIndex() const { return m_queueFamilyIndex; }
 
