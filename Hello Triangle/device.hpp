@@ -23,6 +23,10 @@ namespace bmvk
         Queue createQueue() const;
         vk::UniqueImageView createImageView(vk::ImageViewCreateInfo info) const;
         vk::UniqueShaderModule createShaderModule(const std::vector<char> & code) const;
+        vk::UniqueSemaphore createSemaphore() const;
+        vk::UniqueCommandPool createCommandPool() const;
+
+        void waitIdle() const { m_device.waitIdle(); }
     private:
         vk::Device m_device;
         uint32_t m_queueFamilyIndex;

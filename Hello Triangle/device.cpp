@@ -25,9 +25,20 @@ namespace bmvk
         return m_device.createImageViewUnique(info);
     }
 
+    vk::UniqueCommandPool Device::createCommandPool() const
+    {
+        vk::CommandPoolCreateInfo poolInfo{ vk::CommandPoolCreateFlags(), m_queueFamilyIndex };
+        return m_device.createCommandPoolUnique(poolInfo);
+    }
+
     vk::UniqueShaderModule Device::createShaderModule(const std::vector<char> & code) const
     {
         vk::ShaderModuleCreateInfo info{ vk::ShaderModuleCreateFlags(), code.size(), reinterpret_cast<const uint32_t *>(code.data()) };
         return m_device.createShaderModuleUnique(info);
+    }
+
+    vk::UniqueSemaphore Device::createSemaphore() const
+    {
+        return m_device.createSemaphoreUnique(vk::SemaphoreCreateInfo());
     }
 }

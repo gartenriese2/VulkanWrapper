@@ -15,6 +15,8 @@ namespace bmvk
         ~Queue();
 
         explicit operator vk::Queue() const noexcept { return m_queue; }
+
+        void waitIdle() const { m_queue.waitIdle(); }
     private:
         vk::Queue m_queue;
     };

@@ -28,6 +28,7 @@
     <ClCompile Include="shader.cpp" />
     <ClCompile Include="surface.cpp" />
     <ClCompile Include="swapchain.cpp" />
+    <ClCompile Include="triangleDemo.cpp" />
     <ClCompile Include="vulkan_ext.c" />
     <ClCompile Include="window.cpp" />
   </ItemGroup>
@@ -40,6 +41,7 @@
     <ClInclude Include="shader.hpp" />
     <ClInclude Include="surface.hpp" />
     <ClInclude Include="swapchain.hpp" />
+    <ClInclude Include="triangleDemo.hpp" />
     <ClInclude Include="vulkan_ext.h" />
     <ClInclude Include="window.hpp" />
   </ItemGroup>
