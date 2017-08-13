@@ -1,10 +1,12 @@
 #pragma once
 
+#include <chrono>
 #include <type_traits>
 
 #include "window.hpp"
 #include "instance.hpp"
 #include "device.hpp"
+
 
 namespace bmvk
 {
@@ -23,6 +25,12 @@ namespace bmvk
         Window m_window;
         Instance m_instance;
         Device m_device;
+
+        std::chrono::steady_clock::time_point m_timepoint;
+        uint32_t m_timepointCount;
+        std::chrono::microseconds m_elapsedTime;
+
+        void timing();
     };
 
     static_assert(std::is_move_constructible_v<Demo>);

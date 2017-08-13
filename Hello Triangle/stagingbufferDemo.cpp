@@ -1,6 +1,7 @@
 #include "stagingbufferDemo.hpp"
 
 #include "shader.hpp"
+#include <iostream>
 
 namespace bmvk
 {
@@ -34,10 +35,13 @@ namespace bmvk
 
     void StagingbufferDemo::run()
     {
+        //auto begin = std::chrono::steady_clock::now();
         while (!m_window.shouldClose())
         {
             m_window.pollEvents();
             // do cpu work here
+            //std::cout << "frametime: " << std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin).count() << "ms\n";
+            //begin = std::chrono::steady_clock::now();
             drawFrame();
         }
 
@@ -193,6 +197,7 @@ namespace bmvk
     void StagingbufferDemo::drawFrame()
     {
         m_queue.waitIdle();
+        timing();
 
         uint32_t imageIndex;
         try

@@ -157,6 +157,7 @@ namespace bmvk
     void VertexbufferDemo::drawFrame()
     {
         m_queue.waitIdle();
+        timing();
 
         uint32_t imageIndex;
         try

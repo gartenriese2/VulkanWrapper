@@ -54,9 +54,6 @@
     <ClCompile Include="swapchain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="demo.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="triangleDemo.cpp">
       <Filter>Source Files\Demos</Filter>
     </ClCompile>
@@ -64,6 +61,9 @@
       <Filter>Source Files\Demos</Filter>
     </ClCompile>
     <ClCompile Include="stagingbufferDemo.cpp">
+      <Filter>Source Files\Demos</Filter>
+    </ClCompile>
+    <ClCompile Include="demo.cpp">
       <Filter>Source Files\Demos</Filter>
     </ClCompile>
   </ItemGroup>
@@ -98,9 +98,6 @@
     <ClInclude Include="swapchain.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="demo.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="stagingbufferDemo.hpp">
       <Filter>Header Files\Demos</Filter>
     </ClInclude>
@@ -108,6 +105,9 @@
       <Filter>Header Files\Demos</Filter>
     </ClInclude>
     <ClInclude Include="vertexbufferDemo.hpp">
+      <Filter>Header Files\Demos</Filter>
+    </ClInclude>
+    <ClInclude Include="demo.hpp">
       <Filter>Header Files\Demos</Filter>
     </ClInclude>
   </ItemGroup>
