@@ -27,6 +27,7 @@
     <ClCompile Include="physicalDevice.cpp" />
     <ClCompile Include="queue.cpp" />
     <ClCompile Include="shader.cpp" />
+    <ClCompile Include="stagingbufferDemo.cpp" />
     <ClCompile Include="surface.cpp" />
     <ClCompile Include="swapchain.cpp" />
     <ClCompile Include="triangleDemo.cpp" />
@@ -42,6 +43,7 @@
     <ClInclude Include="physicalDevice.hpp" />
     <ClInclude Include="queue.hpp" />
     <ClInclude Include="shader.hpp" />
+    <ClInclude Include="stagingbufferDemo.hpp" />
     <ClInclude Include="surface.hpp" />
     <ClInclude Include="swapchain.hpp" />
     <ClInclude Include="triangleDemo.hpp" />
