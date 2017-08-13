@@ -22,6 +22,7 @@
     <ClCompile Include="debugReport.cpp" />
     <ClCompile Include="demo.cpp" />
     <ClCompile Include="device.cpp" />
+    <ClCompile Include="indexbufferDemo.cpp" />
     <ClCompile Include="instance.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="physicalDevice.cpp" />
@@ -39,6 +40,7 @@
     <ClInclude Include="debugReport.hpp" />
     <ClInclude Include="demo.hpp" />
     <ClInclude Include="device.hpp" />
+    <ClInclude Include="indexbufferDemo.hpp" />
     <ClInclude Include="instance.hpp" />
     <ClInclude Include="physicalDevice.hpp" />
     <ClInclude Include="queue.hpp" />

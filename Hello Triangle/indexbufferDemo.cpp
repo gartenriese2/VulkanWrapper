@@ -1,4 +1,4 @@
-#include "stagingbufferDemo.hpp"
+#include "indexbufferDemo.hpp"
 
 #include "shader.hpp"
 #include <iostream>
@@ -12,12 +12,12 @@ namespace bmvk
             return;
         }
 
-        auto app = reinterpret_cast<StagingbufferDemo *>(glfwGetWindowUserPointer(window));
+        auto app = reinterpret_cast<IndexbufferDemo *>(glfwGetWindowUserPointer(window));
         app->recreateSwapChain();
     }
 
-    StagingbufferDemo::StagingbufferDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height)
-        : Demo{ enableValidationLayers, width, height, "Stagingbuffer Demo" },
+    IndexbufferDemo::IndexbufferDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height)
+        : Demo{ enableValidationLayers, width, height, "Indexbuffer Demo" },
         m_queue{ m_device.createQueue() },
         m_swapchain{ m_instance.getPhysicalDevice(), m_instance.getSurface(), m_window, m_device },
         m_commandPool{ m_device.createCommandPool() },
@@ -30,10 +30,11 @@ namespace bmvk
         createGraphicsPipeline();
         createFramebuffers();
         createVertexBuffer();
+        createIndexBuffer();
         createCommandBuffers();
     }
 
-    void StagingbufferDemo::run()
+    void IndexbufferDemo::run()
     {
         while (!m_window.shouldClose())
         {
@@ -45,7 +46,7 @@ namespace bmvk
         m_device.waitIdle();
     }
 
-    void StagingbufferDemo::recreateSwapChain()
+    void IndexbufferDemo::recreateSwapChain()
     {
         m_device.waitIdle();
 
@@ -69,7 +70,7 @@ namespace bmvk
         createCommandBuffers();
     }
 
-    void StagingbufferDemo::createRenderPass()
+    void IndexbufferDemo::createRenderPass()
     {
         vk::AttachmentDescription colorAttachment{ vk::AttachmentDescriptionFlags(), m_swapchain.getImageFormat().format, vk::SampleCountFlagBits::e1, vk::AttachmentLoadOp::eClear, vk::AttachmentStoreOp::eStore, vk::AttachmentLoadOp::eDontCare, vk::AttachmentStoreOp::eDontCare, vk::ImageLayout::eUndefined, vk::ImageLayout::ePresentSrcKHR };
         vk::AttachmentReference colorAttachmentRef{ 0, vk::ImageLayout::eColorAttachmentOptimal };
@@ -79,7 +80,7 @@ namespace bmvk
         m_renderPass = static_cast<vk::Device>(m_device).createRenderPassUnique(renderPassInfo);
     }
 
-    void StagingbufferDemo::createGraphicsPipeline()
+    void IndexbufferDemo::createGraphicsPipeline()
     {
         const auto vertShader{ Shader("../shaders/vertexbuffer.vert.spv", m_device) };
         const auto fragShader{ Shader("../shaders/vertexbuffer.frag.spv", m_device) };
@@ -105,7 +106,7 @@ namespace bmvk
         m_graphicsPipeline = static_cast<vk::Device>(m_device).createGraphicsPipelineUnique(nullptr, pipelineInfo);
     }
 
-    void StagingbufferDemo::createFramebuffers()
+    void IndexbufferDemo::createFramebuffers()
     {
         m_swapChainFramebuffers.resize(m_swapchain.getImageViews().size());
         for (size_t i = 0; i < m_swapchain.getImageViews().size(); ++i)
@@ -116,7 +117,7 @@ namespace bmvk
         }
     }
 
-    void StagingbufferDemo::createBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags properties, vk::UniqueBuffer & buffer, vk::UniqueDeviceMemory & bufferMemory)
+    void IndexbufferDemo::createBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags properties, vk::UniqueBuffer & buffer, vk::UniqueDeviceMemory & bufferMemory)
     {
         vk::BufferCreateInfo bufferInfo{ vk::BufferCreateFlags(), size, usage };
         buffer = static_cast<vk::Device>(m_device).createBufferUnique(bufferInfo);
@@ -128,7 +129,7 @@ namespace bmvk
         static_cast<vk::Device>(m_device).bindBufferMemory(buffer.get(), bufferMemory.get(), 0);
     }
 
-    void StagingbufferDemo::createVertexBuffer()
+    void IndexbufferDemo::createVertexBuffer()
     {
         const auto bufferSize{ sizeof(vertices[0]) * vertices.size() };
 
@@ -141,7 +142,7 @@ namespace bmvk
         auto data{ static_cast<vk::Device>(m_device).mapMemory(stagingBufferMemory.get(), 0, bufferSize) };
         memcpy(data, vertices.data(), static_cast<size_t>(bufferSize));
         static_cast<vk::Device>(m_device).unmapMemory(stagingBufferMemory.get());
-        
+
         const auto vertexBufferUsageFlags{ vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer };
         const auto vertexBufferMemoryPropertyFlags{ vk::MemoryPropertyFlagBits::eDeviceLocal };
         createBuffer(bufferSize, vertexBufferUsageFlags, vertexBufferMemoryPropertyFlags, m_vertexBuffer, m_vertexBufferMemory);
@@ -149,7 +150,28 @@ namespace bmvk
         copyBuffer(stagingBuffer, m_vertexBuffer, bufferSize);
     }
 
-    void StagingbufferDemo::copyBuffer(vk::UniqueBuffer & srcBuffer, vk::UniqueBuffer & dstBuffer, vk::DeviceSize size) const
+    void IndexbufferDemo::createIndexBuffer()
+    {
+        const auto bufferSize{ sizeof(indices[0]) * indices.size() };
+
+        const auto stagingBufferUsageFlags{ vk::BufferUsageFlagBits::eTransferSrc };
+        const auto stagingBufferMemoryPropertyFlags{ vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
+        vk::UniqueBuffer stagingBuffer;
+        vk::UniqueDeviceMemory stagingBufferMemory;
+        createBuffer(bufferSize, stagingBufferUsageFlags, stagingBufferMemoryPropertyFlags, stagingBuffer, stagingBufferMemory);
+
+        auto data{ static_cast<vk::Device>(m_device).mapMemory(stagingBufferMemory.get(), 0, bufferSize) };
+        memcpy(data, indices.data(), static_cast<size_t>(bufferSize));
+        static_cast<vk::Device>(m_device).unmapMemory(stagingBufferMemory.get());
+
+        const auto indexBufferUsageFlags{ vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer };
+        const auto indexBufferMemoryPropertyFlags{ vk::MemoryPropertyFlagBits::eDeviceLocal };
+        createBuffer(bufferSize, indexBufferUsageFlags, indexBufferMemoryPropertyFlags, m_indexBuffer, m_indexBufferMemory);
+
+        copyBuffer(stagingBuffer, m_indexBuffer, bufferSize);
+    }
+
+    void IndexbufferDemo::copyBuffer(vk::UniqueBuffer & srcBuffer, vk::UniqueBuffer & dstBuffer, vk::DeviceSize size) const
     {
         vk::CommandBufferAllocateInfo allocInfo{ m_commandPool.get(), vk::CommandBufferLevel::ePrimary, 1 };
         auto commandBufferVec{ static_cast<vk::Device>(m_device).allocateCommandBuffersUnique(allocInfo) };
@@ -168,7 +190,7 @@ namespace bmvk
         m_queue.waitIdle();
     }
 
-    void StagingbufferDemo::createCommandBuffers()
+    void IndexbufferDemo::createCommandBuffers()
     {
         m_commandBuffers.resize(m_swapChainFramebuffers.size());
         vk::CommandBufferAllocateInfo allocInfo{ m_commandPool.get(), vk::CommandBufferLevel::ePrimary, static_cast<uint32_t>(m_commandBuffers.size()) };
@@ -185,13 +207,14 @@ namespace bmvk
             vk::Buffer vertexBuffers[] = { m_vertexBuffer.get() };
             vk::DeviceSize offsets[] = { 0 };
             m_commandBuffers[i].get().bindVertexBuffers(0, 1, vertexBuffers, offsets);
-            m_commandBuffers[i].get().draw(static_cast<uint32_t>(vertices.size()), 1, 0, 0);
+            m_commandBuffers[i].get().bindIndexBuffer(m_indexBuffer.get(), 0, vk::IndexType::eUint16);
+            m_commandBuffers[i].get().drawIndexed(static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
             m_commandBuffers[i].get().endRenderPass();
             m_commandBuffers[i].get().end();
         }
     }
 
-    void StagingbufferDemo::drawFrame()
+    void IndexbufferDemo::drawFrame()
     {
         m_queue.waitIdle();
         timing();
