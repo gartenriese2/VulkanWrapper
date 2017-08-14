@@ -1,7 +1,6 @@
 #include "indexbufferDemo.hpp"
 
 #include "shader.hpp"
-#include <iostream>
 
 namespace bmvk
 {
@@ -18,9 +17,7 @@ namespace bmvk
 
     IndexbufferDemo::IndexbufferDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height)
         : Demo{ enableValidationLayers, width, height, "Indexbuffer Demo" },
-        m_queue{ m_device.createQueue() },
         m_swapchain{ m_instance.getPhysicalDevice(), m_instance.getSurface(), m_window, m_device },
-        m_commandPool{ m_device.createCommandPool() },
         m_imageAvailableSemaphore{ m_device.createSemaphore() },
         m_renderFinishedSemaphore{ m_device.createSemaphore() }
     {
@@ -117,18 +114,6 @@ namespace bmvk
         }
     }
 
-    void IndexbufferDemo::createBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags properties, vk::UniqueBuffer & buffer, vk::UniqueDeviceMemory & bufferMemory)
-    {
-        vk::BufferCreateInfo bufferInfo{ vk::BufferCreateFlags(), size, usage };
-        buffer = static_cast<vk::Device>(m_device).createBufferUnique(bufferInfo);
-
-        const auto memRequirements{ static_cast<vk::Device>(m_device).getBufferMemoryRequirements(buffer.get()) };
-        vk::MemoryAllocateInfo allocInfo{ memRequirements.size, m_instance.getPhysicalDevice().findMemoryType(memRequirements.memoryTypeBits, properties) };
-        bufferMemory = static_cast<vk::Device>(m_device).allocateMemoryUnique(allocInfo);
-
-        static_cast<vk::Device>(m_device).bindBufferMemory(buffer.get(), bufferMemory.get(), 0);
-    }
-
     void IndexbufferDemo::createVertexBuffer()
     {
         const auto bufferSize{ sizeof(vertices[0]) * vertices.size() };
@@ -169,25 +154,6 @@ namespace bmvk
         createBuffer(bufferSize, indexBufferUsageFlags, indexBufferMemoryPropertyFlags, m_indexBuffer, m_indexBufferMemory);
 
         copyBuffer(stagingBuffer, m_indexBuffer, bufferSize);
-    }
-
-    void IndexbufferDemo::copyBuffer(vk::UniqueBuffer & srcBuffer, vk::UniqueBuffer & dstBuffer, vk::DeviceSize size) const
-    {
-        vk::CommandBufferAllocateInfo allocInfo{ m_commandPool.get(), vk::CommandBufferLevel::ePrimary, 1 };
-        auto commandBufferVec{ static_cast<vk::Device>(m_device).allocateCommandBuffersUnique(allocInfo) };
-        auto commandBuffer{ commandBufferVec[0].get() };
-
-        vk::CommandBufferBeginInfo beginInfo{ vk::CommandBufferUsageFlagBits::eOneTimeSubmit };
-        commandBuffer.begin(beginInfo);
-
-        vk::BufferCopy copyRegion{ 0, 0, size };
-        commandBuffer.copyBuffer(srcBuffer.get(), dstBuffer.get(), 1, &copyRegion);
-
-        commandBuffer.end();
-
-        vk::SubmitInfo submitInfo{ 0, nullptr, nullptr, 1, &commandBuffer };
-        static_cast<vk::Queue>(m_queue).submit(1, &submitInfo, nullptr);
-        m_queue.waitIdle();
     }
 
     void IndexbufferDemo::createCommandBuffers()

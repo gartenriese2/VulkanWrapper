@@ -5,7 +5,6 @@
 #include <glm/glm.hpp>
 
 #include "window.hpp"
-#include "queue.hpp"
 #include "swapchain.hpp"
 #include "demo.hpp"
 
@@ -49,13 +48,11 @@ namespace bmvk
             { { -0.5f, 0.5f },{ 0.0f, 0.0f, 1.0f } }
         };
 
-        Queue m_queue;
         Swapchain m_swapchain;
         vk::UniqueRenderPass m_renderPass;
         vk::UniquePipelineLayout m_pipelineLayout;
         vk::UniquePipeline m_graphicsPipeline;
         std::vector<vk::UniqueFramebuffer> m_swapChainFramebuffers;
-        vk::UniqueCommandPool m_commandPool;
         vk::UniqueBuffer m_vertexBuffer;
         vk::UniqueDeviceMemory m_vertexBufferMemory;
         std::vector<vk::UniqueCommandBuffer> m_commandBuffers;

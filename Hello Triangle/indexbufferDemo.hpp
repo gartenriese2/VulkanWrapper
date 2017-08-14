@@ -5,7 +5,6 @@
 #include <glm/glm.hpp>
 
 #include "window.hpp"
-#include "queue.hpp"
 #include "swapchain.hpp"
 #include "demo.hpp"
 
@@ -43,24 +42,23 @@ namespace bmvk
             }
         };
 
-        const std::vector<Vertex> vertices = {
+        std::vector<Vertex> vertices = {
             { { -0.5f, -0.5f },{ 1.0f, 0.0f, 0.0f } },
             { { 0.5f, -0.5f },{ 0.0f, 1.0f, 0.0f } },
             { { 0.5f, 0.5f },{ 0.0f, 0.0f, 1.0f } },
             { { -0.5f, 0.5f },{ 1.0f, 1.0f, 1.0f } }
         };
 
-        const std::vector<uint16_t> indices = {
+        std::vector<uint16_t> indices = {
             0, 1, 2, 2, 3, 0
         };
 
-        Queue m_queue;
+        
         Swapchain m_swapchain;
         vk::UniqueRenderPass m_renderPass;
         vk::UniquePipelineLayout m_pipelineLayout;
         vk::UniquePipeline m_graphicsPipeline;
         std::vector<vk::UniqueFramebuffer> m_swapChainFramebuffers;
-        vk::UniqueCommandPool m_commandPool;
         vk::UniqueBuffer m_vertexBuffer;
         vk::UniqueDeviceMemory m_vertexBufferMemory;
         vk::UniqueBuffer m_indexBuffer;
@@ -72,8 +70,6 @@ namespace bmvk
         void createRenderPass();
         void createGraphicsPipeline();
         void createFramebuffers();
-        void createBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags properties, vk::UniqueBuffer & buffer, vk::UniqueDeviceMemory & bufferMemory);
-        void copyBuffer(vk::UniqueBuffer & srcBuffer, vk::UniqueBuffer & dstBuffer, vk::DeviceSize size) const;
         void createVertexBuffer();
         void createIndexBuffer();
         void createCommandBuffers();
@@ -82,7 +78,7 @@ namespace bmvk
     };
 
     static_assert(std::is_move_constructible_v<IndexbufferDemo>);
-    //static_assert(std::is_move_assignable_v<IndexbufferDemo>);
+    static_assert(std::is_move_assignable_v<IndexbufferDemo>);
     static_assert(!std::is_copy_constructible_v<IndexbufferDemo>);
     static_assert(!std::is_copy_assignable_v<IndexbufferDemo>);
 }

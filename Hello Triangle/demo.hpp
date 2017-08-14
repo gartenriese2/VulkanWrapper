@@ -25,11 +25,15 @@ namespace bmvk
         Window m_window;
         Instance m_instance;
         Device m_device;
+        Queue m_queue;
+        vk::UniqueCommandPool m_commandPool;
 
         std::chrono::steady_clock::time_point m_timepoint;
         uint32_t m_timepointCount;
         std::chrono::microseconds m_elapsedTime;
 
+        void copyBuffer(vk::UniqueBuffer & srcBuffer, vk::UniqueBuffer & dstBuffer, vk::DeviceSize size) const;
+        void createBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags properties, vk::UniqueBuffer & buffer, vk::UniqueDeviceMemory & bufferMemory);
         void timing();
     };
 

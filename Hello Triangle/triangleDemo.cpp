@@ -17,9 +17,7 @@ namespace bmvk
 
     TriangleDemo::TriangleDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height)
       : Demo{ enableValidationLayers, width, height, "Triangle Demo" },
-        m_queue{ m_device.createQueue() },
         m_swapchain{ m_instance.getPhysicalDevice(), m_instance.getSurface(), m_window, m_device },
-        m_commandPool{ m_device.createCommandPool() },
         m_imageAvailableSemaphore{ m_device.createSemaphore() },
         m_renderFinishedSemaphore{ m_device.createSemaphore() }
     {

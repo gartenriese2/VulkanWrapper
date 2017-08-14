@@ -8,10 +8,43 @@ namespace bmvk
       : m_window{ width, height, name },
         m_instance{ name, VK_MAKE_VERSION(1, 0, 0), "bmvk", VK_MAKE_VERSION(1, 0, 0), m_window, enableValidationLayers },
         m_device{ m_instance.getPhysicalDevice().createLogicalDevice(m_instance.getLayerNames(), enableValidationLayers) },
+        m_queue{ m_device.createQueue() },
+        m_commandPool{ m_device.createCommandPool() },
         m_timepoint{ std::chrono::steady_clock::now() },
         m_elapsedTime{ std::chrono::microseconds::zero() }
     {
         
+    }
+
+    void Demo::copyBuffer(vk::UniqueBuffer & srcBuffer, vk::UniqueBuffer & dstBuffer, vk::DeviceSize size) const
+    {
+        vk::CommandBufferAllocateInfo allocInfo{ m_commandPool.get(), vk::CommandBufferLevel::ePrimary, 1 };
+        auto commandBufferVec{ static_cast<vk::Device>(m_device).allocateCommandBuffersUnique(allocInfo) };
+        auto commandBuffer{ commandBufferVec[0].get() };
+
+        vk::CommandBufferBeginInfo beginInfo{ vk::CommandBufferUsageFlagBits::eOneTimeSubmit };
+        commandBuffer.begin(beginInfo);
+
+        vk::BufferCopy copyRegion{ 0, 0, size };
+        commandBuffer.copyBuffer(srcBuffer.get(), dstBuffer.get(), 1, &copyRegion);
+
+        commandBuffer.end();
+
+        vk::SubmitInfo submitInfo{ 0, nullptr, nullptr, 1, &commandBuffer };
+        static_cast<vk::Queue>(m_queue).submit(1, &submitInfo, nullptr);
+        m_queue.waitIdle();
+    }
+
+    void Demo::createBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags properties, vk::UniqueBuffer & buffer, vk::UniqueDeviceMemory & bufferMemory)
+    {
+        vk::BufferCreateInfo bufferInfo{ vk::BufferCreateFlags(), size, usage };
+        buffer = static_cast<vk::Device>(m_device).createBufferUnique(bufferInfo);
+
+        const auto memRequirements{ static_cast<vk::Device>(m_device).getBufferMemoryRequirements(buffer.get()) };
+        vk::MemoryAllocateInfo allocInfo{ memRequirements.size, m_instance.getPhysicalDevice().findMemoryType(memRequirements.memoryTypeBits, properties) };
+        bufferMemory = static_cast<vk::Device>(m_device).allocateMemoryUnique(allocInfo);
+
+        static_cast<vk::Device>(m_device).bindBufferMemory(buffer.get(), bufferMemory.get(), 0);
     }
 
     void Demo::timing()

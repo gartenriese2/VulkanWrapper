@@ -4,7 +4,6 @@
 #include <vulkan/vulkan.hpp>
 
 #include "window.hpp"
-#include "queue.hpp"
 #include "swapchain.hpp"
 #include "demo.hpp"
 
@@ -23,13 +22,11 @@ namespace bmvk
         void run() override;
         void recreateSwapChain();
     private:
-        Queue m_queue;
         Swapchain m_swapchain;
         vk::UniqueRenderPass m_renderPass;
         vk::UniquePipelineLayout m_pipelineLayout;
         vk::UniquePipeline m_graphicsPipeline;
         std::vector<vk::UniqueFramebuffer> m_swapChainFramebuffers;
-        vk::UniqueCommandPool m_commandPool;
         std::vector<vk::UniqueCommandBuffer> m_commandBuffers;
         vk::UniqueSemaphore m_imageAvailableSemaphore;
         vk::UniqueSemaphore m_renderFinishedSemaphore;
