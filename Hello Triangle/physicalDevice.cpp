@@ -14,10 +14,10 @@ namespace bmvk
     Device PhysicalDevice::createLogicalDevice(const std::vector<const char*> & layerNames, const bool enableValidationLayers) const
     {
         const auto queuePriority = 1.0f;
-        vk::DeviceQueueCreateInfo queueCreateInfo(vk::DeviceQueueCreateFlags(), getQueueFamilyIndex(), 1, &queuePriority);
+        vk::DeviceQueueCreateInfo queueCreateInfo({}, getQueueFamilyIndex(), 1, &queuePriority);
         vk::PhysicalDeviceFeatures deviceFeatures;
         std::vector<const char *> extensionNames{ k_swapchainExtensionName };
-        vk::DeviceCreateInfo info(vk::DeviceCreateFlags(), 1, &queueCreateInfo, static_cast<uint32_t>(layerNames.size()), layerNames.data(), static_cast<uint32_t>(extensionNames.size()), extensionNames.data(), &deviceFeatures);
+        vk::DeviceCreateInfo info({}, 1, &queueCreateInfo, static_cast<uint32_t>(layerNames.size()), layerNames.data(), static_cast<uint32_t>(extensionNames.size()), extensionNames.data(), &deviceFeatures);
         return Device(m_physicalDevice.createDevice(info), m_queueFamilyIndex);
     }
 

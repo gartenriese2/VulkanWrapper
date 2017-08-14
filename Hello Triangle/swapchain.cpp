@@ -61,7 +61,7 @@ namespace bmvk
         m_imageViews.resize(m_images.size());
         for (size_t i = 0; i < m_images.size(); i++)
         {
-            const auto info = vk::ImageViewCreateInfo{ vk::ImageViewCreateFlags(), m_images[i], vk::ImageViewType::e2D, m_imageFormat.format, vk::ComponentMapping(), vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1) };
+            const auto info = vk::ImageViewCreateInfo{ {}, m_images[i], vk::ImageViewType::e2D, m_imageFormat.format, {}, vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1) };
             m_imageViews[i] = device.createImageView(info);
         }
     }

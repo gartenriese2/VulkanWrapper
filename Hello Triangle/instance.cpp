@@ -21,7 +21,7 @@ namespace bmvk
 
         initializeLayerNames(enableValidationLayers);
 
-        vk::InstanceCreateInfo info{ vk::InstanceCreateFlags(), &appInfo, static_cast<uint32_t>(m_layerNames.size()), m_layerNames.data(), static_cast<uint32_t>(extensionsAsCstrings.size()), extensionsAsCstrings.data()};
+        vk::InstanceCreateInfo info{ {}, &appInfo, static_cast<uint32_t>(m_layerNames.size()), m_layerNames.data(), static_cast<uint32_t>(extensionsAsCstrings.size()), extensionsAsCstrings.data()};
         m_instance = vk::createInstance(info);
 
         vkExtInitInstance(getCInstance());

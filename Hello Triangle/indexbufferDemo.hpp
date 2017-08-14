@@ -1,12 +1,9 @@
 #pragma once
 
-#include <type_traits>
-#include <vulkan/vulkan.hpp>
 #include <glm/glm.hpp>
 
-#include "window.hpp"
-#include "swapchain.hpp"
 #include "demo.hpp"
+#include "swapchain.hpp"
 
 namespace bmvk
 {

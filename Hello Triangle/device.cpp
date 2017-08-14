@@ -27,13 +27,13 @@ namespace bmvk
 
     vk::UniqueCommandPool Device::createCommandPool() const
     {
-        vk::CommandPoolCreateInfo poolInfo{ vk::CommandPoolCreateFlags(), m_queueFamilyIndex };
+        vk::CommandPoolCreateInfo poolInfo{ {}, m_queueFamilyIndex };
         return m_device.createCommandPoolUnique(poolInfo);
     }
 
     vk::UniqueShaderModule Device::createShaderModule(const std::vector<char> & code) const
     {
-        vk::ShaderModuleCreateInfo info{ vk::ShaderModuleCreateFlags(), code.size(), reinterpret_cast<const uint32_t *>(code.data()) };
+        vk::ShaderModuleCreateInfo info{ {}, code.size(), reinterpret_cast<const uint32_t *>(code.data()) };
         return m_device.createShaderModuleUnique(info);
     }
 

@@ -1,6 +1,9 @@
-#include "vertexbufferDemo.hpp"
+#include "uniformbufferDemo.hpp"
+
+#include <glm/gtc/matrix_transform.hpp>
 
 #include "shader.hpp"
+#include "../extern/Vulkan-1.0.51.0/include/vulkan/vulkan.hpp"
 
 namespace bmvk
 {
@@ -11,12 +14,12 @@ namespace bmvk
             return;
         }
 
-        auto app = reinterpret_cast<VertexbufferDemo *>(glfwGetWindowUserPointer(window));
+        auto app = reinterpret_cast<UniformbufferDemo *>(glfwGetWindowUserPointer(window));
         app->recreateSwapChain();
     }
 
-    VertexbufferDemo::VertexbufferDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height)
-      : Demo{ enableValidationLayers, width, height, "Vertexbuffer Demo" },
+    UniformbufferDemo::UniformbufferDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height)
+        : Demo{ enableValidationLayers, width, height, "Indexbuffer Demo" },
         m_swapchain{ m_instance.getPhysicalDevice(), m_instance.getSurface(), m_window, m_device },
         m_imageAvailableSemaphore{ m_device.createSemaphore() },
         m_renderFinishedSemaphore{ m_device.createSemaphore() }
@@ -24,25 +27,33 @@ namespace bmvk
         m_window.setWindowUserPointer(this);
         m_window.setWindowSizeCallback(onWindowResized);
         createRenderPass();
+        createDescriptorSetLayout();
         createGraphicsPipeline();
         createFramebuffers();
         createVertexBuffer();
+        createIndexBuffer();
+        createUniformBuffer();
+        createDescriptorPool();
+        createDescriptorSet();
         createCommandBuffers();
     }
 
-    void VertexbufferDemo::run()
+    void UniformbufferDemo::run()
     {
         while (!m_window.shouldClose())
         {
             m_window.pollEvents();
+
             // do cpu work here
+            updateUniformBuffer();
+
             drawFrame();
         }
 
         m_device.waitIdle();
     }
 
-    void VertexbufferDemo::recreateSwapChain()
+    void UniformbufferDemo::recreateSwapChain()
     {
         m_device.waitIdle();
 
@@ -66,7 +77,7 @@ namespace bmvk
         createCommandBuffers();
     }
 
-    void VertexbufferDemo::createRenderPass()
+    void UniformbufferDemo::createRenderPass()
     {
         vk::AttachmentDescription colorAttachment{ {}, m_swapchain.getImageFormat().format, vk::SampleCountFlagBits::e1, vk::AttachmentLoadOp::eClear, vk::AttachmentStoreOp::eStore, vk::AttachmentLoadOp::eDontCare, vk::AttachmentStoreOp::eDontCare, vk::ImageLayout::eUndefined, vk::ImageLayout::ePresentSrcKHR };
         vk::AttachmentReference colorAttachmentRef{ 0, vk::ImageLayout::eColorAttachmentOptimal };
@@ -76,10 +87,17 @@ namespace bmvk
         m_renderPass = static_cast<vk::Device>(m_device).createRenderPassUnique(renderPassInfo);
     }
 
-    void VertexbufferDemo::createGraphicsPipeline()
+    void UniformbufferDemo::createDescriptorSetLayout()
     {
-        const auto vertShader{ Shader("../shaders/vertexbuffer.vert.spv", m_device) };
-        const auto fragShader{ Shader("../shaders/vertexbuffer.frag.spv", m_device) };
+        vk::DescriptorSetLayoutBinding uboLayoutBinding{ 0, vk::DescriptorType::eUniformBuffer, 1, vk::ShaderStageFlagBits::eVertex };
+        vk::DescriptorSetLayoutCreateInfo layoutInfo{ {}, 1, &uboLayoutBinding };
+        m_descriptorSetLayout = static_cast<vk::Device>(m_device).createDescriptorSetLayoutUnique(layoutInfo);
+    }
+
+    void UniformbufferDemo::createGraphicsPipeline()
+    {
+        const auto vertShader{ Shader("../shaders/uniformbuffer.vert.spv", m_device) };
+        const auto fragShader{ Shader("../shaders/uniformbuffer.frag.spv", m_device) };
         const auto vertShaderStageInfo{ vertShader.createPipelineShaderStageCreateInfo(vk::ShaderStageFlagBits::eVertex) };
         const auto fragShaderStageInfo{ fragShader.createPipelineShaderStageCreateInfo(vk::ShaderStageFlagBits::eFragment) };
         vk::PipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageInfo, fragShaderStageInfo };
@@ -89,20 +107,21 @@ namespace bmvk
         vk::PipelineVertexInputStateCreateInfo vertexInputInfo{ {}, 1, &bindingDescription, static_cast<uint32_t>(attributeDescriptions.size()), attributeDescriptions.data() };
         vk::PipelineInputAssemblyStateCreateInfo inputAssembly{ {}, vk::PrimitiveTopology::eTriangleList };
         vk::Viewport viewport{ 0.f, 0.f, static_cast<float>(m_swapchain.getExtent().width), static_cast<float>(m_swapchain.getExtent().height), 0.f, 1.f };
-        vk::Rect2D scissor{ vk::Offset2D(), m_swapchain.getExtent() };
+        vk::Rect2D scissor{ {}, m_swapchain.getExtent() };
         vk::PipelineViewportStateCreateInfo viewportState{ {}, 1, &viewport, 1, &scissor };
-        vk::PipelineRasterizationStateCreateInfo rasterizer{ {}, false, false, vk::PolygonMode::eFill, vk::CullModeFlagBits::eBack, vk::FrontFace::eClockwise, false, 0.f, 0.f, 0.f, 1.f };
+        vk::PipelineRasterizationStateCreateInfo rasterizer{ {}, false, false, vk::PolygonMode::eFill, vk::CullModeFlagBits::eBack, vk::FrontFace::eCounterClockwise, false, 0.f, 0.f, 0.f, 1.f };
         vk::PipelineMultisampleStateCreateInfo multisampling;
         vk::PipelineColorBlendAttachmentState colorBlendAttachment{ false, vk::BlendFactor::eSrcAlpha, vk::BlendFactor::eOneMinusSrcAlpha, vk::BlendOp::eAdd, vk::BlendFactor::eOne, vk::BlendFactor::eZero, vk::BlendOp::eAdd, vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA };
         vk::PipelineColorBlendStateCreateInfo colorBlending{ {}, false, vk::LogicOp::eCopy, 1, &colorBlendAttachment };
-        vk::PipelineLayoutCreateInfo pipelineLayoutInfo;
+        auto descriptorSetLayout{ m_descriptorSetLayout.get() };
+        vk::PipelineLayoutCreateInfo pipelineLayoutInfo{ {}, 1, &descriptorSetLayout };
         m_pipelineLayout = static_cast<vk::Device>(m_device).createPipelineLayoutUnique(pipelineLayoutInfo);
 
         vk::GraphicsPipelineCreateInfo pipelineInfo{ {}, 2, shaderStages, &vertexInputInfo, &inputAssembly, nullptr, &viewportState, &rasterizer, &multisampling, nullptr, &colorBlending, nullptr, m_pipelineLayout.get(), m_renderPass.get(), 0, nullptr, -1 };
         m_graphicsPipeline = static_cast<vk::Device>(m_device).createGraphicsPipelineUnique(nullptr, pipelineInfo);
     }
 
-    void VertexbufferDemo::createFramebuffers()
+    void UniformbufferDemo::createFramebuffers()
     {
         m_swapChainFramebuffers.resize(m_swapchain.getImageViews().size());
         for (size_t i = 0; i < m_swapchain.getImageViews().size(); ++i)
@@ -113,23 +132,76 @@ namespace bmvk
         }
     }
 
-    void VertexbufferDemo::createVertexBuffer()
+    void UniformbufferDemo::createVertexBuffer()
     {
-        vk::BufferCreateInfo bufferInfo{ {}, sizeof(vertices[0]) * vertices.size(), vk::BufferUsageFlagBits::eVertexBuffer };
-        m_vertexBuffer = static_cast<vk::Device>(m_device).createBufferUnique(bufferInfo);
+        const auto bufferSize{ sizeof(vertices[0]) * vertices.size() };
 
-        const auto memRequirements{ static_cast<vk::Device>(m_device).getBufferMemoryRequirements(m_vertexBuffer.get()) };
-        vk::MemoryAllocateInfo allocInfo{ memRequirements.size, m_instance.getPhysicalDevice().findMemoryType(memRequirements.memoryTypeBits, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent) };
-        m_vertexBufferMemory = static_cast<vk::Device>(m_device).allocateMemoryUnique(allocInfo);
+        const auto stagingBufferUsageFlags{ vk::BufferUsageFlagBits::eTransferSrc };
+        const auto stagingBufferMemoryPropertyFlags{ vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
+        vk::UniqueBuffer stagingBuffer;
+        vk::UniqueDeviceMemory stagingBufferMemory;
+        createBuffer(bufferSize, stagingBufferUsageFlags, stagingBufferMemoryPropertyFlags, stagingBuffer, stagingBufferMemory);
 
-        static_cast<vk::Device>(m_device).bindBufferMemory(m_vertexBuffer.get(), m_vertexBufferMemory.get(), 0);
+        auto data{ static_cast<vk::Device>(m_device).mapMemory(stagingBufferMemory.get(), 0, bufferSize) };
+        memcpy(data, vertices.data(), static_cast<size_t>(bufferSize));
+        static_cast<vk::Device>(m_device).unmapMemory(stagingBufferMemory.get());
 
-        auto data{ static_cast<vk::Device>(m_device).mapMemory(m_vertexBufferMemory.get(), 0, bufferInfo.size) };
-        memcpy(data, vertices.data(), static_cast<size_t>(bufferInfo.size));
-        static_cast<vk::Device>(m_device).unmapMemory(m_vertexBufferMemory.get());
+        const auto vertexBufferUsageFlags{ vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer };
+        const auto vertexBufferMemoryPropertyFlags{ vk::MemoryPropertyFlagBits::eDeviceLocal };
+        createBuffer(bufferSize, vertexBufferUsageFlags, vertexBufferMemoryPropertyFlags, m_vertexBuffer, m_vertexBufferMemory);
+
+        copyBuffer(stagingBuffer, m_vertexBuffer, bufferSize);
     }
 
-    void VertexbufferDemo::createCommandBuffers()
+    void UniformbufferDemo::createIndexBuffer()
+    {
+        const auto bufferSize{ sizeof(indices[0]) * indices.size() };
+
+        const auto stagingBufferUsageFlags{ vk::BufferUsageFlagBits::eTransferSrc };
+        const auto stagingBufferMemoryPropertyFlags{ vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
+        vk::UniqueBuffer stagingBuffer;
+        vk::UniqueDeviceMemory stagingBufferMemory;
+        createBuffer(bufferSize, stagingBufferUsageFlags, stagingBufferMemoryPropertyFlags, stagingBuffer, stagingBufferMemory);
+
+        auto data{ static_cast<vk::Device>(m_device).mapMemory(stagingBufferMemory.get(), 0, bufferSize) };
+        memcpy(data, indices.data(), static_cast<size_t>(bufferSize));
+        static_cast<vk::Device>(m_device).unmapMemory(stagingBufferMemory.get());
+
+        const auto indexBufferUsageFlags{ vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer };
+        const auto indexBufferMemoryPropertyFlags{ vk::MemoryPropertyFlagBits::eDeviceLocal };
+        createBuffer(bufferSize, indexBufferUsageFlags, indexBufferMemoryPropertyFlags, m_indexBuffer, m_indexBufferMemory);
+
+        copyBuffer(stagingBuffer, m_indexBuffer, bufferSize);
+    }
+
+    void UniformbufferDemo::createUniformBuffer()
+    {
+        const auto bufferSize{ sizeof(UniformBufferObject) };
+        const auto uniformBufferUsageFlags{ vk::BufferUsageFlagBits::eUniformBuffer };
+        const auto uniformBufferMemoryPropertyFlags{ vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
+        createBuffer(bufferSize, uniformBufferUsageFlags, uniformBufferMemoryPropertyFlags, m_uniformBuffer, m_uniformBufferMemory);
+    }
+
+    void UniformbufferDemo::createDescriptorPool()
+    {
+        vk::DescriptorPoolSize poolSize{ vk::DescriptorType::eUniformBuffer, 1 };
+        vk::DescriptorPoolCreateInfo poolInfo{ vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet, 1, 1, &poolSize };
+        m_descriptorPool = static_cast<vk::Device>(m_device).createDescriptorPoolUnique(poolInfo);
+    }
+
+    void UniformbufferDemo::createDescriptorSet()
+    {
+        vk::DescriptorSetLayout layouts[] = { m_descriptorSetLayout.get() };
+        vk::DescriptorSetAllocateInfo allocInfo{ m_descriptorPool.get(), 1, layouts };
+        m_descriptorSets = static_cast<vk::Device>(m_device).allocateDescriptorSetsUnique(allocInfo);
+
+        vk::DescriptorBufferInfo bufferInfo{ m_uniformBuffer.get(), 0, sizeof(UniformBufferObject) };
+        auto descriptorSet{ m_descriptorSets[0].get() };
+        vk::WriteDescriptorSet descriptorWrite{ descriptorSet, 0, 0, 1, vk::DescriptorType::eUniformBuffer, nullptr, &bufferInfo };
+        static_cast<vk::Device>(m_device).updateDescriptorSets(descriptorWrite, nullptr);
+    }
+
+    void UniformbufferDemo::createCommandBuffers()
     {
         m_commandBuffers.resize(m_swapChainFramebuffers.size());
         vk::CommandBufferAllocateInfo allocInfo{ m_commandPool.get(), vk::CommandBufferLevel::ePrimary, static_cast<uint32_t>(m_commandBuffers.size()) };
@@ -142,14 +214,16 @@ namespace bmvk
             vk::RenderPassBeginInfo renderPassInfo{ m_renderPass.get(), m_swapChainFramebuffers[i].get(), vk::Rect2D({ 0, 0 }, m_swapchain.getExtent()), 1, &clearColor };
             m_commandBuffers[i].get().beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
             m_commandBuffers[i].get().bindPipeline(vk::PipelineBindPoint::eGraphics, m_graphicsPipeline.get());
+            m_commandBuffers[i].get().bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0, m_descriptorSets[0].get(), nullptr);
             m_commandBuffers[i].get().bindVertexBuffers(0, m_vertexBuffer.get(), {0});
-            m_commandBuffers[i].get().draw(static_cast<uint32_t>(vertices.size()), 1, 0, 0);
+            m_commandBuffers[i].get().bindIndexBuffer(m_indexBuffer.get(), 0, vk::IndexType::eUint16);
+            m_commandBuffers[i].get().drawIndexed(static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
             m_commandBuffers[i].get().endRenderPass();
             m_commandBuffers[i].get().end();
         }
     }
 
-    void VertexbufferDemo::drawFrame()
+    void UniformbufferDemo::drawFrame()
     {
         m_queue.waitIdle();
         timing();
@@ -189,5 +263,23 @@ namespace bmvk
         {
             recreateSwapChain();
         }
+    }
+
+    void UniformbufferDemo::updateUniformBuffer()
+    {
+        static auto startTime = std::chrono::high_resolution_clock::now();
+
+        auto currentTime = std::chrono::high_resolution_clock::now();
+        auto time = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - startTime).count() / 1000.0f;
+
+        UniformBufferObject ubo;
+        ubo.model = glm::rotate(glm::mat4(), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+        ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+        ubo.proj = glm::perspective(glm::radians(45.f), m_swapchain.getExtent().width / static_cast<float>(m_swapchain.getExtent().height), 0.1f, 10.f);
+        ubo.proj[1][1] *= -1;
+
+        auto data{ static_cast<vk::Device>(m_device).mapMemory(m_uniformBufferMemory.get(), 0, sizeof(ubo)) };
+        memcpy(data, &ubo, sizeof(ubo));
+        static_cast<vk::Device>(m_device).unmapMemory(m_uniformBufferMemory.get());
     }
 }

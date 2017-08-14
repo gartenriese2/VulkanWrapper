@@ -26,18 +26,18 @@ namespace bmvk
         commandBuffer.begin(beginInfo);
 
         vk::BufferCopy copyRegion{ 0, 0, size };
-        commandBuffer.copyBuffer(srcBuffer.get(), dstBuffer.get(), 1, &copyRegion);
+        commandBuffer.copyBuffer(srcBuffer.get(), dstBuffer.get(), copyRegion);
 
         commandBuffer.end();
 
         vk::SubmitInfo submitInfo{ 0, nullptr, nullptr, 1, &commandBuffer };
-        static_cast<vk::Queue>(m_queue).submit(1, &submitInfo, nullptr);
+        static_cast<vk::Queue>(m_queue).submit(submitInfo, nullptr);
         m_queue.waitIdle();
     }
 
     void Demo::createBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags properties, vk::UniqueBuffer & buffer, vk::UniqueDeviceMemory & bufferMemory)
     {
-        vk::BufferCreateInfo bufferInfo{ vk::BufferCreateFlags(), size, usage };
+        vk::BufferCreateInfo bufferInfo{ {}, size, usage };
         buffer = static_cast<vk::Device>(m_device).createBufferUnique(bufferInfo);
 
         const auto memRequirements{ static_cast<vk::Device>(m_device).getBufferMemoryRequirements(buffer.get()) };
@@ -52,10 +52,10 @@ namespace bmvk
         const auto microseconds = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - m_timepoint);
         m_elapsedTime += microseconds;
         ++m_timepointCount;
-        if (m_elapsedTime.count() > 1000000)
+        if (m_elapsedTime.count() > 1e6)
         {
             const auto avgFrameTime = static_cast<double>(m_elapsedTime.count()) / static_cast<double>(m_timepointCount);
-            const auto avgFps = 1000000.0 / avgFrameTime;
+            const auto avgFps = 1e6 / avgFrameTime;
             std::cout << "Avg frametime: " << avgFrameTime << " microseconds. Avg FPS: " << avgFps << " fps\n";
             m_elapsedTime = std::chrono::microseconds::zero();
             m_timepointCount = 0;

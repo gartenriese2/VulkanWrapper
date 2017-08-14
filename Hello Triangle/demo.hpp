@@ -2,11 +2,12 @@
 
 #include <chrono>
 #include <type_traits>
+#include <vulkan/vulkan.hpp>
 
 #include "window.hpp"
 #include "instance.hpp"
 #include "device.hpp"
-
+#include "queue.hpp"
 
 namespace bmvk
 {

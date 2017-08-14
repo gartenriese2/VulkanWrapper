@@ -1,5 +1,6 @@
 #pragma once
 
+#define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
 
 #include "demo.hpp"
@@ -7,15 +8,15 @@
 
 namespace bmvk
 {
-    class StagingbufferDemo : Demo
+    class UniformbufferDemo : Demo
     {
     public:
-        StagingbufferDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height);
-        StagingbufferDemo(const StagingbufferDemo &) = delete;
-        StagingbufferDemo(StagingbufferDemo && other) = default;
-        StagingbufferDemo & operator=(const StagingbufferDemo &) = delete;
-        StagingbufferDemo & operator=(StagingbufferDemo && other) = default;
-        ~StagingbufferDemo() {}
+        UniformbufferDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height);
+        UniformbufferDemo(const UniformbufferDemo &) = delete;
+        UniformbufferDemo(UniformbufferDemo && other) = default;
+        UniformbufferDemo & operator=(const UniformbufferDemo &) = delete;
+        UniformbufferDemo & operator=(UniformbufferDemo && other) = default;
+        ~UniformbufferDemo() {}
 
         void run() override;
         void recreateSwapChain();
@@ -40,33 +41,57 @@ namespace bmvk
         };
 
         std::vector<Vertex> vertices = {
-            { { 0.0f, -0.5f },{ 1.0f, 1.0f, 0.0f } },
-            { { 0.5f, 0.5f },{ 0.0f, 1.0f, 0.0f } },
-            { { -0.5f, 0.5f },{ 0.0f, 1.0f, 1.0f } }
+            { { -0.5f, -0.5f },{ 1.0f, 0.0f, 0.0f } },
+            { { 0.5f, -0.5f },{ 0.0f, 1.0f, 0.0f } },
+            { { 0.5f, 0.5f },{ 0.0f, 0.0f, 1.0f } },
+            { { -0.5f, 0.5f },{ 1.0f, 1.0f, 1.0f } }
+        };
+
+        std::vector<uint16_t> indices = {
+            0, 1, 2, 2, 3, 0
+        };
+
+        struct UniformBufferObject {
+            glm::mat4 model;
+            glm::mat4 view;
+            glm::mat4 proj;
         };
 
         Swapchain m_swapchain;
         vk::UniqueRenderPass m_renderPass;
+        vk::UniqueDescriptorSetLayout m_descriptorSetLayout;
         vk::UniquePipelineLayout m_pipelineLayout;
         vk::UniquePipeline m_graphicsPipeline;
         std::vector<vk::UniqueFramebuffer> m_swapChainFramebuffers;
         vk::UniqueBuffer m_vertexBuffer;
         vk::UniqueDeviceMemory m_vertexBufferMemory;
+        vk::UniqueBuffer m_indexBuffer;
+        vk::UniqueDeviceMemory m_indexBufferMemory;
+        vk::UniqueBuffer m_uniformBuffer;
+        vk::UniqueDeviceMemory m_uniformBufferMemory;
+        vk::UniqueDescriptorPool m_descriptorPool;
+        std::vector<vk::UniqueDescriptorSet> m_descriptorSets;
         std::vector<vk::UniqueCommandBuffer> m_commandBuffers;
         vk::UniqueSemaphore m_imageAvailableSemaphore;
         vk::UniqueSemaphore m_renderFinishedSemaphore;
 
         void createRenderPass();
+        void createDescriptorSetLayout();
         void createGraphicsPipeline();
         void createFramebuffers();
         void createVertexBuffer();
+        void createIndexBuffer();
+        void createUniformBuffer();
+        void createDescriptorPool();
+        void createDescriptorSet();
         void createCommandBuffers();
 
         void drawFrame();
+        void updateUniformBuffer();
     };
 
-    static_assert(std::is_move_constructible_v<StagingbufferDemo>);
-    static_assert(std::is_move_assignable_v<StagingbufferDemo>);
-    static_assert(!std::is_copy_constructible_v<StagingbufferDemo>);
-    static_assert(!std::is_copy_assignable_v<StagingbufferDemo>);
+    static_assert(std::is_move_constructible_v<UniformbufferDemo>);
+    static_assert(std::is_move_assignable_v<UniformbufferDemo>);
+    static_assert(!std::is_copy_constructible_v<UniformbufferDemo>);
+    static_assert(!std::is_copy_assignable_v<UniformbufferDemo>);
 }

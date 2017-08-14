@@ -1,10 +1,11 @@
 #include <iostream>
 #include <stdexcept>
 
-#include "triangleDemo.hpp"
-#include "vertexbufferDemo.hpp"
-#include "stagingbufferDemo.hpp"
-#include "indexbufferDemo.hpp"
+//#include "triangleDemo.hpp"
+//#include "vertexbufferDemo.hpp"
+//#include "stagingbufferDemo.hpp"
+//#include "indexbufferDemo.hpp"
+#include "uniformbufferDemo.hpp"
 
 const int WIDTH = 800;
 const int HEIGHT = 600;
@@ -22,7 +23,8 @@ int main()
         //bmvk::TriangleDemo app(enableValidationLayers, WIDTH, HEIGHT);
         //bmvk::VertexbufferDemo app(enableValidationLayers, WIDTH, HEIGHT);
         //bmvk::StagingbufferDemo app(enableValidationLayers, WIDTH, HEIGHT);
-        bmvk::IndexbufferDemo app(enableValidationLayers, WIDTH, HEIGHT);
+        //bmvk::IndexbufferDemo app(enableValidationLayers, WIDTH, HEIGHT);
+        bmvk::UniformbufferDemo app(enableValidationLayers, WIDTH, HEIGHT);
         app.run();
     }
     catch (const std::runtime_error & e)
