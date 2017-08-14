@@ -10,8 +10,8 @@ namespace bmvk
         m_device{m_instance.getPhysicalDevice().createLogicalDevice(m_instance.getLayerNames(), enableValidationLayers)},
         m_queue{m_device.createQueue()},
         m_commandPool{m_device.createCommandPool()},
-        m_timepoint{ std::chrono::steady_clock::now() },
-        m_timepointCount{ 0 },
+        m_timepoint{std::chrono::steady_clock::now()},
+        m_timepointCount{0},
         m_elapsedTime{std::chrono::microseconds::zero()}
     {
     }

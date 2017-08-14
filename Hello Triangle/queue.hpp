@@ -20,6 +20,7 @@ namespace bmvk
 
         void waitIdle() const { m_queue.waitIdle(); }
         void submit(const CommandBuffer & cmdBuffer, vk::Fence fence = nullptr) const;
+        void submit(const CommandBuffer & cmdBuffer, const vk::UniqueSemaphore & waitSemaphore, const vk::UniqueSemaphore & signalSemaphore, vk::PipelineStageFlags flags, vk::Fence fence = nullptr) const;
     private:
         vk::Queue m_queue;
     };

@@ -62,7 +62,7 @@ namespace bmvk
             fb.reset(nullptr);
         }
 
-        for (auto & buffer : m_commandBuffers)
+        for (auto & buffer : m_commandBuffersOld)
         {
             buffer.reset(nullptr);
         }
@@ -203,23 +203,19 @@ namespace bmvk
 
     void UniformbufferDemo::createCommandBuffers()
     {
-        m_commandBuffers.resize(m_swapChainFramebuffers.size());
-        CommandBufferAllocateInfo allocInfo{ m_commandPool, vk::CommandBufferLevel::ePrimary, static_cast<uint32_t>(m_commandBuffers.size()) };
-        m_commandBuffers = static_cast<vk::Device>(m_device).allocateCommandBuffersUnique(allocInfo);
+        m_commandBuffers = m_device.allocateCommandBuffers(m_commandPool, static_cast<uint32_t>(m_swapChainFramebuffers.size()));
         for (size_t i = 0; i < m_commandBuffers.size(); ++i)
         {
-            vk::CommandBufferBeginInfo beginInfo{ vk::CommandBufferUsageFlagBits::eSimultaneousUse };
-            m_commandBuffers[i].get().begin(beginInfo);
-            vk::ClearValue clearColor{ vk::ClearColorValue(std::array<float, 4>{ 0.f, 0.f, 0.f, 1.f }) };
-            vk::RenderPassBeginInfo renderPassInfo{ m_renderPass.get(), m_swapChainFramebuffers[i].get(), vk::Rect2D({ 0, 0 }, m_swapchain.getExtent()), 1, &clearColor };
-            m_commandBuffers[i].get().beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
-            m_commandBuffers[i].get().bindPipeline(vk::PipelineBindPoint::eGraphics, m_graphicsPipeline.get());
-            m_commandBuffers[i].get().bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0, m_descriptorSets[0].get(), nullptr);
-            m_commandBuffers[i].get().bindVertexBuffers(0, m_vertexBuffer.get(), {0});
-            m_commandBuffers[i].get().bindIndexBuffer(m_indexBuffer.get(), 0, vk::IndexType::eUint16);
-            m_commandBuffers[i].get().drawIndexed(static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
-            m_commandBuffers[i].get().endRenderPass();
-            m_commandBuffers[i].get().end();
+            const auto & cmdBuffer{ m_commandBuffers[i] };
+            cmdBuffer.begin(vk::CommandBufferUsageFlagBits::eSimultaneousUse);
+            cmdBuffer.beginRenderPass(m_renderPass, m_swapChainFramebuffers[i], { {0, 0}, m_swapchain.getExtent() });
+            cmdBuffer.bindPipeline(m_graphicsPipeline);
+            cmdBuffer.bindDescriptorSet(m_pipelineLayout, m_descriptorSets[0]);
+            cmdBuffer.bindVertexBuffer(m_vertexBuffer);
+            cmdBuffer.bindIndexBuffer(m_indexBuffer);
+            cmdBuffer.drawIndexed(static_cast<uint32_t>(indices.size()));
+            cmdBuffer.endRenderPass();
+            cmdBuffer.end();
         }
     }
 
@@ -239,12 +235,8 @@ namespace bmvk
             return;
         }
 
-        vk::Semaphore waitSemaphores[]{ m_imageAvailableSemaphore.get() };
-        vk::PipelineStageFlags waitStages[]{ vk::PipelineStageFlagBits::eColorAttachmentOutput };
-        auto usedCommandBuffer = m_commandBuffers[imageIndex].get();
         vk::Semaphore signalSemaphores[]{ m_renderFinishedSemaphore.get() };
-        vk::SubmitInfo submitInfo{ 1, waitSemaphores, waitStages, 1, &usedCommandBuffer, 1, signalSemaphores };
-        static_cast<vk::Queue>(m_queue).submit(submitInfo, nullptr);
+        m_queue.submit(m_commandBuffers[imageIndex], m_imageAvailableSemaphore, m_renderFinishedSemaphore, vk::PipelineStageFlagBits::eColorAttachmentOutput);
         vk::SwapchainKHR swapchains[]{ static_cast<vk::SwapchainKHR>(m_swapchain) };
         vk::PresentInfoKHR presentInfo{ 1, signalSemaphores, 1, swapchains, &imageIndex };
         vk::Result result;

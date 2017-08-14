@@ -26,9 +26,9 @@ namespace bmvk
         vk::UniqueShaderModule createShaderModule(const std::vector<char> & code) const;
         vk::UniqueSemaphore createSemaphore() const;
         vk::UniqueCommandPool createCommandPool() const;
-
+        CommandBuffer allocateCommandBuffer(const vk::UniqueCommandPool & pool, const vk::CommandBufferLevel level = vk::CommandBufferLevel::ePrimary) const;
+        std::vector<CommandBuffer> allocateCommandBuffers(const vk::UniqueCommandPool & pool, const uint32_t count, const vk::CommandBufferLevel level = vk::CommandBufferLevel::ePrimary) const;
         void waitIdle() const { m_device.waitIdle(); }
-        CommandBuffer allocateCommandBuffer(const vk::UniqueCommandPool & pool, vk::CommandBufferLevel level = vk::CommandBufferLevel::ePrimary) const;
     private:
         vk::Device m_device;
         uint32_t m_queueFamilyIndex;

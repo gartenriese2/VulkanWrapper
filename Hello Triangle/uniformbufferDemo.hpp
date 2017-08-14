@@ -71,7 +71,8 @@ namespace bmvk
         vk::UniqueDeviceMemory m_uniformBufferMemory;
         vk::UniqueDescriptorPool m_descriptorPool;
         std::vector<vk::UniqueDescriptorSet> m_descriptorSets;
-        std::vector<vk::UniqueCommandBuffer> m_commandBuffers;
+        std::vector<CommandBuffer> m_commandBuffers;
+        std::vector<vk::UniqueCommandBuffer> m_commandBuffersOld;
         vk::UniqueSemaphore m_imageAvailableSemaphore;
         vk::UniqueSemaphore m_renderFinishedSemaphore;
 

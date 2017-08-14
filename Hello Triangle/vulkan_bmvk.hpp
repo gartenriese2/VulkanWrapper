@@ -48,6 +48,11 @@ namespace bmvk
         {
         }
 
+        explicit SubmitInfo(const vk::UniqueCommandBuffer & commandBuffer, const vk::UniqueSemaphore & waitSemaphore, const vk::UniqueSemaphore & signalSemaphore, vk::PipelineStageFlags flags)
+            : m_internal{ 1, &*waitSemaphore, &flags, 1, &*commandBuffer, 1, &*signalSemaphore}
+        {
+        }
+
         operator const vk::SubmitInfo &() const
         {
             return m_internal;
