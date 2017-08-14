@@ -122,5 +122,8 @@
     <ClInclude Include="uniformbufferDemo.hpp">
       <Filter>Header Files\Demos</Filter>
     </ClInclude>
+    <ClInclude Include="vulkan_bmvk.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

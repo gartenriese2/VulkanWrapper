@@ -1,6 +1,7 @@
 #include "stagingbufferDemo.hpp"
 
 #include "shader.hpp"
+#include "vulkan_bmvk.hpp"
 
 namespace bmvk
 {
@@ -137,7 +138,7 @@ namespace bmvk
     void StagingbufferDemo::createCommandBuffers()
     {
         m_commandBuffers.resize(m_swapChainFramebuffers.size());
-        vk::CommandBufferAllocateInfo allocInfo{ m_commandPool.get(), vk::CommandBufferLevel::ePrimary, static_cast<uint32_t>(m_commandBuffers.size()) };
+        CommandBufferAllocateInfo allocInfo{ m_commandPool, vk::CommandBufferLevel::ePrimary, static_cast<uint32_t>(m_commandBuffers.size()) };
         m_commandBuffers = static_cast<vk::Device>(m_device).allocateCommandBuffersUnique(allocInfo);
         for (size_t i = 0; i < m_commandBuffers.size(); ++i)
         {

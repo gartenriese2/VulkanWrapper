@@ -52,6 +52,7 @@
     <ClInclude Include="triangleDemo.hpp" />
     <ClInclude Include="uniformbufferDemo.hpp" />
     <ClInclude Include="vertexbufferDemo.hpp" />
+    <ClInclude Include="vulkan_bmvk.hpp" />
     <ClInclude Include="vulkan_ext.h" />
     <ClInclude Include="window.hpp" />
   </ItemGroup>

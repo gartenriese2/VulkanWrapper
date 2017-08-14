@@ -2,6 +2,8 @@
 
 #include <iostream>
 
+#include "vulkan_bmvk.hpp"
+
 namespace bmvk
 {
     Demo::Demo(const bool enableValidationLayers, const uint32_t width, const uint32_t height, std::string name)
@@ -18,7 +20,7 @@ namespace bmvk
 
     void Demo::copyBuffer(vk::UniqueBuffer & srcBuffer, vk::UniqueBuffer & dstBuffer, vk::DeviceSize size) const
     {
-        vk::CommandBufferAllocateInfo allocInfo{ m_commandPool.get(), vk::CommandBufferLevel::ePrimary, 1 };
+        CommandBufferAllocateInfo allocInfo{ m_commandPool, vk::CommandBufferLevel::ePrimary, 1 };
         auto commandBufferVec{ static_cast<vk::Device>(m_device).allocateCommandBuffersUnique(allocInfo) };
         auto commandBuffer{ commandBufferVec[0].get() };
 
