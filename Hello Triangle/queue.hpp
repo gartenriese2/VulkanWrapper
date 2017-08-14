@@ -4,6 +4,8 @@
 
 namespace bmvk
 {
+    class CommandBuffer;
+
     class Queue
     {
     public:
@@ -12,11 +14,12 @@ namespace bmvk
         Queue(Queue && other) = default;
         Queue & operator=(const Queue &) = delete;
         Queue & operator=(Queue &&) & = default;
-        ~Queue();
+        ~Queue() {}
 
-        explicit operator vk::Queue() const noexcept { return m_queue; }
+        explicit operator const vk::Queue &() const noexcept { return m_queue; }
 
         void waitIdle() const { m_queue.waitIdle(); }
+        void submit(const CommandBuffer & cmdBuffer, vk::Fence fence = nullptr) const;
     private:
         vk::Queue m_queue;
     };

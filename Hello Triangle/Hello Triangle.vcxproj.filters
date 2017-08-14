@@ -72,6 +72,9 @@
     <ClCompile Include="uniformbufferDemo.cpp">
       <Filter>Source Files\Demos</Filter>
     </ClCompile>
+    <ClCompile Include="commandbuffer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="instance.hpp">
@@ -123,6 +126,9 @@
       <Filter>Header Files\Demos</Filter>
     </ClInclude>
     <ClInclude Include="vulkan_bmvk.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="commandbuffer.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

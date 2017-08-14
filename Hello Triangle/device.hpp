@@ -3,6 +3,7 @@
 #include <vulkan/vulkan.hpp>
 
 #include "queue.hpp"
+#include "commandbuffer.hpp"
 
 namespace bmvk
 {
@@ -18,7 +19,7 @@ namespace bmvk
         Device & operator=(Device && other) = default;
         ~Device();
 
-        explicit operator vk::Device() const noexcept { return m_device; }
+        explicit operator const vk::Device &() const noexcept { return m_device; }
 
         Queue createQueue() const;
         vk::UniqueImageView createImageView(vk::ImageViewCreateInfo info) const;
@@ -27,6 +28,7 @@ namespace bmvk
         vk::UniqueCommandPool createCommandPool() const;
 
         void waitIdle() const { m_device.waitIdle(); }
+        CommandBuffer allocateCommandBuffer(const vk::UniqueCommandPool & pool, vk::CommandBufferLevel level = vk::CommandBufferLevel::ePrimary) const;
     private:
         vk::Device m_device;
         uint32_t m_queueFamilyIndex;

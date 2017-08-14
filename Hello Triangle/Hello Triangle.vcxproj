@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="commandbuffer.cpp" />
     <ClCompile Include="debugReport.cpp" />
     <ClCompile Include="demo.cpp" />
     <ClCompile Include="device.cpp" />
@@ -38,6 +39,7 @@
     <ClCompile Include="window.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="commandbuffer.hpp" />
     <ClInclude Include="debugReport.hpp" />
     <ClInclude Include="demo.hpp" />
     <ClInclude Include="device.hpp" />

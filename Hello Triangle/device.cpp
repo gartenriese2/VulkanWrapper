@@ -31,6 +31,14 @@ namespace bmvk
         return m_device.createCommandPoolUnique(poolInfo);
     }
 
+    CommandBuffer Device::allocateCommandBuffer(const vk::UniqueCommandPool & pool, vk::CommandBufferLevel level) const
+    {
+        auto vec = m_device.allocateCommandBuffersUnique({ *pool, level, 1 });
+        assert(vec.size() == 1);
+
+        return CommandBuffer(std::move(vec[0]));
+    }
+
     vk::UniqueShaderModule Device::createShaderModule(const std::vector<char> & code) const
     {
         vk::ShaderModuleCreateInfo info{ {}, code.size(), reinterpret_cast<const uint32_t *>(code.data()) };

@@ -2,38 +2,27 @@
 
 #include <iostream>
 
-#include "vulkan_bmvk.hpp"
-
 namespace bmvk
 {
     Demo::Demo(const bool enableValidationLayers, const uint32_t width, const uint32_t height, std::string name)
-      : m_window{ width, height, name },
-        m_instance{ name, VK_MAKE_VERSION(1, 0, 0), "bmvk", VK_MAKE_VERSION(1, 0, 0), m_window, enableValidationLayers },
-        m_device{ m_instance.getPhysicalDevice().createLogicalDevice(m_instance.getLayerNames(), enableValidationLayers) },
-        m_queue{ m_device.createQueue() },
-        m_commandPool{ m_device.createCommandPool() },
+      : m_window{width, height, name},
+        m_instance{name, VK_MAKE_VERSION(1, 0, 0), "bmvk", VK_MAKE_VERSION(1, 0, 0), m_window, enableValidationLayers},
+        m_device{m_instance.getPhysicalDevice().createLogicalDevice(m_instance.getLayerNames(), enableValidationLayers)},
+        m_queue{m_device.createQueue()},
+        m_commandPool{m_device.createCommandPool()},
         m_timepoint{ std::chrono::steady_clock::now() },
-        m_elapsedTime{ std::chrono::microseconds::zero() }
+        m_timepointCount{ 0 },
+        m_elapsedTime{std::chrono::microseconds::zero()}
     {
-        
     }
 
     void Demo::copyBuffer(vk::UniqueBuffer & srcBuffer, vk::UniqueBuffer & dstBuffer, vk::DeviceSize size) const
     {
-        CommandBufferAllocateInfo allocInfo{ m_commandPool, vk::CommandBufferLevel::ePrimary, 1 };
-        auto commandBufferVec{ static_cast<vk::Device>(m_device).allocateCommandBuffersUnique(allocInfo) };
-        auto commandBuffer{ commandBufferVec[0].get() };
-
-        vk::CommandBufferBeginInfo beginInfo{ vk::CommandBufferUsageFlagBits::eOneTimeSubmit };
-        commandBuffer.begin(beginInfo);
-
-        vk::BufferCopy copyRegion{ 0, 0, size };
-        commandBuffer.copyBuffer(srcBuffer.get(), dstBuffer.get(), copyRegion);
-
-        commandBuffer.end();
-
-        vk::SubmitInfo submitInfo{ 0, nullptr, nullptr, 1, &commandBuffer };
-        static_cast<vk::Queue>(m_queue).submit(submitInfo, nullptr);
+        auto cmdBuffer{ m_device.allocateCommandBuffer(m_commandPool) };
+        cmdBuffer.begin(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
+        cmdBuffer.copyBuffer(srcBuffer, dstBuffer, size);
+        cmdBuffer.end();
+        m_queue.submit(cmdBuffer);
         m_queue.waitIdle();
     }
 
