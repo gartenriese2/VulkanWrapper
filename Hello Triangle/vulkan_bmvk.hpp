@@ -2,7 +2,6 @@
 
 #include <vulkan/vulkan.hpp>
 #include <optional>
-#include "../extern/Vulkan-1.0.51.0/include/vulkan/vulkan.hpp"
 
 namespace bmvk
 {
@@ -78,10 +77,76 @@ namespace bmvk
         T m_internal;
     };
 
+    struct DescriptorBufferInfo : VkStructBase<vk::DescriptorBufferInfo>
+    {
+        DescriptorBufferInfo(const vk::UniqueBuffer & buffer, vk::DeviceSize offset = 0, vk::DeviceSize range = 0)
+            : VkStructBase{ { *buffer, offset, range } }
+        {
+        }
+    };
+
+    struct SpecializationInfo : VkStructBase<vk::SpecializationInfo>
+    {
+        SpecializationInfo(vk::ArrayProxy<vk::SpecializationMapEntry> mapEntries = nullptr, size_t dataSize = 0, const void * data = nullptr)
+            : VkStructBase{ { mapEntries.size(), mapEntries.data(), dataSize, data } }
+        {
+        }
+    };
+
+    struct ClearColorValue : VkStructBase<vk::ClearColorValue>
+    {
+        explicit ClearColorValue(float r, float g, float b, float a)
+            : VkStructBase{ { std::array<float,4>{ {r, g, b, a} } } }
+        {
+        }
+
+        explicit ClearColorValue(int32_t r, int32_t g, int32_t b, int32_t a)
+            : VkStructBase{ { std::array<int32_t,4>{ {r, g, b, a} } } }
+        {
+        }
+
+        explicit ClearColorValue(uint32_t r, uint32_t g, uint32_t b, uint32_t a)
+            : VkStructBase{ { std::array<uint32_t,4>{ {r, g, b, a} } } }
+        {
+        }
+    };
+
+    struct PresentRegion : VkStructBase<vk::PresentRegionKHR>
+    {
+        PresentRegion(vk::ArrayProxy<vk::RectLayerKHR> rectangles)
+            : VkStructBase{ { rectangles.size(), rectangles.data() } }
+        {
+        }
+    };
+
+    struct DescriptorImageInfo : VkStructBase<vk::DescriptorImageInfo>
+    {
+        DescriptorImageInfo(const vk::UniqueSampler & sampler, const vk::UniqueImageView & imageView, vk::ImageLayout imageLayout = vk::ImageLayout::eUndefined)
+            : VkStructBase{ { *sampler, *imageView, imageLayout } }
+        {
+        }
+    };
+
+    struct DeviceQueueCreateInfo : VkStructBase<vk::DeviceQueueCreateInfo>
+    {
+        DeviceQueueCreateInfo(vk::DeviceQueueCreateFlags flags = {}, uint32_t queueFamilyIndex = 0, uint32_t queueCount = 0, vk::ArrayProxy<float> queuePriorities = nullptr)
+            : VkStructBase{ { flags, queueFamilyIndex, queueCount, queuePriorities.data() } }
+        {
+        }
+    };
+
+    struct DeviceCreateInfo : VkStructBase<vk::DeviceCreateInfo>
+    {
+        DeviceCreateInfo(vk::DeviceCreateFlags flags = {}, vk::ArrayProxy<vk::DeviceQueueCreateInfo> queueCreateInfos = nullptr, vk::ArrayProxy<const char * const> enabledLayerNames = nullptr, vk::ArrayProxy<const char * const> enabledExtensionNames = nullptr, vk::ArrayProxy<vk::PhysicalDeviceFeatures> enabledFeatures = nullptr)
+            : VkStructBase{ { flags, queueCreateInfos.size(), queueCreateInfos.data(), enabledLayerNames.size(), enabledLayerNames.data(), enabledExtensionNames.size(), enabledExtensionNames.data(), enabledFeatures.data() } }
+        {
+        }
+    };
+
     struct CommandBufferAllocateInfo : VkStructBase<vk::CommandBufferAllocateInfo>
     {
         CommandBufferAllocateInfo(const vk::UniqueCommandPool & commandPool, vk::CommandBufferLevel level = vk::CommandBufferLevel::ePrimary, uint32_t count = 0)
-            : VkStructBase<vk::CommandBufferAllocateInfo>{ { *commandPool, level, count } }
+            : VkStructBase{ { *commandPool, level, count } }
         {
         }
     };
@@ -89,7 +154,7 @@ namespace bmvk
     struct PresentInfo : VkStructBase<vk::PresentInfoKHR>
     {
         PresentInfo(vk::ArrayProxy<vk::Semaphore> waitSemaphores = nullptr, vk::ArrayProxy<vk::SwapchainKHR> swapchains = nullptr, vk::ArrayProxy<uint32_t> imageIndices = nullptr, vk::ArrayProxy<vk::Result> results = nullptr)
-            : VkStructBase<vk::PresentInfoKHR>{ { waitSemaphores.size(), waitSemaphores.data(), swapchains.size(), swapchains.data(), imageIndices.data(), results.data() } }
+            : VkStructBase{ { waitSemaphores.size(), waitSemaphores.data(), swapchains.size(), swapchains.data(), imageIndices.data(), results.data() } }
         {
         }
     };
@@ -97,7 +162,7 @@ namespace bmvk
     struct DescriptorPoolCreateInfo : VkStructBase<vk::DescriptorPoolCreateInfo>
     {
         DescriptorPoolCreateInfo(vk::DescriptorPoolCreateFlags flags = vk::DescriptorPoolCreateFlags(), uint32_t maxSets = 0, vk::ArrayProxy<vk::DescriptorPoolSize> poolSizes = nullptr)
-            : VkStructBase<vk::DescriptorPoolCreateInfo>{ { flags, maxSets, poolSizes.size(), poolSizes.data() } }
+            : VkStructBase{ { flags, maxSets, poolSizes.size(), poolSizes.data() } }
         {
         }
     };
@@ -105,7 +170,7 @@ namespace bmvk
     struct RenderPassCreateInfo : VkStructBase<vk::RenderPassCreateInfo>
     {
         RenderPassCreateInfo(vk::RenderPassCreateFlags flags = vk::RenderPassCreateFlags(), vk::ArrayProxy<vk::AttachmentDescription> attachments = nullptr, vk::ArrayProxy<vk::SubpassDescription> subpasses = nullptr, vk::ArrayProxy<vk::SubpassDependency> dependencies = nullptr)
-            : VkStructBase<vk::RenderPassCreateInfo>{ { flags, attachments.size(), attachments.data(), subpasses.size(), subpasses.data(), dependencies.size(), dependencies.data() } }
+            : VkStructBase{ { flags, attachments.size(), attachments.data(), subpasses.size(), subpasses.data(), dependencies.size(), dependencies.data() } }
         {
         }
     };
@@ -113,17 +178,17 @@ namespace bmvk
     struct SubmitInfo : VkStructBase<vk::SubmitInfo>
     {
         SubmitInfo(vk::ArrayProxy<vk::Semaphore> waitSemaphores, vk::PipelineStageFlags * waitDstStageFlags = nullptr, vk::ArrayProxy<vk::CommandBuffer> commandBuffers = nullptr, vk::ArrayProxy<vk::Semaphore> signalSemaphores = nullptr)
-            : VkStructBase<vk::SubmitInfo>{ { waitSemaphores.size(), waitSemaphores.data(), waitDstStageFlags, commandBuffers.size(), commandBuffers.data(), signalSemaphores.size(), signalSemaphores.data() } }
+            : VkStructBase{ { waitSemaphores.size(), waitSemaphores.data(), waitDstStageFlags, commandBuffers.size(), commandBuffers.data(), signalSemaphores.size(), signalSemaphores.data() } }
         {
         }
 
         SubmitInfo(const vk::UniqueCommandBuffer & commandBuffer)
-            : VkStructBase<vk::SubmitInfo>{ { 0, nullptr, nullptr, 1, &*commandBuffer } }
+            : VkStructBase{ { 0, nullptr, nullptr, 1, &*commandBuffer } }
         {
         }
 
         SubmitInfo(const vk::UniqueCommandBuffer & commandBuffer, const vk::UniqueSemaphore & waitSemaphore, const vk::UniqueSemaphore & signalSemaphore, vk::PipelineStageFlags flags)
-            : VkStructBase<vk::SubmitInfo>{ { 1, &*waitSemaphore, &flags, 1, &*commandBuffer, 1, &*signalSemaphore} }
+            : VkStructBase{ { 1, &*waitSemaphore, &flags, 1, &*commandBuffer, 1, &*signalSemaphore} }
         {
         }
     };

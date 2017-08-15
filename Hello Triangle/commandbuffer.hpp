@@ -2,6 +2,7 @@
 
 #include <type_traits>
 #include <vulkan/vulkan.hpp>
+#include "vulkan_bmvk.hpp"
 
 namespace bmvk
 {
@@ -21,7 +22,7 @@ namespace bmvk
         void end() const;
 
         void copyBuffer(vk::UniqueBuffer & srcBuffer, vk::UniqueBuffer & dstBuffer, vk::DeviceSize size) const;
-        void beginRenderPass(const vk::UniqueRenderPass & renderPass, const vk::UniqueFramebuffer & framebuffer, vk::Rect2D renderArea, vk::ClearValue clearColor = { {std::array<float, 4>{ 0.f, 0.f, 0.f, 1.f }} }, vk::SubpassContents contents = vk::SubpassContents::eInline) const;
+        void beginRenderPass(const vk::UniqueRenderPass & renderPass, const vk::UniqueFramebuffer & framebuffer, vk::Rect2D renderArea, vk::ClearValue clearColor = { ClearColorValue{ 0.f, 0.f, 0.f, 1.f } }, vk::SubpassContents contents = vk::SubpassContents::eInline) const;
         void endRenderPass() const;
         
         void bindPipeline(const vk::UniquePipeline & pipeline, vk::PipelineBindPoint bindPoint = vk::PipelineBindPoint::eGraphics) const;

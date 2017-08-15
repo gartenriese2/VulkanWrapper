@@ -120,7 +120,7 @@ namespace bmvk
         {
             vk::CommandBufferBeginInfo beginInfo{ vk::CommandBufferUsageFlagBits::eSimultaneousUse };
             (*m_commandBuffers[i]).begin(beginInfo);
-            vk::ClearValue clearColor{ vk::ClearColorValue(std::array<float, 4>{ 0.f, 0.f, 0.f, 1.f }) };
+            vk::ClearValue clearColor{ ClearColorValue{ 0.f, 0.f, 0.f, 1.f } };
             vk::RenderPassBeginInfo renderPassInfo{ *m_renderPass, *m_swapChainFramebuffers[i], vk::Rect2D({ 0, 0 }, m_swapchain.getExtent()), 1, &clearColor };
             (*m_commandBuffers[i]).beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
             (*m_commandBuffers[i]).bindPipeline(vk::PipelineBindPoint::eGraphics, *m_graphicsPipeline);
