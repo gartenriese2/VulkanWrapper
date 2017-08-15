@@ -84,4 +84,9 @@ namespace bmvk
     {
         return m_device.acquireNextImageKHR(reinterpret_cast<const vk::SwapchainKHR &>(swapchain), std::numeric_limits<uint64_t>::max(), semaphore, fence).value;
     }
+
+    void Device::updateDescriptorSet(vk::WriteDescriptorSet set) const
+    {
+        m_device.updateDescriptorSets(set, nullptr);
+    }
 }

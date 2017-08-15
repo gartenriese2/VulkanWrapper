@@ -19,7 +19,7 @@ namespace bmvk
     }
 
     UniformbufferDemo::UniformbufferDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height)
-        : Demo{ enableValidationLayers, width, height, "Indexbuffer Demo" },
+        : Demo{ enableValidationLayers, width, height, "Uniformbuffer Demo" },
         m_swapchain{ m_instance.getPhysicalDevice(), m_instance.getSurface(), m_window, m_device },
         m_imageAvailableSemaphore{ m_device.createSemaphore() },
         m_renderFinishedSemaphore{ m_device.createSemaphore() }
@@ -195,9 +195,8 @@ namespace bmvk
         m_descriptorSets = static_cast<vk::Device>(m_device).allocateDescriptorSetsUnique(allocInfo);
 
         vk::DescriptorBufferInfo bufferInfo{ *m_uniformBuffer, 0, sizeof(UniformBufferObject) };
-        auto descriptorSet{ *m_descriptorSets[0] };
-        vk::WriteDescriptorSet descriptorWrite{ descriptorSet, 0, 0, 1, vk::DescriptorType::eUniformBuffer, nullptr, &bufferInfo };
-        static_cast<vk::Device>(m_device).updateDescriptorSets(descriptorWrite, nullptr);
+        WriteDescriptorSet descriptorWrite{ m_descriptorSets[0], 0, 0, 1, vk::DescriptorType::eUniformBuffer, nullptr, &bufferInfo };
+        m_device.updateDescriptorSet(descriptorWrite);
     }
 
     void UniformbufferDemo::createCommandBuffers()

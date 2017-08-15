@@ -1,5 +1,7 @@
-#include <iostream>
 #include "instance.hpp"
+
+#include <iostream>
+
 #include "vulkan_ext.h"
 #include "window.hpp"
 
@@ -21,7 +23,8 @@ namespace bmvk
 
         initializeLayerNames(enableValidationLayers);
 
-        vk::InstanceCreateInfo info{ {}, &appInfo, static_cast<uint32_t>(m_layerNames.size()), m_layerNames.data(), static_cast<uint32_t>(extensionsAsCstrings.size()), extensionsAsCstrings.data()};
+        //vk::InstanceCreateInfo info{ {}, &appInfo, static_cast<uint32_t>(m_layerNames.size()), m_layerNames.data(), static_cast<uint32_t>(extensionsAsCstrings.size()), extensionsAsCstrings.data()};
+        InstanceCreateInfo info{ {}, &appInfo, m_layerNames, extensionsAsCstrings };
         m_instance = vk::createInstance(info);
 
         vkExtInitInstance(getCInstance());

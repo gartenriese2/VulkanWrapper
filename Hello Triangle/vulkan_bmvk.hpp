@@ -143,6 +143,32 @@ namespace bmvk
         }
     };
 
+    struct InstanceCreateInfo : VkStructBase<vk::InstanceCreateInfo>
+    {
+        InstanceCreateInfo(vk::InstanceCreateFlags flags = vk::InstanceCreateFlags(), vk::ApplicationInfo * const applicationInfo = nullptr, vk::ArrayProxy<const char * const> enabledLayerNames = nullptr, vk::ArrayProxy<const char * const> enabledExtensionNames = nullptr)
+            : VkStructBase{ { flags, applicationInfo, enabledLayerNames.size(), enabledLayerNames.data(), enabledExtensionNames.size(), enabledExtensionNames.data() } }
+        {
+        }
+    };
+
+    struct MappedMemoryRange : VkStructBase<vk::MappedMemoryRange>
+    {
+        MappedMemoryRange(const vk::UniqueDeviceMemory & memory, vk::DeviceSize size = 0, vk::DeviceSize offset = 0)
+            : VkStructBase{ { *memory, offset, size } }
+        {
+        }
+    };
+
+    struct WriteDescriptorSet : VkStructBase<vk::WriteDescriptorSet>
+    {
+        WriteDescriptorSet(const vk::UniqueDescriptorSet & dstSet, uint32_t dstBinding = 0, uint32_t dstArrayElement = 0, uint32_t descriptorCount = 0, vk::DescriptorType descriptorType = vk::DescriptorType::eSampler, const vk::DescriptorImageInfo * const imageInfo = nullptr, const vk::DescriptorBufferInfo * const bufferInfo = nullptr)
+            : VkStructBase{ { *dstSet, dstBinding, dstArrayElement, descriptorCount, descriptorType, imageInfo, bufferInfo } }
+        {
+        }
+    };
+
+    // TODO
+
     struct CommandBufferAllocateInfo : VkStructBase<vk::CommandBufferAllocateInfo>
     {
         CommandBufferAllocateInfo(const vk::UniqueCommandPool & commandPool, vk::CommandBufferLevel level = vk::CommandBufferLevel::ePrimary, uint32_t count = 0)
