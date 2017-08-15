@@ -12,7 +12,7 @@ namespace bmvk
 
     void Queue::submit(const CommandBuffer & cmdBuffer, vk::Fence fence) const
     {
-        const SubmitInfo info(reinterpret_cast<const vk::UniqueCommandBuffer &>(cmdBuffer));
+        const SubmitInfo info{ reinterpret_cast<const vk::UniqueCommandBuffer &>(cmdBuffer) };
         const vk::SubmitInfo info_vk{ info };
         m_queue.submit(info_vk, fence);
     }

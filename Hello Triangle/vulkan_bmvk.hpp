@@ -2,6 +2,7 @@
 
 #include <vulkan/vulkan.hpp>
 #include <optional>
+#include "../extern/Vulkan-1.0.51.0/include/vulkan/vulkan.hpp"
 
 namespace bmvk
 {
@@ -54,109 +55,76 @@ namespace bmvk
     using OptRefShaderModule = OptRef<vk::UniqueShaderModule, vk::ShaderModule, vk::ShaderModuleDeleter>;
     using OptRefSwapchainKHR = OptRef<vk::UniqueSwapchainKHR, vk::SwapchainKHR, vk::SwapchainKHRDeleter>;
 
-    struct CommandBufferAllocateInfo
+    template <class T>
+    struct VkStructBase
     {
-        explicit CommandBufferAllocateInfo(const vk::UniqueCommandPool & commandPool, vk::CommandBufferLevel level = vk::CommandBufferLevel::ePrimary, uint32_t count = 0)
-            : m_internal{ *commandPool, level, count }
-        {
-        }
-
-        operator const vk::CommandBufferAllocateInfo &() const noexcept
+        operator const T &() const noexcept
         {
             return m_internal;
         }
 
-        bool operator==(const CommandBufferAllocateInfo & rhs) const
+        bool operator==(const T & rhs) const
         {
             return m_internal == rhs.m_internal;
         }
 
-        bool operator!=(const CommandBufferAllocateInfo & rhs) const
+        bool operator!=(const T & rhs) const
         {
             return !operator==(rhs);
         }
+    protected:
+        explicit VkStructBase(T && internal) : m_internal{ std::move(internal) } {}
 
-    private:
-        vk::CommandBufferAllocateInfo m_internal;
+        T m_internal;
     };
 
-    static_assert(sizeof(CommandBufferAllocateInfo) == sizeof(vk::CommandBufferAllocateInfo));
-    static_assert(std::is_copy_constructible_v<CommandBufferAllocateInfo>);
-    static_assert(std::is_move_constructible_v<CommandBufferAllocateInfo>);
-    static_assert(std::is_copy_assignable_v<CommandBufferAllocateInfo>);
-    static_assert(std::is_move_assignable_v<CommandBufferAllocateInfo>);
+    struct CommandBufferAllocateInfo : VkStructBase<vk::CommandBufferAllocateInfo>
+    {
+        CommandBufferAllocateInfo(const vk::UniqueCommandPool & commandPool, vk::CommandBufferLevel level = vk::CommandBufferLevel::ePrimary, uint32_t count = 0)
+            : VkStructBase<vk::CommandBufferAllocateInfo>{ { *commandPool, level, count } }
+        {
+        }
+    };
 
-    struct PresentInfo
+    struct PresentInfo : VkStructBase<vk::PresentInfoKHR>
     {
         PresentInfo(vk::ArrayProxy<vk::Semaphore> waitSemaphores = nullptr, vk::ArrayProxy<vk::SwapchainKHR> swapchains = nullptr, vk::ArrayProxy<uint32_t> imageIndices = nullptr, vk::ArrayProxy<vk::Result> results = nullptr)
-            : m_internal{ waitSemaphores.size(), waitSemaphores.data(), swapchains.size(), swapchains.data(), imageIndices.data(), results.data() }
+            : VkStructBase<vk::PresentInfoKHR>{ { waitSemaphores.size(), waitSemaphores.data(), swapchains.size(), swapchains.data(), imageIndices.data(), results.data() } }
         {
         }
-
-        operator const vk::PresentInfoKHR &() const noexcept
-        {
-            return m_internal;
-        }
-
-        bool operator==(PresentInfo const & rhs) const
-        {
-            return m_internal == rhs.m_internal;
-        }
-
-        bool operator!=(PresentInfo const & rhs) const
-        {
-            return !operator==(rhs);
-        }
-
-    private:
-        vk::PresentInfoKHR m_internal;
     };
 
-    static_assert(sizeof(PresentInfo) == sizeof(vk::PresentInfoKHR));
-    static_assert(std::is_copy_constructible_v<PresentInfo>);
-    static_assert(std::is_move_constructible_v<PresentInfo>);
-    static_assert(std::is_copy_assignable_v<PresentInfo>);
-    static_assert(std::is_move_assignable_v<PresentInfo>);
-
-    struct SubmitInfo
+    struct DescriptorPoolCreateInfo : VkStructBase<vk::DescriptorPoolCreateInfo>
     {
-        explicit SubmitInfo(vk::ArrayProxy<vk::Semaphore> waitSemaphores, vk::PipelineStageFlags * waitDstStageFlags = nullptr, vk::ArrayProxy<vk::CommandBuffer> commandBuffers = nullptr, vk::ArrayProxy<vk::Semaphore> signalSemaphores = nullptr)
-            : m_internal{ waitSemaphores.size(), waitSemaphores.data(), waitDstStageFlags, commandBuffers.size(), commandBuffers.data(), signalSemaphores.size(), signalSemaphores.data() }
+        DescriptorPoolCreateInfo(vk::DescriptorPoolCreateFlags flags = vk::DescriptorPoolCreateFlags(), uint32_t maxSets = 0, vk::ArrayProxy<vk::DescriptorPoolSize> poolSizes = nullptr)
+            : VkStructBase<vk::DescriptorPoolCreateInfo>{ { flags, maxSets, poolSizes.size(), poolSizes.data() } }
         {
         }
-
-        explicit SubmitInfo(const vk::UniqueCommandBuffer & commandBuffer)
-            : m_internal{ 0, nullptr, nullptr, 1, &*commandBuffer }
-        {
-        }
-
-        explicit SubmitInfo(const vk::UniqueCommandBuffer & commandBuffer, const vk::UniqueSemaphore & waitSemaphore, const vk::UniqueSemaphore & signalSemaphore, vk::PipelineStageFlags flags)
-            : m_internal{ 1, &*waitSemaphore, &flags, 1, &*commandBuffer, 1, &*signalSemaphore}
-        {
-        }
-
-        operator const vk::SubmitInfo &() const noexcept
-        {
-            return m_internal;
-        }
-
-        bool operator==(SubmitInfo const & rhs) const
-        {
-            return m_internal == rhs.m_internal;
-        }
-
-        bool operator!=(SubmitInfo const & rhs) const
-        {
-            return !operator==(rhs);
-        }
-
-    private:
-        vk::SubmitInfo m_internal;
     };
 
-    static_assert(sizeof(SubmitInfo) == sizeof(vk::SubmitInfo));
-    static_assert(std::is_copy_constructible_v<SubmitInfo>);
-    static_assert(std::is_move_constructible_v<SubmitInfo>);
-    static_assert(std::is_copy_assignable_v<SubmitInfo>);
-    static_assert(std::is_move_assignable_v<SubmitInfo>);
+    struct RenderPassCreateInfo : VkStructBase<vk::RenderPassCreateInfo>
+    {
+        RenderPassCreateInfo(vk::RenderPassCreateFlags flags = vk::RenderPassCreateFlags(), vk::ArrayProxy<vk::AttachmentDescription> attachments = nullptr, vk::ArrayProxy<vk::SubpassDescription> subpasses = nullptr, vk::ArrayProxy<vk::SubpassDependency> dependencies = nullptr)
+            : VkStructBase<vk::RenderPassCreateInfo>{ { flags, attachments.size(), attachments.data(), subpasses.size(), subpasses.data(), dependencies.size(), dependencies.data() } }
+        {
+        }
+    };
+
+    struct SubmitInfo : VkStructBase<vk::SubmitInfo>
+    {
+        SubmitInfo(vk::ArrayProxy<vk::Semaphore> waitSemaphores, vk::PipelineStageFlags * waitDstStageFlags = nullptr, vk::ArrayProxy<vk::CommandBuffer> commandBuffers = nullptr, vk::ArrayProxy<vk::Semaphore> signalSemaphores = nullptr)
+            : VkStructBase<vk::SubmitInfo>{ { waitSemaphores.size(), waitSemaphores.data(), waitDstStageFlags, commandBuffers.size(), commandBuffers.data(), signalSemaphores.size(), signalSemaphores.data() } }
+        {
+        }
+
+        SubmitInfo(const vk::UniqueCommandBuffer & commandBuffer)
+            : VkStructBase<vk::SubmitInfo>{ { 0, nullptr, nullptr, 1, &*commandBuffer } }
+        {
+        }
+
+        SubmitInfo(const vk::UniqueCommandBuffer & commandBuffer, const vk::UniqueSemaphore & waitSemaphore, const vk::UniqueSemaphore & signalSemaphore, vk::PipelineStageFlags flags)
+            : VkStructBase<vk::SubmitInfo>{ { 1, &*waitSemaphore, &flags, 1, &*commandBuffer, 1, &*signalSemaphore} }
+        {
+        }
+    };
 }

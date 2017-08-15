@@ -83,7 +83,7 @@ namespace bmvk
         vk::AttachmentReference colorAttachmentRef{ 0, vk::ImageLayout::eColorAttachmentOptimal };
         vk::SubpassDescription subpass{ {}, vk::PipelineBindPoint::eGraphics, 0, nullptr, 1, &colorAttachmentRef };
         vk::SubpassDependency dependency{ VK_SUBPASS_EXTERNAL, 0, vk::PipelineStageFlagBits::eColorAttachmentOutput, vk::PipelineStageFlagBits::eColorAttachmentOutput, {}, vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite };
-        vk::RenderPassCreateInfo renderPassInfo{ {}, 1, &colorAttachment, 1, &subpass, 1, &dependency };
+        RenderPassCreateInfo renderPassInfo{ {}, colorAttachment, subpass, dependency };
         m_renderPass = static_cast<vk::Device>(m_device).createRenderPassUnique(renderPassInfo);
     }
 
@@ -185,8 +185,7 @@ namespace bmvk
     void UniformbufferDemo::createDescriptorPool()
     {
         vk::DescriptorPoolSize poolSize{ vk::DescriptorType::eUniformBuffer, 1 };
-        vk::DescriptorPoolCreateInfo poolInfo{ vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet, 1, 1, &poolSize };
-        m_descriptorPool = static_cast<vk::Device>(m_device).createDescriptorPoolUnique(poolInfo);
+        m_descriptorPool = m_device.createDescriptorPool(vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet, 1, poolSize);
     }
 
     void UniformbufferDemo::createDescriptorSet()

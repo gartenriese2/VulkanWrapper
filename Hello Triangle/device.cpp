@@ -42,6 +42,12 @@ namespace bmvk
         return m_device.createCommandPoolUnique(poolInfo);
     }
 
+    vk::UniqueDescriptorPool Device::createDescriptorPool(vk::DescriptorPoolCreateFlags flags, uint32_t maxSets, vk::ArrayProxy<vk::DescriptorPoolSize> poolSizes) const
+    {
+        DescriptorPoolCreateInfo poolInfo{ flags, maxSets, poolSizes };
+        return m_device.createDescriptorPoolUnique(poolInfo);
+    }
+
     CommandBuffer Device::allocateCommandBuffer(const vk::UniqueCommandPool & pool, vk::CommandBufferLevel level) const
     {
         auto vec = m_device.allocateCommandBuffersUnique({ *pool, level, 1 });
