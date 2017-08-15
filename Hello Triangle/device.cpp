@@ -4,8 +4,8 @@
 
 namespace bmvk
 {
-    Device::Device(vk::Device device, const uint32_t queueFamilyIndex)
-      : m_device{ device },
+    Device::Device(vk::Device && device, const uint32_t queueFamilyIndex)
+      : m_device{ std::move(device) },
         m_queueFamilyIndex{ queueFamilyIndex }
     {
     }
@@ -23,6 +23,17 @@ namespace bmvk
     vk::UniqueImageView Device::createImageView(vk::ImageViewCreateInfo info) const
     {
         return m_device.createImageViewUnique(info);
+    }
+
+    vk::UniqueShaderModule Device::createShaderModule(const std::vector<char> & code) const
+    {
+        vk::ShaderModuleCreateInfo info{ {}, code.size(), reinterpret_cast<const uint32_t *>(code.data()) };
+        return m_device.createShaderModuleUnique(info);
+    }
+
+    vk::UniqueSemaphore Device::createSemaphore() const
+    {
+        return m_device.createSemaphoreUnique(vk::SemaphoreCreateInfo());
     }
 
     vk::UniqueCommandPool Device::createCommandPool() const
@@ -53,14 +64,18 @@ namespace bmvk
         return ret;
     }
 
-    vk::UniqueShaderModule Device::createShaderModule(const std::vector<char> & code) const
+    void * Device::mapMemory(const vk::UniqueDeviceMemory & memory, const vk::DeviceSize size, const vk::DeviceSize offset, const vk::MemoryMapFlags flags) const
     {
-        vk::ShaderModuleCreateInfo info{ {}, code.size(), reinterpret_cast<const uint32_t *>(code.data()) };
-        return m_device.createShaderModuleUnique(info);
+        return m_device.mapMemory(*memory, offset, size, flags);
     }
 
-    vk::UniqueSemaphore Device::createSemaphore() const
+    void Device::unmapMemory(const vk::UniqueDeviceMemory & memory) const
     {
-        return m_device.createSemaphoreUnique(vk::SemaphoreCreateInfo());
+        m_device.unmapMemory(*memory);
+    }
+
+    uint32_t Device::acquireNextImage(const Swapchain & swapchain, OptRefSemaphore semaphore, OptRefFence fence) const
+    {
+        return m_device.acquireNextImageKHR(reinterpret_cast<const vk::SwapchainKHR &>(swapchain), std::numeric_limits<uint64_t>::max(), semaphore, fence).value;
     }
 }

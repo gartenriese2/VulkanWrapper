@@ -9,7 +9,7 @@ namespace bmvk
     class Queue
     {
     public:
-        explicit Queue(const vk::Queue & queue);
+        explicit Queue(vk::Queue && queue);
         Queue(const Queue &) = delete;
         Queue(Queue && other) = default;
         Queue & operator=(const Queue &) = delete;
@@ -21,6 +21,7 @@ namespace bmvk
         void waitIdle() const { m_queue.waitIdle(); }
         void submit(const CommandBuffer & cmdBuffer, vk::Fence fence = nullptr) const;
         void submit(const CommandBuffer & cmdBuffer, const vk::UniqueSemaphore & waitSemaphore, const vk::UniqueSemaphore & signalSemaphore, vk::PipelineStageFlags flags, vk::Fence fence = nullptr) const;
+        bool present(vk::ArrayProxy<vk::Semaphore> waitSemaphores = nullptr, vk::ArrayProxy<vk::SwapchainKHR> swapchains = nullptr, vk::ArrayProxy<uint32_t> imageIndices = nullptr, vk::ArrayProxy<vk::Result> results = nullptr) const;
     private:
         vk::Queue m_queue;
     };

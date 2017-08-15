@@ -20,7 +20,7 @@ namespace bmvk
         Swapchain & operator=(Swapchain && other) = default;
         ~Swapchain() {}
 
-        explicit operator vk::SwapchainKHR() const noexcept { return m_swapchain.get(); }
+        explicit operator vk::SwapchainKHR() const noexcept { return *m_swapchain; }
 
         const auto & getImageFormat() const noexcept { return m_imageFormat; }
         const auto & getExtent() const noexcept { return m_extent; }

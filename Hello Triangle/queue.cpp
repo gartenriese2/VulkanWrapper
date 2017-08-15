@@ -5,8 +5,8 @@
 
 namespace bmvk
 {
-    Queue::Queue(const vk::Queue & queue)
-        : m_queue{queue}
+    Queue::Queue(vk::Queue && queue)
+        : m_queue{std::move(queue)}
     {
     }
 
@@ -22,6 +22,19 @@ namespace bmvk
         const SubmitInfo info{ reinterpret_cast<const vk::UniqueCommandBuffer &>(cmdBuffer), waitSemaphore, signalSemaphore, flags };
         const vk::SubmitInfo info_vk{ info };
         m_queue.submit(info_vk, fence);
+    }
+
+    bool Queue::present(vk::ArrayProxy<vk::Semaphore> waitSemaphores, vk::ArrayProxy<vk::SwapchainKHR> swapchains, vk::ArrayProxy<uint32_t> imageIndices, vk::ArrayProxy<vk::Result> results) const
+    {
+        try
+        {
+            PresentInfo info{ waitSemaphores, swapchains, imageIndices, results };
+            return m_queue.presentKHR(info) != vk::Result::eSuboptimalKHR;
+        }
+        catch (const vk::OutOfDateKHRError &)
+        {
+            return false;
+        }
     }
 }
 

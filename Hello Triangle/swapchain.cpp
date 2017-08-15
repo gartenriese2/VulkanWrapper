@@ -57,7 +57,7 @@ namespace bmvk
         };
 
         m_swapchain = static_cast<vk::Device>(device).createSwapchainKHRUnique(createInfo);
-        m_images = static_cast<vk::Device>(device).getSwapchainImagesKHR(m_swapchain.get());
+        m_images = static_cast<vk::Device>(device).getSwapchainImagesKHR(*m_swapchain);
         m_imageViews.resize(m_images.size());
         for (size_t i = 0; i < m_images.size(); i++)
         {

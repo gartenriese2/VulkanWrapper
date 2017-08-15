@@ -31,11 +31,11 @@ namespace bmvk
         vk::BufferCreateInfo bufferInfo{ {}, size, usage };
         buffer = static_cast<vk::Device>(m_device).createBufferUnique(bufferInfo);
 
-        const auto memRequirements{ static_cast<vk::Device>(m_device).getBufferMemoryRequirements(buffer.get()) };
+        const auto memRequirements{ static_cast<vk::Device>(m_device).getBufferMemoryRequirements(*buffer) };
         vk::MemoryAllocateInfo allocInfo{ memRequirements.size, m_instance.getPhysicalDevice().findMemoryType(memRequirements.memoryTypeBits, properties) };
         bufferMemory = static_cast<vk::Device>(m_device).allocateMemoryUnique(allocInfo);
 
-        static_cast<vk::Device>(m_device).bindBufferMemory(buffer.get(), bufferMemory.get(), 0);
+        static_cast<vk::Device>(m_device).bindBufferMemory(*buffer, *bufferMemory, 0);
     }
 
     void Demo::timing()

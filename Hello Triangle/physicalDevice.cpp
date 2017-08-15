@@ -18,7 +18,7 @@ namespace bmvk
         vk::PhysicalDeviceFeatures deviceFeatures;
         std::vector<const char *> extensionNames{ k_swapchainExtensionName };
         vk::DeviceCreateInfo info({}, 1, &queueCreateInfo, static_cast<uint32_t>(layerNames.size()), layerNames.data(), static_cast<uint32_t>(extensionNames.size()), extensionNames.data(), &deviceFeatures);
-        return Device(m_physicalDevice.createDevice(info), m_queueFamilyIndex);
+        return Device(std::move(m_physicalDevice.createDevice(info)), m_queueFamilyIndex);
     }
 
     uint32_t PhysicalDevice::findMemoryType(uint32_t typeFilter, vk::MemoryPropertyFlags properties) const

@@ -14,7 +14,7 @@ namespace bmvk
 
     vk::PipelineShaderStageCreateInfo Shader::createPipelineShaderStageCreateInfo(vk::ShaderStageFlagBits flagBits) const
     {
-        return { {}, flagBits, m_module.get(), "main" };
+        return { {}, flagBits, *m_module, "main" };
     }
 
     std::vector<char> Shader::readFile(const std::experimental::filesystem::path & path)
