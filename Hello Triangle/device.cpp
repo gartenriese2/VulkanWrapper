@@ -25,6 +25,12 @@ namespace bmvk
         return m_device.createImageViewUnique(info);
     }
 
+    vk::UniqueFramebuffer Device::createFramebuffer(const vk::UniqueRenderPass & renderpass, vk::ArrayProxy<vk::ImageView> attachments, uint32_t width, uint32_t height, uint32_t layers) const
+    {
+        vk::FramebufferCreateInfo info{ {}, *renderpass, attachments.size(), attachments.data(), width, height, layers };
+        return m_device.createFramebufferUnique(info);
+    }
+
     vk::UniqueShaderModule Device::createShaderModule(const std::vector<char> & code) const
     {
         vk::ShaderModuleCreateInfo info{ {}, code.size(), reinterpret_cast<const uint32_t *>(code.data()) };

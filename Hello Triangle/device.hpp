@@ -23,6 +23,7 @@ namespace bmvk
 
         Queue createQueue() const;
         vk::UniqueImageView createImageView(vk::ImageViewCreateInfo info) const;
+        vk::UniqueFramebuffer createFramebuffer(const vk::UniqueRenderPass & renderpass, vk::ArrayProxy<vk::ImageView> attachments = nullptr, uint32_t width = 0, uint32_t height = 0, uint32_t layers = 0) const;
         vk::UniqueShaderModule createShaderModule(const std::vector<char> & code) const;
         vk::UniqueSemaphore createSemaphore() const;
         vk::UniqueCommandPool createCommandPool() const;

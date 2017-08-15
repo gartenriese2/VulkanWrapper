@@ -62,11 +62,7 @@ namespace bmvk
             fb.reset(nullptr);
         }
 
-        for (auto & buffer : m_commandBuffersOld)
-        {
-            buffer.reset(nullptr);
-        }
-
+        m_commandBuffers.clear();
         m_graphicsPipeline.reset(nullptr);
         m_pipelineLayout.reset(nullptr);
         m_renderPass.reset(nullptr);
@@ -96,8 +92,8 @@ namespace bmvk
 
     void UniformbufferDemo::createGraphicsPipeline()
     {
-        const auto vertShader{ Shader("../shaders/uniformbuffer.vert.spv", m_device) };
-        const auto fragShader{ Shader("../shaders/uniformbuffer.frag.spv", m_device) };
+        const Shader vertShader{ "../shaders/uniformbuffer.vert.spv", m_device };
+        const Shader fragShader{ "../shaders/uniformbuffer.frag.spv", m_device };
         const auto vertShaderStageInfo{ vertShader.createPipelineShaderStageCreateInfo(vk::ShaderStageFlagBits::eVertex) };
         const auto fragShaderStageInfo{ fragShader.createPipelineShaderStageCreateInfo(vk::ShaderStageFlagBits::eFragment) };
         vk::PipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageInfo, fragShaderStageInfo };
@@ -123,12 +119,11 @@ namespace bmvk
 
     void UniformbufferDemo::createFramebuffers()
     {
-        m_swapChainFramebuffers.resize(m_swapchain.getImageViews().size());
-        for (size_t i = 0; i < m_swapchain.getImageViews().size(); ++i)
+        m_swapChainFramebuffers.clear();
+        for (auto & uniqueImageView : m_swapchain.getImageViews())
         {
-            vk::ImageView attachments[]{ *m_swapchain.getImageViews()[i] };
-            vk::FramebufferCreateInfo framebufferInfo{ {}, *m_renderPass, 1, attachments, m_swapchain.getExtent().width, m_swapchain.getExtent().height, 1 };
-            m_swapChainFramebuffers[i] = static_cast<vk::Device>(m_device).createFramebufferUnique(framebufferInfo);
+            auto imageView{ *uniqueImageView };
+            m_swapChainFramebuffers.emplace_back(m_device.createFramebuffer(m_renderPass, imageView, m_swapchain.getExtent().width, m_swapchain.getExtent().height, 1));
         }
     }
 
