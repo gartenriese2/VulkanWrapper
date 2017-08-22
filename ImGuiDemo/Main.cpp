@@ -1,7 +1,7 @@
 // ImGui - standalone example application for Glfw + Vulkan, using programmable pipeline
 // If you are new to ImGui, see examples/README.txt and documentation at the top of imgui.cpp.
 
-#include "imgui.h"
+#include <imgui/imgui.h>
 
 #include <stdio.h>          // printf, fprintf
 #include <stdlib.h>         // abort
