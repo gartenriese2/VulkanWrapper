@@ -75,6 +75,9 @@
     <ClCompile Include="commandbuffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="imguiDemo.cpp">
+      <Filter>Source Files\Demos</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="instance.hpp">
@@ -130,6 +133,9 @@
     </ClInclude>
     <ClInclude Include="commandbuffer.hpp">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="imguiDemo.hpp">
+      <Filter>Header Files\Demos</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
