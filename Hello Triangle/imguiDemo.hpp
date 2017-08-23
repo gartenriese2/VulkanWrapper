@@ -20,6 +20,10 @@ namespace bmvk
 
         void run() override;
         void recreateSwapChain();
+
+        void imguiMouseButtonCallback(GLFWwindow * window, int button, int action, int mods);
+        void imguiScrollCallback(GLFWwindow * window, double xoffset, double yoffset);
+        void imguiKeyCallback(GLFWwindow * window, int key, int scancode, int action, int mods) const;
     private:
         struct Vertex
         {
@@ -82,6 +86,10 @@ namespace bmvk
         vk::UniqueSemaphore m_imageAvailableSemaphore;
         vk::UniqueSemaphore m_renderFinishedSemaphore;
 
+        double m_imguiTime = 0.0;
+        std::vector<bool> m_imguiMousePressed = { false, false, false };
+        float m_imguiMouseWheel = 0.f;
+
         void createRenderPass();
         void createFontSampler();
         void createDescriptorSetLayout();
@@ -96,6 +104,9 @@ namespace bmvk
 
         void drawFrame();
         void updateUniformBuffer();
+        void imguiNewFrame();
+
+        
     };
 
     static_assert(std::is_move_constructible_v<ImguiDemo>);

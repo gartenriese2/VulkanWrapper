@@ -21,6 +21,8 @@ namespace bmvk
         Window & operator=(Window &&) & = default;
         ~Window();
 
+        const auto & getPointer() const noexcept { return m_window; }
+
         bool shouldClose() const;
         void pollEvents() const;
         std::tuple<int, int> getSize() const;

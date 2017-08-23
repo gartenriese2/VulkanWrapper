@@ -1,10 +1,10 @@
 #include "imguiDemo.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
+#include <imgui/imgui.h>
 
 #include "shader.hpp"
 #include "vulkan_bmvk.hpp"
-#include "../Imgui/imgui.h"
 
 namespace bmvk
 {
@@ -17,6 +17,24 @@ namespace bmvk
 
         auto app = reinterpret_cast<ImguiDemo *>(glfwGetWindowUserPointer(window));
         app->recreateSwapChain();
+    }
+
+    static void onMouseButton(GLFWwindow * window, int button, int action, int mods)
+    {
+        auto app = reinterpret_cast<ImguiDemo *>(glfwGetWindowUserPointer(window));
+        app->imguiMouseButtonCallback(window, button, action, mods);
+    }
+
+    static void onScroll(GLFWwindow * window, double xoffset, double yoffset)
+    {
+        auto app = reinterpret_cast<ImguiDemo *>(glfwGetWindowUserPointer(window));
+        app->imguiScrollCallback(window, xoffset, yoffset);
+    }
+
+    static void onKey(GLFWwindow * window, int key, int scancode, int action, int mods)
+    {
+        auto app = reinterpret_cast<ImguiDemo *>(glfwGetWindowUserPointer(window));
+        app->imguiKeyCallback(window, key, scancode, action, mods);
     }
 
     ImguiDemo::ImguiDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height)
@@ -38,6 +56,10 @@ namespace bmvk
         createDescriptorPool();
         createDescriptorSet();
         createCommandBuffers();
+
+        glfwSetMouseButtonCallback(m_window.getPointer().get(), onMouseButton);
+        glfwSetScrollCallback(m_window.getPointer().get(), onScroll);
+        glfwSetKeyCallback(m_window.getPointer().get(), onKey);
     }
 
     void ImguiDemo::run()
@@ -48,6 +70,7 @@ namespace bmvk
 
             // do cpu work here
             updateUniformBuffer();
+            imguiNewFrame();
 
             drawFrame();
         }
@@ -398,5 +421,85 @@ namespace bmvk
         ubo.proj[1][1] *= -1;
 
         m_device.copyToMemory(m_uniformBufferMemory, ubo);
+    }
+
+    void ImguiDemo::imguiNewFrame()
+    {
+        const auto & windowPtr{ m_window.getPointer() };
+        auto & io{ ImGui::GetIO() };
+
+        // Setup display size (every frame to accommodate for window resizing)
+        int w, h;
+        int display_w, display_h;
+        glfwGetWindowSize(windowPtr.get(), &w, &h);
+        glfwGetFramebufferSize(windowPtr.get(), &display_w, &display_h);
+        io.DisplaySize = ImVec2(static_cast<float>(w), static_cast<float>(h));
+        io.DisplayFramebufferScale = ImVec2(w > 0 ? static_cast<float>(display_w) / w : 0, h > 0 ? static_cast<float>(display_h) / h : 0);
+
+        // Setup time step
+        const auto current_time = glfwGetTime();
+        io.DeltaTime = m_imguiTime > 0.0 ? static_cast<float>(current_time - m_imguiTime) : static_cast<float>(1.0f / 60.0f);
+        m_imguiTime = current_time;
+
+        // Setup inputs
+        // (we already got mouse wheel, keyboard keys & characters from glfw callbacks polled in glfwPollEvents())
+        if (glfwGetWindowAttrib(windowPtr.get(), GLFW_FOCUSED))
+        {
+            double mouse_x, mouse_y;
+            glfwGetCursorPos(windowPtr.get(), &mouse_x, &mouse_y);
+            io.MousePos = ImVec2(static_cast<float>(mouse_x), static_cast<float>(mouse_y));   // Mouse position in screen coordinates (set to -1,-1 if no mouse / on another screen, etc.)
+        }
+        else
+        {
+            io.MousePos = ImVec2(-1, -1);
+        }
+
+        for (auto i = 0; i < 3; i++)
+        {
+            io.MouseDown[i] = m_imguiMousePressed[i] || glfwGetMouseButton(windowPtr.get(), i) != 0;    // If a mouse press event came, always pass it as "mouse held this frame", so we don't miss click-release events that are shorter than 1 frame.
+            m_imguiMousePressed[i] = false;
+        }
+
+        io.MouseWheel = m_imguiMouseWheel;
+        m_imguiMouseWheel = 0.0f;
+
+        // Hide OS mouse cursor if ImGui is drawing it
+        glfwSetInputMode(windowPtr.get(), GLFW_CURSOR, io.MouseDrawCursor ? GLFW_CURSOR_HIDDEN : GLFW_CURSOR_NORMAL);
+
+        // Start the frame
+        //ImGui::NewFrame(); // TODO
+    }
+
+    void ImguiDemo::imguiMouseButtonCallback(GLFWwindow * window, int button, int action, int mods)
+    {
+        if (action == GLFW_PRESS && button >= 0 && button < 3)
+        {
+            m_imguiMousePressed[button] = true;
+        }
+    }
+
+    void ImguiDemo::imguiScrollCallback(GLFWwindow * window, double xoffset, double yoffset)
+    {
+        m_imguiMouseWheel += static_cast<float>(yoffset); // Use fractional mouse wheel, 1.0 unit 5 lines.
+    }
+
+    void ImguiDemo::imguiKeyCallback(GLFWwindow * window, int key, int scancode, int action, int mods) const
+    {
+        auto & io{ ImGui::GetIO() };
+        if (action == GLFW_PRESS)
+        {
+            io.KeysDown[key] = true;
+        }
+
+        if (action == GLFW_RELEASE)
+        {
+            io.KeysDown[key] = false;
+        }
+
+        (void)mods; // Modifiers are not reliable across systems
+        io.KeyCtrl = io.KeysDown[GLFW_KEY_LEFT_CONTROL] || io.KeysDown[GLFW_KEY_RIGHT_CONTROL];
+        io.KeyShift = io.KeysDown[GLFW_KEY_LEFT_SHIFT] || io.KeysDown[GLFW_KEY_RIGHT_SHIFT];
+        io.KeyAlt = io.KeysDown[GLFW_KEY_LEFT_ALT] || io.KeysDown[GLFW_KEY_RIGHT_ALT];
+        io.KeySuper = io.KeysDown[GLFW_KEY_LEFT_SUPER] || io.KeysDown[GLFW_KEY_RIGHT_SUPER];
     }
 }
