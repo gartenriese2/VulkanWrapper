@@ -33,7 +33,7 @@ namespace bmvk
 
     vk::UniqueShaderModule Device::createShaderModule(const std::vector<char> & code) const
     {
-        vk::ShaderModuleCreateInfo info{ {}, code.size(), reinterpret_cast<const uint32_t *>(code.data()) };
+        ShaderModuleCreateInfo info{ code };
         return m_device.createShaderModuleUnique(info);
     }
 

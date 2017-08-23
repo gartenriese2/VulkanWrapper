@@ -167,7 +167,84 @@ namespace bmvk
         }
     };
 
-    // TODO
+    struct CopyDescriptorSet : VkStructBase<vk::CopyDescriptorSet>
+    {
+        CopyDescriptorSet(const vk::UniqueDescriptorSet & srcSet, uint32_t srcBinding, uint32_t srcArrayElement, const vk::UniqueDescriptorSet & dstSet, uint32_t dstBinding, uint32_t dstArrayElement, uint32_t descriptorCount)
+            : VkStructBase{ { *srcSet, srcBinding, srcArrayElement, *dstSet, dstBinding, dstArrayElement, descriptorCount } }
+        {
+        }
+    };
+
+    struct BufferViewCreateInfo : VkStructBase<vk::BufferViewCreateInfo>
+    {
+        BufferViewCreateInfo(vk::BufferViewCreateFlags flags, const vk::UniqueBuffer & buffer, vk::Format format = vk::Format::eUndefined, vk::DeviceSize offset = 0, vk::DeviceSize range = 0)
+            : VkStructBase{ { flags, *buffer, format, offset, range } }
+        {
+        }
+    };
+
+    struct ShaderModuleCreateInfo : VkStructBase<vk::ShaderModuleCreateInfo>
+    {
+        ShaderModuleCreateInfo(vk::ShaderModuleCreateFlags flags, vk::ArrayProxy<uint32_t> code)
+            : VkStructBase{ { flags, code.size(), code.data() } }
+        {
+        }
+
+        ShaderModuleCreateInfo(vk::ArrayProxy<uint32_t> code)
+            : VkStructBase{ { {}, code.size(), code.data() } }
+        {
+        }
+
+        ShaderModuleCreateInfo(vk::ArrayProxy<const char> code)
+            : VkStructBase{ { {}, code.size(), reinterpret_cast<const uint32_t *>(code.data()) } }
+        {
+        }
+    };
+
+    struct DescriptorSetAllocateInfo : VkStructBase<vk::DescriptorSetAllocateInfo>
+    {
+        DescriptorSetAllocateInfo(const vk::UniqueDescriptorPool & descriptorPool, vk::ArrayProxy<vk::DescriptorSetLayout> setLayouts)
+            : VkStructBase{ { *descriptorPool, setLayouts.size(), setLayouts.data() } }
+        {
+        }
+    };
+
+    struct PipelineVertexInputStateCreateInfo : VkStructBase<vk::PipelineVertexInputStateCreateInfo>
+    {
+        PipelineVertexInputStateCreateInfo(vk::ArrayProxy<vk::VertexInputBindingDescription> vertexBindingDescriptions, vk::ArrayProxy<vk::VertexInputAttributeDescription> vertexAttributeDescriptions)
+            : VkStructBase{ { {}, vertexBindingDescriptions.size(), vertexBindingDescriptions.data(), vertexAttributeDescriptions.size(), vertexAttributeDescriptions.data() } }
+        {
+        }
+    };
+
+    struct PipelineInputAssemblyStateCreateInfo : VkStructBase<vk::PipelineInputAssemblyStateCreateInfo>
+    {
+        PipelineInputAssemblyStateCreateInfo(vk::PrimitiveTopology topology = vk::PrimitiveTopology::ePointList, bool primitiveRestartEnable = false)
+            : VkStructBase{ { {}, topology, primitiveRestartEnable } }
+        {
+        }
+    };
+
+    struct PipelineTessellationStateCreateInfo : VkStructBase<vk::PipelineTessellationStateCreateInfo>
+    {
+        PipelineTessellationStateCreateInfo(uint32_t patchControlPoints = 0)
+            : VkStructBase{ { {}, patchControlPoints } }
+        {
+        }
+    };
+
+    struct PipelineViewportStateCreateInfo : VkStructBase<vk::PipelineViewportStateCreateInfo>
+    {
+        PipelineViewportStateCreateInfo(vk::PipelineViewportStateCreateFlags flags, vk::ArrayProxy<vk::Viewport> viewports, vk::ArrayProxy<vk::Rect2D> scissors)
+            : VkStructBase{ { flags, viewports.size(), viewports.data(), scissors.size(), scissors.data() } }
+        {
+        }
+
+        PipelineViewportStateCreateInfo(vk::ArrayProxy<vk::Viewport> viewports, vk::ArrayProxy<vk::Rect2D> scissors)
+            : VkStructBase{ { {}, viewports.size(), viewports.data(), scissors.size(), scissors.data() } }
+        {
+        }
+    };
 
     struct CommandBufferAllocateInfo : VkStructBase<vk::CommandBufferAllocateInfo>
     {
@@ -177,10 +254,59 @@ namespace bmvk
         }
     };
 
+    struct RenderPassBeginInfo : VkStructBase<vk::RenderPassBeginInfo>
+    {
+        RenderPassBeginInfo(const vk::UniqueRenderPass & renderpass, const vk::UniqueFramebuffer & framebuffer, vk::Rect2D renderArea, vk::ArrayProxy<vk::ClearValue> clearValues)
+            : VkStructBase{ { *renderpass, *framebuffer, renderArea, clearValues.size(), clearValues.data() } }
+        {
+        }
+    };
+
+    // TODO
+
+    struct PipelineColorBlendStateCreateInfo : VkStructBase<vk::PipelineColorBlendStateCreateInfo>
+    {
+        PipelineColorBlendStateCreateInfo(vk::PipelineColorBlendStateCreateFlags flags, bool logicOpEnable, vk::LogicOp logicOp, vk::ArrayProxy<vk::PipelineColorBlendAttachmentState> attachments, const std::array<float, 4> & blendConstants = { { 0, 0, 0, 0 } })
+            : VkStructBase{ { flags, logicOpEnable, logicOp, attachments.size(), attachments.data(), blendConstants } }
+        {
+        }
+
+        PipelineColorBlendStateCreateInfo(bool logicOpEnable, vk::LogicOp logicOp, vk::ArrayProxy<vk::PipelineColorBlendAttachmentState> attachments, const std::array<float, 4> & blendConstants = { { 0, 0, 0, 0 } })
+            : VkStructBase{ { {}, logicOpEnable, logicOp, attachments.size(), attachments.data(), blendConstants } }
+        {
+        }
+    };
+
     struct PresentInfo : VkStructBase<vk::PresentInfoKHR>
     {
         PresentInfo(vk::ArrayProxy<vk::Semaphore> waitSemaphores = nullptr, vk::ArrayProxy<vk::SwapchainKHR> swapchains = nullptr, vk::ArrayProxy<uint32_t> imageIndices = nullptr, vk::ArrayProxy<vk::Result> results = nullptr)
             : VkStructBase{ { waitSemaphores.size(), waitSemaphores.data(), swapchains.size(), swapchains.data(), imageIndices.data(), results.data() } }
+        {
+        }
+    };
+
+    struct PipelineDynamicStateCreateInfo : VkStructBase<vk::PipelineDynamicStateCreateInfo>
+    {
+        PipelineDynamicStateCreateInfo(vk::PipelineDynamicStateCreateFlags flags, vk::ArrayProxy<const vk::DynamicState> dynamicStates)
+            : VkStructBase{ { flags, dynamicStates.size(), dynamicStates.data() } }
+        {
+        }
+
+        PipelineDynamicStateCreateInfo(vk::ArrayProxy<const vk::DynamicState> dynamicStates)
+            : VkStructBase{ { {}, dynamicStates.size(), dynamicStates.data() } }
+        {
+        }
+    };
+
+    struct PipelineLayoutCreateInfo : VkStructBase<vk::PipelineLayoutCreateInfo>
+    {
+        PipelineLayoutCreateInfo(vk::PipelineLayoutCreateFlags flags, vk::ArrayProxy<vk::DescriptorSetLayout> setLayouts, vk::ArrayProxy<vk::PushConstantRange> pushConstantRanges)
+            : VkStructBase{ { flags, setLayouts.size(), setLayouts.data(), pushConstantRanges.size(), pushConstantRanges.data() } }
+        {
+        }
+
+        PipelineLayoutCreateInfo(vk::ArrayProxy<vk::DescriptorSetLayout> setLayouts, vk::ArrayProxy<vk::PushConstantRange> pushConstantRanges)
+            : VkStructBase{ { {}, setLayouts.size(), setLayouts.data(), pushConstantRanges.size(), pushConstantRanges.data() } }
         {
         }
     };

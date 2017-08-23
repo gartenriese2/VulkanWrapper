@@ -4,6 +4,7 @@
 
 #include "shader.hpp"
 #include "vulkan_bmvk.hpp"
+#include "../Imgui/imgui.h"
 
 namespace bmvk
 {
@@ -27,6 +28,7 @@ namespace bmvk
         m_window.setWindowUserPointer(this);
         m_window.setWindowSizeCallback(onWindowResized);
         createRenderPass();
+        createFontSampler();
         createDescriptorSetLayout();
         createGraphicsPipeline();
         createFramebuffers();
@@ -84,11 +86,22 @@ namespace bmvk
         m_renderPassImgui = static_cast<vk::Device>(m_device).createRenderPassUnique(renderPassInfo);
     }
 
+    void ImguiDemo::createFontSampler()
+    {
+        vk::SamplerCreateInfo info{ {}, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerMipmapMode::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerAddressMode::eRepeat, vk::SamplerAddressMode::eRepeat, 0.f, false, 1.f, false, vk::CompareOp::eNever, -1000.f, 1000.f };
+        m_fontSamplerImgui = static_cast<vk::Device>(m_device).createSamplerUnique(info);
+    }
+
     void ImguiDemo::createDescriptorSetLayout()
     {
         vk::DescriptorSetLayoutBinding uboLayoutBinding{ 0, vk::DescriptorType::eUniformBuffer, 1, vk::ShaderStageFlagBits::eVertex };
         vk::DescriptorSetLayoutCreateInfo layoutInfo{ {}, 1, &uboLayoutBinding };
         m_descriptorSetLayout = static_cast<vk::Device>(m_device).createDescriptorSetLayoutUnique(layoutInfo);
+
+        vk::Sampler samplers[1] = { *m_fontSamplerImgui };
+        vk::DescriptorSetLayoutBinding imageLayoutBinding{ 0, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment, samplers };
+        vk::DescriptorSetLayoutCreateInfo layoutInfoImgui{ {}, 1, &imageLayoutBinding };
+        m_descriptorSetLayoutImgui = static_cast<vk::Device>(m_device).createDescriptorSetLayoutUnique(layoutInfoImgui);
     }
 
     void ImguiDemo::createGraphicsPipeline()
@@ -104,7 +117,7 @@ namespace bmvk
 
         auto bindingDescription = Vertex::getBindingDescription();
         auto attributeDescriptions = Vertex::getAttributeDescriptions();
-        vk::PipelineVertexInputStateCreateInfo vertexInputInfo{ {}, 1, &bindingDescription, static_cast<uint32_t>(attributeDescriptions.size()), attributeDescriptions.data() };
+        vk::PipelineVertexInputStateCreateInfo vertexInputInfo{ PipelineVertexInputStateCreateInfo{ bindingDescription, attributeDescriptions } };
         vk::PipelineInputAssemblyStateCreateInfo inputAssembly{ {}, vk::PrimitiveTopology::eTriangleList };
         vk::Viewport viewport{ 0.f, 0.f, static_cast<float>(m_swapchain.getExtent().width), static_cast<float>(m_swapchain.getExtent().height), 0.f, 1.f };
         vk::Rect2D scissor{ {}, m_swapchain.getExtent() };
@@ -117,7 +130,7 @@ namespace bmvk
         vk::PipelineLayoutCreateInfo pipelineLayoutInfo{ {}, 1, &descriptorSetLayout };
         m_pipelineLayout = static_cast<vk::Device>(m_device).createPipelineLayoutUnique(pipelineLayoutInfo);
 
-        vk::GraphicsPipelineCreateInfo pipelineInfo{ {}, 2, shaderStages, &vertexInputInfo, &inputAssembly, nullptr, &viewportState, &rasterizer, &multisampling, nullptr, &colorBlending, nullptr, *m_pipelineLayout, *m_renderPass, 0, nullptr, -1 };
+        vk::GraphicsPipelineCreateInfo pipelineInfo( {}, 2, shaderStages, &vertexInputInfo, &inputAssembly, nullptr, &viewportState, &rasterizer, &multisampling, nullptr, &colorBlending, nullptr, *m_pipelineLayout, *m_renderPass, 0, nullptr, -1 );
         m_graphicsPipeline = static_cast<vk::Device>(m_device).createGraphicsPipelineUnique(nullptr, pipelineInfo);
 
         /*
@@ -204,6 +217,31 @@ namespace bmvk
         vk::PipelineShaderStageCreateInfo fragShaderStageInfoImgui{ {}, vk::ShaderStageFlagBits::eFragment, *fragModule, "main" };
 
         vk::PipelineShaderStageCreateInfo shaderStagesImgui[] = { vertShaderStageInfoImgui, fragShaderStageInfoImgui };
+
+        vk::VertexInputBindingDescription bindingDescriptionImgui{ 0, sizeof ImDrawVert, vk::VertexInputRate::eVertex };
+        std::vector<vk::VertexInputAttributeDescription> attributeDescriptionsImgui
+        {
+            { 0, 0, vk::Format::eR32G32Sfloat, reinterpret_cast<size_t>(&static_cast<ImDrawVert*>(nullptr)->pos) },
+            { 1, 0, vk::Format::eR32G32Sfloat, reinterpret_cast<size_t>(&static_cast<ImDrawVert*>(nullptr)->uv) },
+            { 2, 0, vk::Format::eR8G8B8A8Unorm, reinterpret_cast<size_t>(&static_cast<ImDrawVert*>(nullptr)->col) }
+        };
+        vk::PipelineVertexInputStateCreateInfo vertexInputInfoImgui{ PipelineVertexInputStateCreateInfo{ bindingDescriptionImgui, attributeDescriptionsImgui } };
+        vk::PipelineInputAssemblyStateCreateInfo inputAssemblyImgui{ PipelineInputAssemblyStateCreateInfo{ vk::PrimitiveTopology::eTriangleList } };
+        vk::PipelineViewportStateCreateInfo viewportStateImgui{ PipelineViewportStateCreateInfo{ viewport, scissor } };
+        vk::PipelineRasterizationStateCreateInfo rasterizerImgui{ {}, false, false, vk::PolygonMode::eFill, vk::CullModeFlagBits::eNone, vk::FrontFace::eCounterClockwise, false, false, false, false, 1.f };
+        vk::PipelineMultisampleStateCreateInfo multisamplingImgui;
+        vk::PipelineDepthStencilStateCreateInfo depthStencilState;
+        vk::PipelineColorBlendAttachmentState colorBlendAttachmentImgui{ true, vk::BlendFactor::eSrcAlpha, vk::BlendFactor::eOneMinusSrcAlpha, vk::BlendOp::eAdd, vk::BlendFactor::eOneMinusSrcAlpha, vk::BlendFactor::eZero, vk::BlendOp::eAdd, vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA };
+        vk::PipelineColorBlendStateCreateInfo colorBlendingImgui{ PipelineColorBlendStateCreateInfo{ false, vk::LogicOp::eClear, colorBlendAttachmentImgui } };
+        vk::PipelineDynamicStateCreateInfo dynamicState{ PipelineDynamicStateCreateInfo{ { vk::DynamicState::eViewport, vk::DynamicState::eScissor } } };
+
+        vk::PushConstantRange pushConstantRange{ vk::ShaderStageFlagBits::eVertex, sizeof(float) * 0, sizeof(float) * 4 };
+        auto descriptorSetLayoutImgui{ *m_descriptorSetLayoutImgui };
+        vk::PipelineLayoutCreateInfo pipelineLayoutInfoImgui{ PipelineLayoutCreateInfo{ descriptorSetLayoutImgui, pushConstantRange } };
+        m_pipelineLayoutImgui = static_cast<vk::Device>(m_device).createPipelineLayoutUnique(pipelineLayoutInfoImgui);
+
+        vk::GraphicsPipelineCreateInfo pipelineInfoImgui{ {}, 2, shaderStagesImgui, &vertexInputInfoImgui, &inputAssemblyImgui, nullptr, &viewportStateImgui, &rasterizerImgui, &multisamplingImgui, &depthStencilState, &colorBlendingImgui, &dynamicState, *m_pipelineLayoutImgui, *m_renderPassImgui, 0, nullptr, -1 };
+        m_graphicsPipelineImgui = static_cast<vk::Device>(m_device).createGraphicsPipelineUnique(nullptr, pipelineInfoImgui);
     }
 
     void ImguiDemo::createFramebuffers()

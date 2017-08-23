@@ -60,9 +60,13 @@ namespace bmvk
         Swapchain m_swapchain;
         vk::UniqueRenderPass m_renderPass;
         vk::UniqueRenderPass m_renderPassImgui;
+        vk::UniqueSampler m_fontSamplerImgui;
         vk::UniqueDescriptorSetLayout m_descriptorSetLayout;
+        vk::UniqueDescriptorSetLayout m_descriptorSetLayoutImgui;
         vk::UniquePipelineLayout m_pipelineLayout;
+        vk::UniquePipelineLayout m_pipelineLayoutImgui;
         vk::UniquePipeline m_graphicsPipeline;
+        vk::UniquePipeline m_graphicsPipelineImgui;
         std::vector<vk::UniqueFramebuffer> m_swapChainFramebuffers;
         vk::UniqueBuffer m_vertexBuffer;
         vk::UniqueDeviceMemory m_vertexBufferMemory;
@@ -79,6 +83,7 @@ namespace bmvk
         vk::UniqueSemaphore m_renderFinishedSemaphore;
 
         void createRenderPass();
+        void createFontSampler();
         void createDescriptorSetLayout();
         void createGraphicsPipeline();
         void createFramebuffers();
