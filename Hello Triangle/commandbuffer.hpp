@@ -21,9 +21,13 @@ namespace bmvk
         void begin(vk::CommandBufferUsageFlags flags = {}) const;
         void end() const;
 
-        void copyBuffer(vk::UniqueBuffer & srcBuffer, vk::UniqueBuffer & dstBuffer, vk::DeviceSize size) const;
+        void copyBuffer(const vk::UniqueBuffer & srcBuffer, vk::UniqueBuffer & dstBuffer, vk::DeviceSize size) const;
+        void copyBufferToImage(const vk::UniqueBuffer & srcBuffer, vk::UniqueImage & dstImage, vk::ImageLayout dstImageLayout, vk::ArrayProxy<const vk::BufferImageCopy> regions) const;
+
         void beginRenderPass(const vk::UniqueRenderPass & renderPass, const vk::UniqueFramebuffer & framebuffer, vk::Rect2D renderArea, vk::ClearValue clearColor = { ClearColorValue{ 0.f, 0.f, 0.f, 1.f } }, vk::SubpassContents contents = vk::SubpassContents::eInline) const;
         void endRenderPass() const;
+
+        void pipelineBarrier(vk::PipelineStageFlags srcStageMask, vk::PipelineStageFlags dstStageMask, vk::DependencyFlags dependencyFlags, vk::ArrayProxy<const vk::MemoryBarrier> memoryBarriers, vk::ArrayProxy<const vk::BufferMemoryBarrier> bufferMemoryBarriers, vk::ArrayProxy<const vk::ImageMemoryBarrier> imageMemoryBarriers) const;
         
         void bindPipeline(const vk::UniquePipeline & pipeline, vk::PipelineBindPoint bindPoint = vk::PipelineBindPoint::eGraphics) const;
         void bindDescriptorSet(const vk::UniquePipelineLayout & layout, const vk::UniqueDescriptorSet & set, vk::PipelineBindPoint bindPoint = vk::PipelineBindPoint::eGraphics) const;

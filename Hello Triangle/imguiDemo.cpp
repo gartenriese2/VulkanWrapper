@@ -5,6 +5,8 @@
 
 #include "shader.hpp"
 #include "vulkan_bmvk.hpp"
+#include "../ImGuiDemo/imgui_impl_glfw_vulkan.h"
+#include <iostream>
 
 namespace bmvk
 {
@@ -37,11 +39,26 @@ namespace bmvk
         app->imguiKeyCallback(window, key, scancode, action, mods);
     }
 
+    static uint32_t getImguiMemoryType(vk::PhysicalDevice gpu, vk::MemoryPropertyFlags properties, uint32_t type_bits)
+    {
+        const auto prop{ gpu.getMemoryProperties() };
+        for (uint32_t i = 0; i < prop.memoryTypeCount; ++i)
+        {
+            if ((prop.memoryTypes[i].propertyFlags & properties) == properties && type_bits & 1 << i)
+            {
+                return i;
+            }
+        }
+
+        return 0xffffffff; // Unable to find memoryType
+    }
+
     ImguiDemo::ImguiDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height)
         : Demo{ enableValidationLayers, width, height, "Imgui Demo" },
         m_swapchain{ m_instance.getPhysicalDevice(), m_instance.getSurface(), m_window, m_device },
         m_imageAvailableSemaphore{ m_device.createSemaphore() },
-        m_renderFinishedSemaphore{ m_device.createSemaphore() }
+        m_renderFinishedSemaphore{ m_device.createSemaphore() },
+        m_renderImguiFinishedSemaphore{ m_device.createSemaphore() }
     {
         m_window.setWindowUserPointer(this);
         m_window.setWindowSizeCallback(onWindowResized);
@@ -60,6 +77,8 @@ namespace bmvk
         glfwSetMouseButtonCallback(m_window.getPointer().get(), onMouseButton);
         glfwSetScrollCallback(m_window.getPointer().get(), onScroll);
         glfwSetKeyCallback(m_window.getPointer().get(), onKey);
+
+        uploadFonts();
     }
 
     void ImguiDemo::run()
@@ -100,13 +119,16 @@ namespace bmvk
 
     void ImguiDemo::createRenderPass()
     {
-        vk::AttachmentDescription colorAttachment{ {}, m_swapchain.getImageFormat().format, vk::SampleCountFlagBits::e1, vk::AttachmentLoadOp::eClear, vk::AttachmentStoreOp::eStore, vk::AttachmentLoadOp::eDontCare, vk::AttachmentStoreOp::eDontCare, vk::ImageLayout::eUndefined, vk::ImageLayout::ePresentSrcKHR };
+        vk::AttachmentDescription colorAttachment{ {}, m_swapchain.getImageFormat().format, vk::SampleCountFlagBits::e1, vk::AttachmentLoadOp::eClear, vk::AttachmentStoreOp::eStore, vk::AttachmentLoadOp::eDontCare, vk::AttachmentStoreOp::eDontCare, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal };
         vk::AttachmentReference colorAttachmentRef{ 0, vk::ImageLayout::eColorAttachmentOptimal };
         vk::SubpassDescription subpass{ {}, vk::PipelineBindPoint::eGraphics, 0, nullptr, 1, &colorAttachmentRef };
         vk::SubpassDependency dependency{ VK_SUBPASS_EXTERNAL, 0, vk::PipelineStageFlagBits::eColorAttachmentOutput, vk::PipelineStageFlagBits::eColorAttachmentOutput,{}, vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite };
         RenderPassCreateInfo renderPassInfo{ {}, colorAttachment, subpass, dependency };
         m_renderPass = static_cast<vk::Device>(m_device).createRenderPassUnique(renderPassInfo);
-        m_renderPassImgui = static_cast<vk::Device>(m_device).createRenderPassUnique(renderPassInfo);
+
+        vk::AttachmentDescription colorAttachmentImgui{ {}, m_swapchain.getImageFormat().format, vk::SampleCountFlagBits::e1, vk::AttachmentLoadOp::eLoad, vk::AttachmentStoreOp::eStore, vk::AttachmentLoadOp::eDontCare, vk::AttachmentStoreOp::eDontCare, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::ePresentSrcKHR };
+        RenderPassCreateInfo renderPassInfoImgui{ {}, colorAttachmentImgui, subpass, dependency };
+        m_renderPassImgui = static_cast<vk::Device>(m_device).createRenderPassUnique(renderPassInfoImgui);
     }
 
     void ImguiDemo::createFontSampler()
@@ -358,6 +380,10 @@ namespace bmvk
         vk::DescriptorBufferInfo bufferInfo{ *m_uniformBuffer, 0, sizeof(UniformBufferObject) };
         WriteDescriptorSet descriptorWrite{ m_descriptorSets[0], 0, 0, 1, vk::DescriptorType::eUniformBuffer, nullptr, &bufferInfo };
         m_device.updateDescriptorSet(descriptorWrite);
+
+        vk::DescriptorSetLayout layoutsImgui[] = { *m_descriptorSetLayoutImgui };
+        vk::DescriptorSetAllocateInfo allocInfoImgui{ *m_descriptorPoolImgui, 1, layoutsImgui };
+        m_descriptorSetsImgui = static_cast<vk::Device>(m_device).allocateDescriptorSetsUnique(allocInfoImgui);
     }
 
     void ImguiDemo::createCommandBuffers()
@@ -376,8 +402,76 @@ namespace bmvk
             cmdBuffer.endRenderPass();
             cmdBuffer.end();
         }
+    }
 
-        m_commandBuffersImgui = m_device.allocateCommandBuffers(m_commandPool, static_cast<uint32_t>(m_swapChainFramebuffers.size()));
+    void ImguiDemo::uploadFonts()
+    {
+        auto cmdBuffer{ m_device.allocateCommandBuffer(m_commandPool) };
+        cmdBuffer.begin(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
+
+        auto & io = ImGui::GetIO();
+
+        unsigned char * pixels;
+        int width, height;
+        io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
+        auto upload_size = width * height * 4 * sizeof(char);
+
+        // Create the Image:
+        vk::ImageCreateInfo imageInfo{ {}, vk::ImageType::e2D, vk::Format::eR8G8B8A8Unorm, vk::Extent3D(width, height, 1), 1, 1, vk::SampleCountFlagBits::e1, vk::ImageTiling::eOptimal, vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eTransferDst };
+        m_imguiFontImage = static_cast<vk::Device>(m_device).createImageUnique(imageInfo);
+
+        const auto imageReq{ static_cast<vk::Device>(m_device).getImageMemoryRequirements(*m_imguiFontImage) };
+        const auto imageMemoryTypeIndex{ getImguiMemoryType(static_cast<vk::PhysicalDevice>(m_instance.getPhysicalDevice()), vk::MemoryPropertyFlagBits::eDeviceLocal, imageReq.memoryTypeBits) };
+        vk::MemoryAllocateInfo imageMemoryAllocInfo{ imageReq.size, imageMemoryTypeIndex };
+        m_imguiFontMemory = static_cast<vk::Device>(m_device).allocateMemoryUnique(imageMemoryAllocInfo);
+
+        static_cast<vk::Device>(m_device).bindImageMemory(*m_imguiFontImage, *m_imguiFontMemory, 0);
+
+        // Create the Image View:
+        vk::ImageViewCreateInfo imageViewInfo{ {}, *m_imguiFontImage, vk::ImageViewType::e2D, vk::Format::eR8G8B8A8Unorm,{}, vk::ImageSubresourceRange{ vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1 } };
+        m_imguiFontImageView = static_cast<vk::Device>(m_device).createImageViewUnique(imageViewInfo);
+
+        // Update the Descriptor Set:
+        vk::DescriptorImageInfo descImage[1] = { vk::DescriptorImageInfo{ *m_fontSamplerImgui, *m_imguiFontImageView, vk::ImageLayout::eShaderReadOnlyOptimal } };
+        vk::WriteDescriptorSet writeDesc(*m_descriptorSetsImgui[0], 0, 0, 1, vk::DescriptorType::eCombinedImageSampler, descImage);
+        static_cast<vk::Device>(m_device).updateDescriptorSets(writeDesc, nullptr);
+
+        // Create the Upload Buffer:
+        vk::BufferCreateInfo bufferInfo{ {}, upload_size, vk::BufferUsageFlagBits::eTransferSrc };
+        auto uploadBuffer{ static_cast<vk::Device>(m_device).createBufferUnique(bufferInfo) };
+
+        const auto bufferReq{ static_cast<vk::Device>(m_device).getBufferMemoryRequirements(*uploadBuffer) };
+        m_imguiBufferMemoryAlignment = m_imguiBufferMemoryAlignment > bufferReq.alignment ? m_imguiBufferMemoryAlignment : bufferReq.alignment;
+        const auto bufferMemoryTypeIndex{ getImguiMemoryType(static_cast<vk::PhysicalDevice>(m_instance.getPhysicalDevice()), vk::MemoryPropertyFlagBits::eHostVisible, bufferReq.memoryTypeBits) };
+        vk::MemoryAllocateInfo bufferMemoryAllocInfo{ bufferReq.size, bufferMemoryTypeIndex };
+        auto uploadBufferMemory{ static_cast<vk::Device>(m_device).allocateMemoryUnique(bufferMemoryAllocInfo) };
+
+        static_cast<vk::Device>(m_device).bindBufferMemory(*uploadBuffer, *uploadBufferMemory, 0);
+
+        // Upload to Buffer:
+        auto * map{ m_device.mapMemory(uploadBufferMemory, upload_size) };
+        memcpy(map, pixels, upload_size);
+        vk::MappedMemoryRange flushRange{ *uploadBufferMemory, 0, upload_size };
+        static_cast<vk::Device>(m_device).flushMappedMemoryRanges(flushRange);
+        m_device.unmapMemory(uploadBufferMemory);
+
+        // Copy to Image:
+        vk::ImageMemoryBarrier copyBarrier{ {}, vk::AccessFlagBits::eTransferWrite, vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal, VK_QUEUE_FAMILY_IGNORED, VK_QUEUE_FAMILY_IGNORED, *m_imguiFontImage, vk::ImageSubresourceRange{ vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1 } };
+        cmdBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eHost, vk::PipelineStageFlagBits::eTransfer, {}, nullptr, nullptr, copyBarrier);
+
+        vk::BufferImageCopy copyRegion{ 0, 0, 0, vk::ImageSubresourceLayers{ vk::ImageAspectFlagBits::eColor, 0, 0, 1 },{}, vk::Extent3D{ static_cast<uint32_t>(width), static_cast<uint32_t>(height), 1 } };
+        cmdBuffer.copyBufferToImage(uploadBuffer, m_imguiFontImage, vk::ImageLayout::eTransferDstOptimal, copyRegion);
+
+        vk::ImageMemoryBarrier useBarrier{ vk::AccessFlagBits::eTransferWrite, vk::AccessFlagBits::eShaderRead, vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eShaderReadOnlyOptimal, VK_QUEUE_FAMILY_IGNORED, VK_QUEUE_FAMILY_IGNORED, *m_imguiFontImage, vk::ImageSubresourceRange{ vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1 } };
+        cmdBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eFragmentShader, {}, nullptr, nullptr, useBarrier);
+
+        // Store our identifier
+        VkImage img{ *m_imguiFontImage };
+        io.Fonts->TexID = reinterpret_cast<void *>((intptr_t)img);
+
+        cmdBuffer.end();
+        m_queue.submit(cmdBuffer);
+        m_device.waitIdle();
     }
 
     void ImguiDemo::drawFrame()
@@ -397,14 +491,30 @@ namespace bmvk
         }
 
         m_queue.submit(m_commandBuffers[imageIndex], m_imageAvailableSemaphore, m_renderFinishedSemaphore, vk::PipelineStageFlagBits::eColorAttachmentOutput);
+        drawImgui(imageIndex);
 
-        auto waitSemaphore{ *m_renderFinishedSemaphore };
+        auto waitSemaphore{ *m_renderImguiFinishedSemaphore };
         auto swapchain{ static_cast<vk::SwapchainKHR>(m_swapchain) };
         auto success{ m_queue.present(waitSemaphore, swapchain, imageIndex) };
         if (!success)
         {
             recreateSwapChain();
         }
+    }
+
+    void ImguiDemo::drawImgui(uint32_t imageIndex)
+    {
+        m_commandBufferImguiPtr.reset();
+        m_commandBufferImguiPtr = std::make_unique<CommandBuffer>(m_device.allocateCommandBuffer(m_commandPool));
+        m_commandBufferImguiPtr->begin(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
+        m_commandBufferImguiPtr->beginRenderPass(m_renderPassImgui, m_swapChainFramebuffers[imageIndex], { { 0, 0 }, m_swapchain.getExtent() });
+
+        ImGui::Render();
+
+        m_commandBufferImguiPtr->endRenderPass();
+        m_commandBufferImguiPtr->end();
+
+        m_queue.submit(*m_commandBufferImguiPtr.get(), m_renderFinishedSemaphore, m_renderImguiFinishedSemaphore, vk::PipelineStageFlagBits::eColorAttachmentOutput);
     }
 
     void ImguiDemo::updateUniformBuffer()
@@ -467,7 +577,7 @@ namespace bmvk
         glfwSetInputMode(windowPtr.get(), GLFW_CURSOR, io.MouseDrawCursor ? GLFW_CURSOR_HIDDEN : GLFW_CURSOR_NORMAL);
 
         // Start the frame
-        //ImGui::NewFrame(); // TODO
+        ImGui::NewFrame();
     }
 
     void ImguiDemo::imguiMouseButtonCallback(GLFWwindow * window, int button, int action, int mods)

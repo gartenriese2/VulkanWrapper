@@ -81,10 +81,16 @@ namespace bmvk
         vk::UniqueDescriptorPool m_descriptorPool;
         vk::UniqueDescriptorPool m_descriptorPoolImgui;
         std::vector<vk::UniqueDescriptorSet> m_descriptorSets;
+        std::vector<vk::UniqueDescriptorSet> m_descriptorSetsImgui;
         std::vector<CommandBuffer> m_commandBuffers;
-        std::vector<CommandBuffer> m_commandBuffersImgui;
+        std::unique_ptr<CommandBuffer> m_commandBufferImguiPtr;
         vk::UniqueSemaphore m_imageAvailableSemaphore;
         vk::UniqueSemaphore m_renderFinishedSemaphore;
+        vk::UniqueSemaphore m_renderImguiFinishedSemaphore;
+        vk::UniqueImage m_imguiFontImage;
+        vk::UniqueDeviceMemory m_imguiFontMemory;
+        vk::UniqueImageView m_imguiFontImageView;
+        size_t m_imguiBufferMemoryAlignment = 256;
 
         double m_imguiTime = 0.0;
         std::vector<bool> m_imguiMousePressed = { false, false, false };
@@ -101,8 +107,10 @@ namespace bmvk
         void createDescriptorPool();
         void createDescriptorSet();
         void createCommandBuffers();
+        void uploadFonts();
 
         void drawFrame();
+        void drawImgui(uint32_t imageIndex);
         void updateUniformBuffer();
         void imguiNewFrame();
 

@@ -12,9 +12,14 @@ namespace bmvk
         m_commandBuffer->end();
     }
 
-    void CommandBuffer::copyBuffer(vk::UniqueBuffer & srcBuffer, vk::UniqueBuffer & dstBuffer, vk::DeviceSize size) const
+    void CommandBuffer::copyBuffer(const vk::UniqueBuffer & srcBuffer, vk::UniqueBuffer & dstBuffer, vk::DeviceSize size) const
     {
         m_commandBuffer->copyBuffer(*srcBuffer, *dstBuffer, { { 0, 0, size } });
+    }
+
+    void CommandBuffer::copyBufferToImage(const vk::UniqueBuffer & srcBuffer, vk::UniqueImage & dstImage, vk::ImageLayout dstImageLayout, vk::ArrayProxy<const vk::BufferImageCopy> regions) const
+    {
+        m_commandBuffer->copyBufferToImage(*srcBuffer, *dstImage, dstImageLayout, regions);
     }
 
     void CommandBuffer::beginRenderPass(const vk::UniqueRenderPass & renderPass, const vk::UniqueFramebuffer & framebuffer, vk::Rect2D renderArea, vk::ClearValue clearColor, vk::SubpassContents contents) const
@@ -25,6 +30,11 @@ namespace bmvk
     void CommandBuffer::endRenderPass() const
     {
         m_commandBuffer->endRenderPass();
+    }
+
+    void CommandBuffer::pipelineBarrier(vk::PipelineStageFlags srcStageMask, vk::PipelineStageFlags dstStageMask, vk::DependencyFlags dependencyFlags, vk::ArrayProxy<const vk::MemoryBarrier> memoryBarriers, vk::ArrayProxy<const vk::BufferMemoryBarrier> bufferMemoryBarriers, vk::ArrayProxy<const vk::ImageMemoryBarrier> imageMemoryBarriers) const
+    {
+        m_commandBuffer->pipelineBarrier(srcStageMask, dstStageMask, dependencyFlags, memoryBarriers, bufferMemoryBarriers, imageMemoryBarriers);
     }
 
     void CommandBuffer::bindPipeline(const vk::UniquePipeline & pipeline, vk::PipelineBindPoint bindPoint) const
