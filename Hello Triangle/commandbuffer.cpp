@@ -32,6 +32,16 @@ namespace bmvk
         m_commandBuffer->endRenderPass();
     }
 
+    void CommandBuffer::setViewport(vk::Viewport viewport) const
+    {
+        m_commandBuffer->setViewport(0, viewport);
+    }
+
+    void CommandBuffer::setScissor(vk::ArrayProxy<const vk::Rect2D> scissors) const
+    {
+        m_commandBuffer->setScissor(0, scissors);
+    }
+
     void CommandBuffer::pipelineBarrier(vk::PipelineStageFlags srcStageMask, vk::PipelineStageFlags dstStageMask, vk::DependencyFlags dependencyFlags, vk::ArrayProxy<const vk::MemoryBarrier> memoryBarriers, vk::ArrayProxy<const vk::BufferMemoryBarrier> bufferMemoryBarriers, vk::ArrayProxy<const vk::ImageMemoryBarrier> imageMemoryBarriers) const
     {
         m_commandBuffer->pipelineBarrier(srcStageMask, dstStageMask, dependencyFlags, memoryBarriers, bufferMemoryBarriers, imageMemoryBarriers);

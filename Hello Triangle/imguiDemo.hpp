@@ -6,6 +6,8 @@
 #include "demo.hpp"
 #include "swapchain.hpp"
 
+struct ImDrawData;
+
 namespace bmvk
 {
     class ImguiDemo : Demo
@@ -73,9 +75,13 @@ namespace bmvk
         vk::UniquePipeline m_graphicsPipelineImgui;
         std::vector<vk::UniqueFramebuffer> m_swapChainFramebuffers;
         vk::UniqueBuffer m_vertexBuffer;
+        vk::UniqueBuffer m_vertexBufferImgui;
         vk::UniqueDeviceMemory m_vertexBufferMemory;
+        vk::UniqueDeviceMemory m_vertexBufferMemoryImgui;
         vk::UniqueBuffer m_indexBuffer;
+        vk::UniqueBuffer m_indexBufferImgui;
         vk::UniqueDeviceMemory m_indexBufferMemory;
+        vk::UniqueDeviceMemory m_indexBufferMemoryImgui;
         vk::UniqueBuffer m_uniformBuffer;
         vk::UniqueDeviceMemory m_uniformBufferMemory;
         vk::UniqueDescriptorPool m_descriptorPool;
@@ -90,7 +96,9 @@ namespace bmvk
         vk::UniqueImage m_imguiFontImage;
         vk::UniqueDeviceMemory m_imguiFontMemory;
         vk::UniqueImageView m_imguiFontImageView;
-        size_t m_imguiBufferMemoryAlignment = 256;
+        size_t m_bufferMemoryAlignmentImgui = 256;
+        size_t m_vertexBufferSize;
+        size_t m_indexBufferSize;
 
         double m_imguiTime = 0.0;
         std::vector<bool> m_imguiMousePressed = { false, false, false };
@@ -110,6 +118,7 @@ namespace bmvk
         void uploadFonts();
 
         void drawFrame();
+        void imguiRenderDrawLists(ImDrawData * draw_data);
         void drawImgui(uint32_t imageIndex);
         void updateUniformBuffer();
         void imguiNewFrame();

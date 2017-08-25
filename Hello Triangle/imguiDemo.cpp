@@ -393,7 +393,7 @@ namespace bmvk
         {
             const auto & cmdBuffer{ m_commandBuffers[i] };
             cmdBuffer.begin(vk::CommandBufferUsageFlagBits::eSimultaneousUse);
-            cmdBuffer.beginRenderPass(m_renderPass, m_swapChainFramebuffers[i], { { 0, 0 }, m_swapchain.getExtent() });
+            cmdBuffer.beginRenderPass(m_renderPass, m_swapChainFramebuffers[i], { { 0, 0 }, m_swapchain.getExtent() }, { ClearColorValue{ 0.f, 0.f, 0.f, 1.f } });
             cmdBuffer.bindPipeline(m_graphicsPipeline);
             cmdBuffer.bindDescriptorSet(m_pipelineLayout, m_descriptorSets[0]);
             cmdBuffer.bindVertexBuffer(m_vertexBuffer);
@@ -441,7 +441,7 @@ namespace bmvk
         auto uploadBuffer{ static_cast<vk::Device>(m_device).createBufferUnique(bufferInfo) };
 
         const auto bufferReq{ static_cast<vk::Device>(m_device).getBufferMemoryRequirements(*uploadBuffer) };
-        m_imguiBufferMemoryAlignment = m_imguiBufferMemoryAlignment > bufferReq.alignment ? m_imguiBufferMemoryAlignment : bufferReq.alignment;
+        m_bufferMemoryAlignmentImgui = m_bufferMemoryAlignmentImgui > bufferReq.alignment ? m_bufferMemoryAlignmentImgui : bufferReq.alignment;
         const auto bufferMemoryTypeIndex{ getImguiMemoryType(static_cast<vk::PhysicalDevice>(m_instance.getPhysicalDevice()), vk::MemoryPropertyFlagBits::eHostVisible, bufferReq.memoryTypeBits) };
         vk::MemoryAllocateInfo bufferMemoryAllocInfo{ bufferReq.size, bufferMemoryTypeIndex };
         auto uploadBufferMemory{ static_cast<vk::Device>(m_device).allocateMemoryUnique(bufferMemoryAllocInfo) };
@@ -502,12 +502,141 @@ namespace bmvk
         }
     }
 
+    void ImguiDemo::imguiRenderDrawLists(ImDrawData * draw_data)
+    {
+        auto & io = ImGui::GetIO();
+
+        // Create the Vertex Buffer:
+        auto vertexSize{ draw_data->TotalVtxCount * sizeof(ImDrawVert) };
+        if (!m_vertexBufferImgui || m_vertexBufferSize < vertexSize)
+        {
+            if (m_vertexBufferImgui)
+            {
+                m_vertexBufferImgui.reset(nullptr);
+            }
+
+            if (m_vertexBufferMemoryImgui)
+            {
+                m_vertexBufferMemoryImgui.reset(nullptr);
+            }
+
+            const auto vertexBufferSize{ ((vertexSize - 1) / m_bufferMemoryAlignmentImgui + 1) * m_bufferMemoryAlignmentImgui };
+            vk::BufferCreateInfo bufferInfo{ {}, vertexBufferSize, vk::BufferUsageFlagBits::eVertexBuffer };
+            m_vertexBufferImgui = static_cast<vk::Device>(m_device).createBufferUnique(bufferInfo);
+
+            const auto req{ static_cast<vk::Device>(m_device).getBufferMemoryRequirements(*m_vertexBufferImgui) };
+            m_bufferMemoryAlignmentImgui = m_bufferMemoryAlignmentImgui > req.alignment ? m_bufferMemoryAlignmentImgui : req.alignment;
+
+            vk::MemoryAllocateInfo allocInfo{ req.size, getImguiMemoryType(static_cast<vk::PhysicalDevice>(m_instance.getPhysicalDevice()), vk::MemoryPropertyFlagBits::eHostVisible, req.memoryTypeBits) };
+            m_vertexBufferMemoryImgui = static_cast<vk::Device>(m_device).allocateMemoryUnique(allocInfo);
+
+            static_cast<vk::Device>(m_device).bindBufferMemory(*m_vertexBufferImgui, *m_vertexBufferMemoryImgui, 0);
+
+            m_vertexBufferSize = vertexBufferSize;
+        }
+
+        // Create the Index Buffer:
+        auto indexSize{ draw_data->TotalIdxCount * sizeof(ImDrawIdx) };
+        if (!m_indexBufferImgui || m_indexBufferSize < indexSize)
+        {
+            if (m_indexBufferImgui)
+            {
+                m_indexBufferImgui.reset(nullptr);
+            }
+
+            if (m_indexBufferMemoryImgui)
+            {
+                m_indexBufferMemoryImgui.reset(nullptr);
+            }
+
+            const auto indexBufferSize{ ((indexSize - 1) / m_bufferMemoryAlignmentImgui + 1) * m_bufferMemoryAlignmentImgui };
+            vk::BufferCreateInfo bufferInfo{ {}, indexBufferSize, vk::BufferUsageFlagBits::eIndexBuffer };
+            m_indexBufferImgui = static_cast<vk::Device>(m_device).createBufferUnique(bufferInfo);
+
+            const auto req{ static_cast<vk::Device>(m_device).getBufferMemoryRequirements(*m_indexBufferImgui) };
+            m_bufferMemoryAlignmentImgui = m_bufferMemoryAlignmentImgui > req.alignment ? m_bufferMemoryAlignmentImgui : req.alignment;
+
+            vk::MemoryAllocateInfo allocInfo{ req.size, getImguiMemoryType(static_cast<vk::PhysicalDevice>(m_instance.getPhysicalDevice()), vk::MemoryPropertyFlagBits::eHostVisible, req.memoryTypeBits) };
+            m_indexBufferMemoryImgui = static_cast<vk::Device>(m_device).allocateMemoryUnique(allocInfo);
+
+            static_cast<vk::Device>(m_device).bindBufferMemory(*m_indexBufferImgui, *m_indexBufferMemoryImgui, 0);
+
+            m_indexBufferSize = indexBufferSize;
+        }
+
+        // Upload Vertex and index Data:
+        auto vtx_dst = reinterpret_cast<ImDrawVert *>(m_device.mapMemory(m_vertexBufferMemoryImgui, vertexSize));
+        auto idx_dst = reinterpret_cast<ImDrawIdx *>(m_device.mapMemory(m_indexBufferMemoryImgui, indexSize));
+        
+        for (auto n = 0; n < draw_data->CmdListsCount; ++n)
+        {
+            const ImDrawList * cmd_list = draw_data->CmdLists[n];
+            memcpy(vtx_dst, cmd_list->VtxBuffer.Data, cmd_list->VtxBuffer.Size * sizeof(ImDrawVert));
+            memcpy(idx_dst, cmd_list->IdxBuffer.Data, cmd_list->IdxBuffer.Size * sizeof(ImDrawIdx));
+            vtx_dst += cmd_list->VtxBuffer.Size;
+            idx_dst += cmd_list->IdxBuffer.Size;
+        }
+
+        std::vector<vk::MappedMemoryRange> ranges =
+        {
+            { *m_vertexBufferMemoryImgui, 0, VK_WHOLE_SIZE },
+            { *m_indexBufferMemoryImgui, 0, VK_WHOLE_SIZE },
+        };
+        static_cast<vk::Device>(m_device).flushMappedMemoryRanges(ranges);
+
+        m_device.unmapMemory(m_vertexBufferMemoryImgui);
+        m_device.unmapMemory(m_indexBufferMemoryImgui);
+
+        // Bind pipeline and descriptor sets:
+        m_commandBufferImguiPtr->bindPipeline(m_graphicsPipelineImgui);
+        m_commandBufferImguiPtr->bindDescriptorSet(m_pipelineLayoutImgui, m_descriptorSetsImgui[0]);
+
+        // Bind Vertex And Index Buffer:
+        m_commandBufferImguiPtr->bindVertexBuffer(m_vertexBufferImgui);
+        m_commandBufferImguiPtr->bindIndexBuffer(m_indexBufferImgui);
+
+        // Setup viewport:
+        m_commandBufferImguiPtr->setViewport({ 0.f, 0.f, ImGui::GetIO().DisplaySize.x, ImGui::GetIO().DisplaySize.y, 0.f, 1.f });
+
+        // Setup scale and translation:
+        m_commandBufferImguiPtr->pushConstants<float>(m_pipelineLayoutImgui, vk::ShaderStageFlagBits::eVertex, 0, std::vector<float>{ 2.f / io.DisplaySize.x, 2.f / io.DisplaySize.y });
+        m_commandBufferImguiPtr->pushConstants<float>(m_pipelineLayoutImgui, vk::ShaderStageFlagBits::eVertex, 2, std::vector<float>{ -1.f, -1.f });
+
+        // Render the command lists:
+        auto vtxOffset = 0;
+        auto idxOffset = 0;
+        for (auto n = 0; n < draw_data->CmdListsCount; ++n)
+        {
+            const ImDrawList * cmdList = draw_data->CmdLists[n];
+            for (auto cmdI = 0; cmdI < cmdList->CmdBuffer.Size; ++cmdI)
+            {
+                auto pcmd = &cmdList->CmdBuffer[cmdI];
+                if (pcmd->UserCallback)
+                {
+                    pcmd->UserCallback(cmdList, pcmd);
+                }
+                else
+                {
+                    vk::Offset2D offset{ static_cast<int32_t>(pcmd->ClipRect.x) > 0 ? static_cast<int32_t>(pcmd->ClipRect.x) : 0, static_cast<int32_t>(pcmd->ClipRect.y) > 0 ? static_cast<int32_t>(pcmd->ClipRect.y) : 0 };
+                    vk::Extent2D extent{ static_cast<uint32_t>(pcmd->ClipRect.z - pcmd->ClipRect.x), static_cast<uint32_t>(pcmd->ClipRect.w - pcmd->ClipRect.y + 1) }; // FIXME: Why +1 here?
+                    vk::Rect2D scissor{ offset, extent };
+                    m_commandBufferImguiPtr->setScissor(scissor);
+                    m_commandBufferImguiPtr->drawIndexed(pcmd->ElemCount, 1, idxOffset, vtxOffset);
+                }
+
+                idxOffset += pcmd->ElemCount;
+            }
+
+            vtxOffset += cmdList->VtxBuffer.Size;
+        }
+    }
+
     void ImguiDemo::drawImgui(uint32_t imageIndex)
     {
         m_commandBufferImguiPtr.reset();
         m_commandBufferImguiPtr = std::make_unique<CommandBuffer>(m_device.allocateCommandBuffer(m_commandPool));
         m_commandBufferImguiPtr->begin(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
-        m_commandBufferImguiPtr->beginRenderPass(m_renderPassImgui, m_swapChainFramebuffers[imageIndex], { { 0, 0 }, m_swapchain.getExtent() });
+        m_commandBufferImguiPtr->beginRenderPass(m_renderPassImgui, m_swapChainFramebuffers[imageIndex], { { 0, 0 }, m_swapchain.getExtent() }, { ClearColorValue{ 0.f, 0.f, 0.f, 1.f } });
 
         ImGui::Render();
 

@@ -24,8 +24,14 @@ namespace bmvk
         void copyBuffer(const vk::UniqueBuffer & srcBuffer, vk::UniqueBuffer & dstBuffer, vk::DeviceSize size) const;
         void copyBufferToImage(const vk::UniqueBuffer & srcBuffer, vk::UniqueImage & dstImage, vk::ImageLayout dstImageLayout, vk::ArrayProxy<const vk::BufferImageCopy> regions) const;
 
-        void beginRenderPass(const vk::UniqueRenderPass & renderPass, const vk::UniqueFramebuffer & framebuffer, vk::Rect2D renderArea, vk::ClearValue clearColor = { ClearColorValue{ 0.f, 0.f, 0.f, 1.f } }, vk::SubpassContents contents = vk::SubpassContents::eInline) const;
+        void beginRenderPass(const vk::UniqueRenderPass & renderPass, const vk::UniqueFramebuffer & framebuffer, vk::Rect2D renderArea, vk::ClearValue clearColor, vk::SubpassContents contents = vk::SubpassContents::eInline) const;
         void endRenderPass() const;
+
+        void setViewport(vk::Viewport viewport) const;
+        void setScissor(vk::ArrayProxy<const vk::Rect2D> scissors) const;
+
+        template<class T>
+        void pushConstants(const vk::UniquePipelineLayout & layout, vk::ShaderStageFlags stageFlags, uint32_t offset, std::vector<T> values) const;
 
         void pipelineBarrier(vk::PipelineStageFlags srcStageMask, vk::PipelineStageFlags dstStageMask, vk::DependencyFlags dependencyFlags, vk::ArrayProxy<const vk::MemoryBarrier> memoryBarriers, vk::ArrayProxy<const vk::BufferMemoryBarrier> bufferMemoryBarriers, vk::ArrayProxy<const vk::ImageMemoryBarrier> imageMemoryBarriers) const;
         
@@ -38,6 +44,12 @@ namespace bmvk
     private:
         vk::UniqueCommandBuffer m_commandBuffer;
     };
+
+    template<class T>
+    void CommandBuffer::pushConstants(const vk::UniquePipelineLayout & layout, vk::ShaderStageFlags stageFlags, uint32_t offset, std::vector<T> values) const
+    {
+        m_commandBuffer->pushConstants(*layout, stageFlags, sizeof(T) * offset, sizeof(T) * static_cast<uint32_t>(values.size()), reinterpret_cast<void *>(values.data()));
+    }
 
     static_assert(std::is_move_constructible_v<CommandBuffer>);
     static_assert(std::is_move_assignable_v<CommandBuffer>);
