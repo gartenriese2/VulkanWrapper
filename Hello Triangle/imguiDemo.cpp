@@ -54,7 +54,7 @@ namespace bmvk
     }
 
     ImguiDemo::ImguiDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height)
-        : Demo{ enableValidationLayers, width, height, "Imgui Demo" },
+        : Demo{ enableValidationLayers, width, height, "Imgui Demo", true },
         m_swapchain{ m_instance.getPhysicalDevice(), m_instance.getSurface(), m_window, m_device },
         m_imageAvailableSemaphore{ m_device.createSemaphore() },
         m_renderFinishedSemaphore{ m_device.createSemaphore() },
@@ -79,17 +79,58 @@ namespace bmvk
         glfwSetKeyCallback(m_window.getPointer().get(), onKey);
 
         uploadFonts();
+
+        auto & io = ImGui::GetIO();
+        io.KeyMap[ImGuiKey_Tab] = GLFW_KEY_TAB;                         // Keyboard mapping. ImGui will use those indices to peek into the io.KeyDown[] array.
+        io.KeyMap[ImGuiKey_LeftArrow] = GLFW_KEY_LEFT;
+        io.KeyMap[ImGuiKey_RightArrow] = GLFW_KEY_RIGHT;
+        io.KeyMap[ImGuiKey_UpArrow] = GLFW_KEY_UP;
+        io.KeyMap[ImGuiKey_DownArrow] = GLFW_KEY_DOWN;
+        io.KeyMap[ImGuiKey_PageUp] = GLFW_KEY_PAGE_UP;
+        io.KeyMap[ImGuiKey_PageDown] = GLFW_KEY_PAGE_DOWN;
+        io.KeyMap[ImGuiKey_Home] = GLFW_KEY_HOME;
+        io.KeyMap[ImGuiKey_End] = GLFW_KEY_END;
+        io.KeyMap[ImGuiKey_Delete] = GLFW_KEY_DELETE;
+        io.KeyMap[ImGuiKey_Backspace] = GLFW_KEY_BACKSPACE;
+        io.KeyMap[ImGuiKey_Enter] = GLFW_KEY_ENTER;
+        io.KeyMap[ImGuiKey_Escape] = GLFW_KEY_ESCAPE;
+        io.KeyMap[ImGuiKey_A] = GLFW_KEY_A;
+        io.KeyMap[ImGuiKey_C] = GLFW_KEY_C;
+        io.KeyMap[ImGuiKey_V] = GLFW_KEY_V;
+        io.KeyMap[ImGuiKey_X] = GLFW_KEY_X;
+        io.KeyMap[ImGuiKey_Y] = GLFW_KEY_Y;
+        io.KeyMap[ImGuiKey_Z] = GLFW_KEY_Z;
+        io.RenderDrawListsFn = nullptr;
     }
 
     void ImguiDemo::run()
     {
         while (!m_window.shouldClose())
         {
+            /*
+             * CPU
+             */
+
             m_window.pollEvents();
 
-            // do cpu work here
             updateUniformBuffer();
             imguiNewFrame();
+
+            // 1. Show a simple window
+            // Tip: if we don't call ImGui::Begin()/ImGui::End() the widgets appears in a window automatically called "Debug"
+            {
+                ImGui::SetNextWindowPos(ImVec2(20, 20));
+                ImGui::SetNextWindowSize(ImVec2(400, 50), ImGuiCond_Always);
+                ImGui::Begin("Performance");
+                ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", m_avgFrameTime / 1000.0, m_avgFps);
+                ImGui::End();
+            }
+
+            ImGui::Render();
+
+            /*
+             * GPU
+             */
 
             drawFrame();
         }
@@ -477,7 +518,7 @@ namespace bmvk
     void ImguiDemo::drawFrame()
     {
         m_queue.waitIdle();
-        timing();
+        timing(false);
 
         uint32_t imageIndex;
         try
@@ -504,6 +545,11 @@ namespace bmvk
 
     void ImguiDemo::imguiRenderDrawLists(ImDrawData * draw_data)
     {
+        if (draw_data->TotalVtxCount == 0)
+        {
+            return;
+        }
+
         auto & io = ImGui::GetIO();
 
         // Create the Vertex Buffer:
@@ -638,7 +684,7 @@ namespace bmvk
         m_commandBufferImguiPtr->begin(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
         m_commandBufferImguiPtr->beginRenderPass(m_renderPassImgui, m_swapChainFramebuffers[imageIndex], { { 0, 0 }, m_swapchain.getExtent() }, { ClearColorValue{ 0.f, 0.f, 0.f, 1.f } });
 
-        ImGui::Render();
+        imguiRenderDrawLists(ImGui::GetDrawData());
 
         m_commandBufferImguiPtr->endRenderPass();
         m_commandBufferImguiPtr->end();

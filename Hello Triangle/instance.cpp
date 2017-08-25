@@ -10,7 +10,7 @@ namespace bmvk
     constexpr auto k_standardValidationLayerName = "VK_LAYER_LUNARG_standard_validation";
     constexpr auto k_debugExtensionName = "VK_EXT_debug_report";
 
-    Instance::Instance(const std::string& appName, const uint32_t appVersion, const std::string& engineName, const uint32_t engineVersion, const Window & window, const bool enableValidationLayers)
+    Instance::Instance(const std::string& appName, const uint32_t appVersion, const std::string& engineName, const uint32_t engineVersion, const Window & window, const bool enableValidationLayers, const bool onlyWarningsAndAbove)
     {
         vk::ApplicationInfo appInfo{ appName.c_str(), appVersion, engineName.c_str(), engineVersion, VK_API_VERSION_1_0 };
 
@@ -23,7 +23,6 @@ namespace bmvk
 
         initializeLayerNames(enableValidationLayers);
 
-        //vk::InstanceCreateInfo info{ {}, &appInfo, static_cast<uint32_t>(m_layerNames.size()), m_layerNames.data(), static_cast<uint32_t>(extensionsAsCstrings.size()), extensionsAsCstrings.data()};
         InstanceCreateInfo info{ {}, &appInfo, m_layerNames, extensionsAsCstrings };
         m_instance = vk::createInstance(info);
 
@@ -31,7 +30,8 @@ namespace bmvk
 
         if (enableValidationLayers)
         {
-            m_debugReportPtr = std::make_unique<DebugReport>(*this, vk::DebugReportFlagBitsEXT::eError | vk::DebugReportFlagBitsEXT::eWarning | vk::DebugReportFlagBitsEXT::eInformation | vk::DebugReportFlagBitsEXT::eDebug | vk::DebugReportFlagBitsEXT::ePerformanceWarning);
+            const auto flags{ onlyWarningsAndAbove ? vk::DebugReportFlagBitsEXT::eError | vk::DebugReportFlagBitsEXT::eWarning : vk::DebugReportFlagBitsEXT::eError | vk::DebugReportFlagBitsEXT::eWarning | vk::DebugReportFlagBitsEXT::eInformation | vk::DebugReportFlagBitsEXT::eDebug | vk::DebugReportFlagBitsEXT::ePerformanceWarning };
+            m_debugReportPtr = std::make_unique<DebugReport>(*this, flags);
         }
         
         m_surface = window.createSurface(*this);

@@ -14,7 +14,7 @@ namespace bmvk
     class Demo
     {
     public:
-        Demo(const bool enableValidationLayers, const uint32_t width, const uint32_t height, std::string name);
+        Demo(const bool enableValidationLayers, const uint32_t width, const uint32_t height, std::string name, const bool onlyWarningsAndAbove = false);
         Demo(const Demo &) = delete;
         Demo(Demo && other) = default;
         Demo & operator=(const Demo &) = delete;
@@ -29,13 +29,17 @@ namespace bmvk
         Queue m_queue;
         vk::UniqueCommandPool m_commandPool;
 
-        std::chrono::steady_clock::time_point m_timepoint;
-        uint32_t m_timepointCount;
-        std::chrono::microseconds m_elapsedTime;
+        double m_avgFrameTime = 0.0;
+        double m_avgFps = 0.0;
 
         void copyBuffer(vk::UniqueBuffer & srcBuffer, vk::UniqueBuffer & dstBuffer, vk::DeviceSize size) const;
         void createBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags properties, vk::UniqueBuffer & buffer, vk::UniqueDeviceMemory & bufferMemory);
-        void timing();
+        void timing(const bool print = true);
+
+    private:
+        std::chrono::steady_clock::time_point m_timepoint;
+        uint32_t m_timepointCount;
+        std::chrono::microseconds m_elapsedTime;
     };
 
     static_assert(std::is_move_constructible_v<Demo>);

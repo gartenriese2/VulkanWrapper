@@ -12,7 +12,7 @@ namespace bmvk
     class Instance
     {
     public:
-        Instance(const std::string & appName, const uint32_t appVersion, const std::string & engineName, const uint32_t engineVersion, const Window & window, const bool enableValidationLayers);
+        Instance(const std::string & appName, const uint32_t appVersion, const std::string & engineName, const uint32_t engineVersion, const Window & window, const bool enableValidationLayers, const bool onlyWarningsAndAbove = false);
         Instance(const Instance &) = delete;
         Instance(Instance && other) = default;
         Instance & operator=(const Instance &) = delete;
