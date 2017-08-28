@@ -23,6 +23,7 @@
     <ClCompile Include="debugReport.cpp" />
     <ClCompile Include="demo.cpp" />
     <ClCompile Include="device.cpp" />
+    <ClCompile Include="imguiBaseDemo.cpp" />
     <ClCompile Include="imguiDemo.cpp" />
     <ClCompile Include="indexbufferDemo.cpp" />
     <ClCompile Include="instance.cpp" />
@@ -44,6 +45,7 @@
     <ClInclude Include="debugReport.hpp" />
     <ClInclude Include="demo.hpp" />
     <ClInclude Include="device.hpp" />
+    <ClInclude Include="imguiBaseDemo.hpp" />
     <ClInclude Include="imguiDemo.hpp" />
     <ClInclude Include="indexbufferDemo.hpp" />
     <ClInclude Include="instance.hpp" />
