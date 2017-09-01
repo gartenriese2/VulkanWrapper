@@ -95,4 +95,9 @@ namespace bmvk
     {
         m_device.updateDescriptorSets(set, nullptr);
     }
+
+    void Device::updateDescriptorSets(vk::ArrayProxy<const vk::WriteDescriptorSet> sets) const
+    {
+        m_device.updateDescriptorSets(sets, nullptr);
+    }
 }

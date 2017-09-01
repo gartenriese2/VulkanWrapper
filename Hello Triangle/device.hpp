@@ -37,6 +37,7 @@ namespace bmvk
         void copyToMemory(const vk::UniqueDeviceMemory & memory, T & obj) const;
         uint32_t acquireNextImage(const Swapchain & swapchain, OptRefSemaphore semaphore = {}, OptRefFence fence = {}) const;
         void updateDescriptorSet(vk::WriteDescriptorSet set) const;
+        void updateDescriptorSets(vk::ArrayProxy<const vk::WriteDescriptorSet> sets) const;
     private:
         vk::Device m_device;
         uint32_t m_queueFamilyIndex;

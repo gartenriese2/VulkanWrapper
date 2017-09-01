@@ -264,6 +264,19 @@ namespace bmvk
 
     // TODO
 
+    struct DescriptorSetLayoutCreateInfo : VkStructBase<vk::DescriptorSetLayoutCreateInfo>
+    {
+        DescriptorSetLayoutCreateInfo(vk::DescriptorSetLayoutCreateFlags flags, vk::ArrayProxy<vk::DescriptorSetLayoutBinding> bindings)
+            : VkStructBase{ { flags, bindings.size(), bindings.data() } }
+        {
+        }
+
+        DescriptorSetLayoutCreateInfo(vk::ArrayProxy<vk::DescriptorSetLayoutBinding> bindings)
+            : VkStructBase{ { {}, bindings.size(), bindings.data() } }
+        {
+        }
+    };
+
     struct PipelineColorBlendStateCreateInfo : VkStructBase<vk::PipelineColorBlendStateCreateInfo>
     {
         PipelineColorBlendStateCreateInfo(vk::PipelineColorBlendStateCreateFlags flags, bool logicOpEnable, vk::LogicOp logicOp, vk::ArrayProxy<vk::PipelineColorBlendAttachmentState> attachments, const std::array<float, 4> & blendConstants = { { 0, 0, 0, 0 } })

@@ -11,7 +11,7 @@
 namespace bmvk
 {
     TextureDemo::TextureDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height)
-      : ImguiBaseDemo{ enableValidationLayers, width, height, "Texture Demo", false },
+      : ImguiBaseDemo{ enableValidationLayers, width, height, "Texture Demo", true },
         m_imageAvailableSemaphore{ m_device.createSemaphore() },
         m_renderFinishedSemaphore{ m_device.createSemaphore() },
         m_renderImguiFinishedSemaphore{ m_device.createSemaphore() }
@@ -66,10 +66,34 @@ namespace bmvk
         m_device.waitIdle();
     }
 
+    void TextureDemo::recreateSwapChain()
+    {
+        m_device.waitIdle();
+
+        for (auto & fb : m_swapChainFramebuffers)
+        {
+            fb.reset(nullptr);
+        }
+
+        m_commandBuffers.clear();
+        m_graphicsPipeline.reset(nullptr);
+        m_pipelineLayout.reset(nullptr);
+        m_renderPass.reset(nullptr);
+
+        ImguiBaseDemo::recreateSwapChain();
+
+        createRenderPass();
+        createGraphicsPipeline();
+        createFramebuffers();
+        createCommandBuffers();
+    }
+
     void TextureDemo::createDescriptorSetLayout()
     {
         vk::DescriptorSetLayoutBinding uboLayoutBinding{ 0, vk::DescriptorType::eUniformBuffer, 1, vk::ShaderStageFlagBits::eVertex };
-        vk::DescriptorSetLayoutCreateInfo layoutInfo{ {}, 1, &uboLayoutBinding };
+        vk::DescriptorSetLayoutBinding samplerLayoutBinding{ 1, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment };
+        std::vector<vk::DescriptorSetLayoutBinding> vec{ uboLayoutBinding, samplerLayoutBinding };
+        DescriptorSetLayoutCreateInfo layoutInfo{ vec };
         m_descriptorSetLayout = static_cast<vk::Device>(m_device).createDescriptorSetLayoutUnique(layoutInfo);
     }
 
@@ -85,8 +109,8 @@ namespace bmvk
 
     void TextureDemo::createGraphicsPipeline()
     {
-        const Shader vertShader{ "../shaders/uniformbuffer.vert.spv", m_device };
-        const Shader fragShader{ "../shaders/uniformbuffer.frag.spv", m_device };
+        const Shader vertShader{ "../shaders/texture.vert.spv", m_device };
+        const Shader fragShader{ "../shaders/texture.frag.spv", m_device };
         const auto vertShaderStageInfo{ vertShader.createPipelineShaderStageCreateInfo(vk::ShaderStageFlagBits::eVertex) };
         const auto fragShaderStageInfo{ fragShader.createPipelineShaderStageCreateInfo(vk::ShaderStageFlagBits::eFragment) };
         vk::PipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageInfo, fragShaderStageInfo };
@@ -210,7 +234,9 @@ namespace bmvk
     void TextureDemo::createDescriptorPool()
     {
         vk::DescriptorPoolSize poolSize{ vk::DescriptorType::eUniformBuffer, 1 };
-        m_descriptorPool = m_device.createDescriptorPool(vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet, 1, poolSize);
+        vk::DescriptorPoolSize poolSizeTex{ vk::DescriptorType::eCombinedImageSampler, 1 };
+        std::vector<vk::DescriptorPoolSize> vec{ poolSize, poolSizeTex };
+        m_descriptorPool = m_device.createDescriptorPool(vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet, 1, vec);
     }
 
     void TextureDemo::createDescriptorSet()
@@ -220,8 +246,11 @@ namespace bmvk
         m_descriptorSets = static_cast<vk::Device>(m_device).allocateDescriptorSetsUnique(allocInfo);
 
         vk::DescriptorBufferInfo bufferInfo{ *m_uniformBuffer, 0, sizeof(UniformBufferObject) };
+        vk::DescriptorImageInfo imageInfo{ *m_textureSampler, *m_textureImageView, vk::ImageLayout::eShaderReadOnlyOptimal };
         WriteDescriptorSet descriptorWrite{ m_descriptorSets[0], 0, 0, 1, vk::DescriptorType::eUniformBuffer, nullptr, &bufferInfo };
-        m_device.updateDescriptorSet(descriptorWrite);
+        WriteDescriptorSet descriptorWriteTex{ m_descriptorSets[0], 1, 0, 1, vk::DescriptorType::eCombinedImageSampler, &imageInfo };
+        std::vector<vk::WriteDescriptorSet> vec{ descriptorWrite, descriptorWriteTex };
+        m_device.updateDescriptorSets(vec);
     }
 
     void TextureDemo::createCommandBuffers()

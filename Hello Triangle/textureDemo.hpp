@@ -17,31 +17,34 @@ namespace bmvk
         ~TextureDemo() {}
 
         void run() override;
+        void recreateSwapChain() override;
     private:
         struct Vertex
         {
             glm::vec2 pos;
             glm::vec3 color;
+            glm::vec2 texCoord;
 
             static vk::VertexInputBindingDescription getBindingDescription()
             {
                 return { 0, sizeof(Vertex), vk::VertexInputRate::eVertex };
             }
 
-            static std::array<vk::VertexInputAttributeDescription, 2> getAttributeDescriptions()
+            static std::array<vk::VertexInputAttributeDescription, 3> getAttributeDescriptions()
             {
-                std::array<vk::VertexInputAttributeDescription, 2> attributeDescriptions;
+                std::array<vk::VertexInputAttributeDescription, 3> attributeDescriptions;
                 attributeDescriptions[0] = vk::VertexInputAttributeDescription{ 0, 0, vk::Format::eR32G32Sfloat, offsetof(Vertex, pos) };
                 attributeDescriptions[1] = vk::VertexInputAttributeDescription{ 1, 0, vk::Format::eR32G32B32Sfloat, offsetof(Vertex, color) };
+                attributeDescriptions[2] = vk::VertexInputAttributeDescription{ 2, 0, vk::Format::eR32G32Sfloat, offsetof(Vertex, texCoord) };
                 return attributeDescriptions;
             }
         };
 
         std::vector<Vertex> vertices = {
-            { { -0.5f, -0.5f },{ 1.0f, 0.0f, 0.0f } },
-            { { 0.5f, -0.5f },{ 0.0f, 1.0f, 0.0f } },
-            { { 0.5f, 0.5f },{ 0.0f, 0.0f, 1.0f } },
-            { { -0.5f, 0.5f },{ 1.0f, 1.0f, 1.0f } }
+            { { -0.5f, -0.5f },{ 1.0f, 0.0f, 0.0f },{ 1.0f, 0.0f } },
+            { { 0.5f, -0.5f },{ 0.0f, 1.0f, 0.0f },{ 0.0f, 0.0f } },
+            { { 0.5f, 0.5f },{ 0.0f, 0.0f, 1.0f },{ 0.0f, 1.0f } },
+            { { -0.5f, 0.5f },{ 1.0f, 1.0f, 1.0f },{ 1.0f, 1.0f } }
         };
 
         std::vector<uint16_t> indices = {
