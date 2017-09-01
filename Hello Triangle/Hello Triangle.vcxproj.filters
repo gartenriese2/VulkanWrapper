@@ -81,6 +81,9 @@
     <ClCompile Include="imguiDemo.cpp">
       <Filter>Source Files\Demos</Filter>
     </ClCompile>
+    <ClCompile Include="textureDemo.cpp">
+      <Filter>Source Files\Demos</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="instance.hpp">
@@ -141,6 +144,9 @@
       <Filter>Header Files\Demos</Filter>
     </ClInclude>
     <ClInclude Include="imguiDemo.hpp">
+      <Filter>Header Files\Demos</Filter>
+    </ClInclude>
+    <ClInclude Include="textureDemo.hpp">
       <Filter>Header Files\Demos</Filter>
     </ClInclude>
   </ItemGroup>

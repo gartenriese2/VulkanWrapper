@@ -34,6 +34,7 @@
     <ClCompile Include="stagingbufferDemo.cpp" />
     <ClCompile Include="surface.cpp" />
     <ClCompile Include="swapchain.cpp" />
+    <ClCompile Include="textureDemo.cpp" />
     <ClCompile Include="triangleDemo.cpp" />
     <ClCompile Include="uniformbufferDemo.cpp" />
     <ClCompile Include="vertexbufferDemo.cpp" />
@@ -55,6 +56,7 @@
     <ClInclude Include="stagingbufferDemo.hpp" />
     <ClInclude Include="surface.hpp" />
     <ClInclude Include="swapchain.hpp" />
+    <ClInclude Include="textureDemo.hpp" />
     <ClInclude Include="triangleDemo.hpp" />
     <ClInclude Include="uniformbufferDemo.hpp" />
     <ClInclude Include="vertexbufferDemo.hpp" />
@@ -133,7 +135,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)extern\Vulkan-1.0.57.0\include;$(SolutionDir)extern\glm-0.9.8.4;$(SolutionDir)extern\GLFW-3.2.1\include;$(SolutionDir)extern\imgui-1.50-20170822\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)extern\Vulkan-1.0.57.0\include;$(SolutionDir)extern\glm-0.9.8.4;$(SolutionDir)extern\GLFW-3.2.1\include;$(SolutionDir)extern\imgui-1.50-20170822\include;$(SolutionDir)extern\stb_image-2.16;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
@@ -149,7 +151,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)extern\Vulkan-1.0.57.0\include;$(SolutionDir)extern\glm-0.9.8.4;$(SolutionDir)extern\GLFW-3.2.1\include;$(SolutionDir)extern\imgui-1.50-20170822\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)extern\Vulkan-1.0.57.0\include;$(SolutionDir)extern\glm-0.9.8.4;$(SolutionDir)extern\GLFW-3.2.1\include;$(SolutionDir)extern\imgui-1.50-20170822\include;$(SolutionDir)extern\stb_image-2.16;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
@@ -167,7 +169,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)extern\Vulkan-1.0.57.0\include;$(SolutionDir)extern\glm-0.9.8.4;$(SolutionDir)extern\GLFW-3.2.1\include;$(SolutionDir)extern\imgui-1.50-20170822\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)extern\Vulkan-1.0.57.0\include;$(SolutionDir)extern\glm-0.9.8.4;$(SolutionDir)extern\GLFW-3.2.1\include;$(SolutionDir)extern\imgui-1.50-20170822\include;$(SolutionDir)extern\stb_image-2.16;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
@@ -187,7 +189,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)extern\Vulkan-1.0.57.0\include;$(SolutionDir)extern\glm-0.9.8.4;$(SolutionDir)extern\GLFW-3.2.1\include;$(SolutionDir)extern\imgui-1.50-20170822\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)extern\Vulkan-1.0.57.0\include;$(SolutionDir)extern\glm-0.9.8.4;$(SolutionDir)extern\GLFW-3.2.1\include;$(SolutionDir)extern\imgui-1.50-20170822\include;$(SolutionDir)extern\stb_image-2.16;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>

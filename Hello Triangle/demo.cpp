@@ -26,6 +26,17 @@ namespace bmvk
         m_queue.waitIdle();
     }
 
+    void Demo::copyBufferToImage(vk::UniqueBuffer & buffer, vk::UniqueImage & image, uint32_t width, uint32_t height) const
+    {
+        auto cmdBuffer{ m_device.allocateCommandBuffer(m_commandPool) };
+        cmdBuffer.begin(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
+        vk::BufferImageCopy region{ 0, 0, 0, { vk::ImageAspectFlagBits::eColor, 0, 0, 1 }, {}, { width, height, 1 } };
+        cmdBuffer.copyBufferToImage(buffer, image, vk::ImageLayout::eTransferDstOptimal, region);
+        cmdBuffer.end();
+        m_queue.submit(cmdBuffer);
+        m_queue.waitIdle();
+    }
+
     void Demo::createBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags properties, vk::UniqueBuffer & buffer, vk::UniqueDeviceMemory & bufferMemory)
     {
         vk::BufferCreateInfo bufferInfo{ {}, size, usage };
@@ -36,6 +47,51 @@ namespace bmvk
         bufferMemory = static_cast<vk::Device>(m_device).allocateMemoryUnique(allocInfo);
 
         static_cast<vk::Device>(m_device).bindBufferMemory(*buffer, *bufferMemory, 0);
+    }
+
+    void Demo::createImage(uint32_t width, uint32_t height, vk::Format format, vk::ImageTiling tiling, vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties, vk::UniqueImage & image, vk::UniqueDeviceMemory & imageMemory)
+    {
+        vk::ImageCreateInfo imageInfo{ {}, vk::ImageType::e2D, format, { width, height, 1 }, 1, 1, vk::SampleCountFlagBits::e1, tiling, vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled, vk::SharingMode::eExclusive };
+        image = static_cast<vk::Device>(m_device).createImageUnique(imageInfo);
+
+        const auto memRequirements{ static_cast<vk::Device>(m_device).getImageMemoryRequirements(*image) };
+        vk::MemoryAllocateInfo allocInfo{ memRequirements.size, m_instance.getPhysicalDevice().findMemoryType(memRequirements.memoryTypeBits, properties) };
+        imageMemory = static_cast<vk::Device>(m_device).allocateMemoryUnique(allocInfo);
+
+        static_cast<vk::Device>(m_device).bindImageMemory(*image, *imageMemory, 0);
+    }
+
+    void Demo::transitionImageLayout(const vk::UniqueImage & image, vk::Format format, vk::ImageLayout oldLayout, vk::ImageLayout newLayout) const
+    {
+        auto cmdBuffer{ m_device.allocateCommandBuffer(m_commandPool) };
+        cmdBuffer.begin(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
+
+        vk::ImageMemoryBarrier barrier{ {},{}, oldLayout, newLayout, VK_QUEUE_FAMILY_IGNORED, VK_QUEUE_FAMILY_IGNORED, *image,{ vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1 } };
+        vk::PipelineStageFlags srcStage;;
+        vk::PipelineStageFlags dstStage;
+        if (oldLayout == vk::ImageLayout::eUndefined && newLayout == vk::ImageLayout::eTransferDstOptimal)
+        {
+            barrier.setDstAccessMask(vk::AccessFlagBits::eTransferWrite);
+            srcStage = vk::PipelineStageFlagBits::eTopOfPipe;
+            dstStage = vk::PipelineStageFlagBits::eTransfer;
+        }
+        else if (oldLayout == vk::ImageLayout::eTransferDstOptimal && newLayout == vk::ImageLayout::eShaderReadOnlyOptimal)
+        {
+            barrier.setSrcAccessMask(vk::AccessFlagBits::eTransferWrite);
+            barrier.setDstAccessMask(vk::AccessFlagBits::eShaderRead);
+            srcStage = vk::PipelineStageFlagBits::eTransfer;
+            dstStage = vk::PipelineStageFlagBits::eFragmentShader;
+        }
+        else
+        {
+            throw std::invalid_argument("unsupported layout transition!");
+        }
+        
+        cmdBuffer.pipelineBarrier(srcStage, dstStage, {}, nullptr, nullptr, barrier);
+
+        cmdBuffer.end();
+        m_queue.submit(cmdBuffer);
+        m_queue.waitIdle();
     }
 
     void Demo::timing(const bool print)
