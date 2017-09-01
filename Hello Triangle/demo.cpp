@@ -61,6 +61,12 @@ namespace bmvk
         static_cast<vk::Device>(m_device).bindImageMemory(*image, *imageMemory, 0);
     }
 
+    vk::UniqueImageView Demo::createImageView(const vk::UniqueImage & image, vk::Format format) const
+    {
+        vk::ImageViewCreateInfo viewInfo{ {}, *image, vk::ImageViewType::e2D, format, {} ,{ vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1 } };
+        return m_device.createImageView(viewInfo);
+    }
+
     void Demo::transitionImageLayout(const vk::UniqueImage & image, vk::Format format, vk::ImageLayout oldLayout, vk::ImageLayout newLayout) const
     {
         auto cmdBuffer{ m_device.allocateCommandBuffer(m_commandPool) };

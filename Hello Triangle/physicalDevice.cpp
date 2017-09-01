@@ -17,6 +17,7 @@ namespace bmvk
         DeviceQueueCreateInfo queueCreateInfo{ {}, getQueueFamilyIndex(), static_cast<uint32_t>(1), vk::ArrayProxy<float>(queuePriority) };
         vk::DeviceQueueCreateInfo vk_queueCreateInfo{ queueCreateInfo };
         vk::PhysicalDeviceFeatures deviceFeatures;
+        deviceFeatures.setSamplerAnisotropy(true);
         std::vector<const char *> extensionNames{ k_swapchainExtensionName };
         DeviceCreateInfo info( {}, vk_queueCreateInfo, layerNames, extensionNames, deviceFeatures );
         return Device(std::move(m_physicalDevice.createDevice(info)), m_queueFamilyIndex);
@@ -57,7 +58,8 @@ namespace bmvk
         const auto hasPresentationSupport{ device.getSurfaceSupportKHR(index, surface) };
         const auto hasRequiredExtensions{ checkDeviceExtensionSupport(device) };
         const auto hasSwapChainSupport{ checkSwapChainSupport(device, surface) };
-        return std::make_tuple(properties.deviceType == vk::PhysicalDeviceType::eDiscreteGpu && foundQueue && hasPresentationSupport && hasRequiredExtensions && hasSwapChainSupport, index);
+        const auto hasAnisotropySupport{ features.samplerAnisotropy };
+        return std::make_tuple(properties.deviceType == vk::PhysicalDeviceType::eDiscreteGpu && foundQueue && hasPresentationSupport && hasRequiredExtensions && hasSwapChainSupport && hasAnisotropySupport, index);
     }
 
     bool PhysicalDevice::checkDeviceExtensionSupport(const vk::PhysicalDevice & device)

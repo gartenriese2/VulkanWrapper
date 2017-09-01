@@ -21,6 +21,8 @@ namespace bmvk
         createGraphicsPipeline();
         createFramebuffers();
         createTextureImage();
+        createTextureImageView();
+        createTextureSampler();
         createVertexBuffer();
         createIndexBuffer();
         createUniformBuffer();
@@ -142,6 +144,17 @@ namespace bmvk
         transitionImageLayout(m_textureImage, vk::Format::eR8G8B8A8Unorm, vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal);
         copyBufferToImage(stagingBuffer, m_textureImage, texWidth, texHeight);
         transitionImageLayout(m_textureImage, vk::Format::eB8G8R8A8Unorm, vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
+    }
+
+    void TextureDemo::createTextureImageView()
+    {
+        m_textureImageView = createImageView(m_textureImage, vk::Format::eR8G8B8A8Unorm);
+    }
+
+    void TextureDemo::createTextureSampler()
+    {
+        vk::SamplerCreateInfo samplerInfo{ {}, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerMipmapMode::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerAddressMode::eRepeat, vk::SamplerAddressMode::eRepeat, 0.f, true, 16, false, vk::CompareOp::eAlways, 0.f, 0.f, vk::BorderColor::eIntOpaqueBlack, false };
+        m_textureSampler = static_cast<vk::Device>(m_device).createSamplerUnique(samplerInfo);
     }
 
     void TextureDemo::createVertexBuffer()
