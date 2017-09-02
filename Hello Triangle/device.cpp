@@ -100,4 +100,9 @@ namespace bmvk
     {
         m_device.updateDescriptorSets(sets, nullptr);
     }
+
+    Sampler Device::createSampler(const bool enableAnisotropy) const
+    {
+        return Sampler(m_device, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerMipmapMode::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerAddressMode::eRepeat, vk::SamplerAddressMode::eRepeat, 0.f, enableAnisotropy, enableAnisotropy ? 16.f : 1.f, false, vk::CompareOp::eAlways, 0.f, 0.f, vk::BorderColor::eIntOpaqueBlack, false);
+    }
 }

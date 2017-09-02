@@ -12,6 +12,7 @@ namespace bmvk
 {
     TextureDemo::TextureDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height)
       : ImguiBaseDemo{ enableValidationLayers, width, height, "Texture Demo", true },
+        m_textureSampler{ m_device.createSampler(true) },
         m_imageAvailableSemaphore{ m_device.createSemaphore() },
         m_renderFinishedSemaphore{ m_device.createSemaphore() },
         m_renderImguiFinishedSemaphore{ m_device.createSemaphore() }
@@ -22,7 +23,6 @@ namespace bmvk
         createFramebuffers();
         createTextureImage();
         createTextureImageView();
-        createTextureSampler();
         createVertexBuffer();
         createIndexBuffer();
         createUniformBuffer();
@@ -175,12 +175,6 @@ namespace bmvk
         m_textureImageView = createImageView(m_textureImage, vk::Format::eR8G8B8A8Unorm);
     }
 
-    void TextureDemo::createTextureSampler()
-    {
-        vk::SamplerCreateInfo samplerInfo{ {}, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerMipmapMode::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerAddressMode::eRepeat, vk::SamplerAddressMode::eRepeat, 0.f, true, 16, false, vk::CompareOp::eAlways, 0.f, 0.f, vk::BorderColor::eIntOpaqueBlack, false };
-        m_textureSampler = static_cast<vk::Device>(m_device).createSamplerUnique(samplerInfo);
-    }
-
     void TextureDemo::createVertexBuffer()
     {
         const auto bufferSize{ sizeof(vertices[0]) * vertices.size() };
@@ -246,7 +240,8 @@ namespace bmvk
         m_descriptorSets = static_cast<vk::Device>(m_device).allocateDescriptorSetsUnique(allocInfo);
 
         vk::DescriptorBufferInfo bufferInfo{ *m_uniformBuffer, 0, sizeof(UniformBufferObject) };
-        vk::DescriptorImageInfo imageInfo{ *m_textureSampler, *m_textureImageView, vk::ImageLayout::eShaderReadOnlyOptimal };
+        const auto & sampler = reinterpret_cast<const vk::UniqueSampler &>(m_textureSampler);
+        vk::DescriptorImageInfo imageInfo{ *sampler, *m_textureImageView, vk::ImageLayout::eShaderReadOnlyOptimal };
         WriteDescriptorSet descriptorWrite{ m_descriptorSets[0], 0, 0, 1, vk::DescriptorType::eUniformBuffer, nullptr, &bufferInfo };
         WriteDescriptorSet descriptorWriteTex{ m_descriptorSets[0], 1, 0, 1, vk::DescriptorType::eCombinedImageSampler, &imageInfo };
         std::vector<vk::WriteDescriptorSet> vec{ descriptorWrite, descriptorWriteTex };

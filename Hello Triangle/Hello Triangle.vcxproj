@@ -30,6 +30,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="physicalDevice.cpp" />
     <ClCompile Include="queue.cpp" />
+    <ClCompile Include="sampler.cpp" />
     <ClCompile Include="shader.cpp" />
     <ClCompile Include="stagingbufferDemo.cpp" />
     <ClCompile Include="surface.cpp" />
@@ -52,6 +53,7 @@
     <ClInclude Include="instance.hpp" />
     <ClInclude Include="physicalDevice.hpp" />
     <ClInclude Include="queue.hpp" />
+    <ClInclude Include="sampler.hpp" />
     <ClInclude Include="shader.hpp" />
     <ClInclude Include="stagingbufferDemo.hpp" />
     <ClInclude Include="surface.hpp" />

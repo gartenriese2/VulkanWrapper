@@ -65,7 +65,7 @@ namespace bmvk
         vk::UniqueImage m_textureImage;
         vk::UniqueDeviceMemory m_textureImageMemory;
         vk::UniqueImageView m_textureImageView;
-        vk::UniqueSampler m_textureSampler;
+        Sampler m_textureSampler;
         vk::UniqueBuffer m_vertexBuffer;
         vk::UniqueDeviceMemory m_vertexBufferMemory;
         vk::UniqueBuffer m_indexBuffer;
@@ -85,7 +85,6 @@ namespace bmvk
         void createFramebuffers();
         void createTextureImage();
         void createTextureImageView();
-        void createTextureSampler();
         void createVertexBuffer();
         void createIndexBuffer();
         void createUniformBuffer();

@@ -3,6 +3,7 @@
 #include "vulkan_bmvk.hpp"
 #include "queue.hpp"
 #include "commandbuffer.hpp"
+#include "sampler.hpp"
 
 namespace bmvk
 {
@@ -30,6 +31,8 @@ namespace bmvk
         vk::UniqueDescriptorPool createDescriptorPool(vk::DescriptorPoolCreateFlags flags = vk::DescriptorPoolCreateFlags(), uint32_t maxSets = 0, vk::ArrayProxy<vk::DescriptorPoolSize> poolSizes = nullptr) const;
         CommandBuffer allocateCommandBuffer(const vk::UniqueCommandPool & pool, const vk::CommandBufferLevel level = vk::CommandBufferLevel::ePrimary) const;
         std::vector<CommandBuffer> allocateCommandBuffers(const vk::UniqueCommandPool & pool, const uint32_t count, const vk::CommandBufferLevel level = vk::CommandBufferLevel::ePrimary) const;
+        Sampler createSampler(const bool enableAnisotropy = false) const;
+
         void waitIdle() const { m_device.waitIdle(); }
         void * mapMemory(const vk::UniqueDeviceMemory & memory, const vk::DeviceSize size, const vk::DeviceSize offset = 0, const vk::MemoryMapFlags flags = {}) const;
         void unmapMemory(const vk::UniqueDeviceMemory & memory) const;
