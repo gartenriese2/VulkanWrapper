@@ -52,12 +52,12 @@ namespace bmvk
 
     ImguiBaseDemo::ImguiBaseDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height, std::string name, const bool onlyWarningsAndAbove)
       : Demo{ enableValidationLayers, width, height, name, onlyWarningsAndAbove },
-        m_swapchain{ m_instance.getPhysicalDevice(), m_instance.getSurface(), m_window, m_device }
+        m_swapchain{ m_instance.getPhysicalDevice(), m_instance.getSurface(), m_window, m_device },
+        m_fontSampler{ m_device.createSampler(false, -1000.f, 1000.f) }
     {
         m_window.setWindowUserPointer(this);
         m_window.setWindowSizeCallback(onWindowResized);
         
-        createFontSampler();
         createDescriptorSetLayout();
         createRenderPass();
         createGraphicsPipeline();
@@ -107,15 +107,10 @@ namespace bmvk
         createFramebuffers();
     }
 
-    void ImguiBaseDemo::createFontSampler()
-    {
-        vk::SamplerCreateInfo info{ {}, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerMipmapMode::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerAddressMode::eRepeat, vk::SamplerAddressMode::eRepeat, 0.f, false, 1.f, false, vk::CompareOp::eNever, -1000.f, 1000.f };
-        m_fontSamplerImgui = static_cast<vk::Device>(m_device).createSamplerUnique(info);
-    }
-
     void ImguiBaseDemo::createDescriptorSetLayout()
     {
-        vk::Sampler samplers[1] = { *m_fontSamplerImgui };
+        auto & sampler{ reinterpret_cast<vk::UniqueSampler &>(m_fontSampler) };
+        vk::Sampler samplers[1] = { *sampler };
         vk::DescriptorSetLayoutBinding imageLayoutBinding{ 0, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment, samplers };
         vk::DescriptorSetLayoutCreateInfo layoutInfoImgui{ {}, 1, &imageLayoutBinding };
         m_descriptorSetLayoutImgui = static_cast<vk::Device>(m_device).createDescriptorSetLayoutUnique(layoutInfoImgui);
@@ -307,7 +302,8 @@ namespace bmvk
         m_imguiFontImageView = static_cast<vk::Device>(m_device).createImageViewUnique(imageViewInfo);
 
         // Update the Descriptor Set:
-        vk::DescriptorImageInfo descImage[1] = { vk::DescriptorImageInfo{ *m_fontSamplerImgui, *m_imguiFontImageView, vk::ImageLayout::eShaderReadOnlyOptimal } };
+        auto & sampler{ reinterpret_cast<vk::UniqueSampler &>(m_fontSampler) };
+        vk::DescriptorImageInfo descImage[1] = { { *sampler, *m_imguiFontImageView, vk::ImageLayout::eShaderReadOnlyOptimal } };
         vk::WriteDescriptorSet writeDesc(*m_descriptorSetsImgui[0], 0, 0, 1, vk::DescriptorType::eCombinedImageSampler, descImage);
         static_cast<vk::Device>(m_device).updateDescriptorSets(writeDesc, nullptr);
 

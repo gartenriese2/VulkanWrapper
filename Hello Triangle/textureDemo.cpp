@@ -157,9 +157,8 @@ namespace bmvk
         vk::UniqueBuffer stagingBuffer;
         vk::UniqueDeviceMemory stagingBufferMemory;
         createBuffer(imageSize, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, stagingBuffer, stagingBufferMemory);
-        auto * data{ m_device.mapMemory(stagingBufferMemory, imageSize) };
-        memcpy(data, pixels, static_cast<size_t>(imageSize));
-        m_device.unmapMemory(stagingBufferMemory);
+
+        m_device.copyToMemory(stagingBufferMemory, pixels, imageSize);
 
         stbi_image_free(pixels);
 

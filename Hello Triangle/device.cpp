@@ -76,6 +76,11 @@ namespace bmvk
         return ret;
     }
 
+    Sampler Device::createSampler(const bool enableAnisotropy, const float minLod, const float maxLod) const
+    {
+        return Sampler(m_device, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerMipmapMode::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerAddressMode::eRepeat, vk::SamplerAddressMode::eRepeat, 0.f, enableAnisotropy, enableAnisotropy ? 16.f : 1.f, false, vk::CompareOp::eAlways, minLod, maxLod, vk::BorderColor::eIntOpaqueBlack, false);
+    }
+
     void * Device::mapMemory(const vk::UniqueDeviceMemory & memory, const vk::DeviceSize size, const vk::DeviceSize offset, const vk::MemoryMapFlags flags) const
     {
         return m_device.mapMemory(*memory, offset, size, flags);
@@ -84,6 +89,13 @@ namespace bmvk
     void Device::unmapMemory(const vk::UniqueDeviceMemory & memory) const
     {
         m_device.unmapMemory(*memory);
+    }
+
+    void Device::copyToMemory(const vk::UniqueDeviceMemory & memory, const void * const objPtr, size_t objSize) const
+    {
+        auto data{ mapMemory(memory, objSize) };
+        memcpy(data, objPtr, objSize);
+        unmapMemory(memory);
     }
 
     uint32_t Device::acquireNextImage(const Swapchain & swapchain, OptRefSemaphore semaphore, OptRefFence fence) const
@@ -99,10 +111,5 @@ namespace bmvk
     void Device::updateDescriptorSets(vk::ArrayProxy<const vk::WriteDescriptorSet> sets) const
     {
         m_device.updateDescriptorSets(sets, nullptr);
-    }
-
-    Sampler Device::createSampler(const bool enableAnisotropy) const
-    {
-        return Sampler(m_device, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerMipmapMode::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerAddressMode::eRepeat, vk::SamplerAddressMode::eRepeat, 0.f, enableAnisotropy, enableAnisotropy ? 16.f : 1.f, false, vk::CompareOp::eAlways, 0.f, 0.f, vk::BorderColor::eIntOpaqueBlack, false);
     }
 }

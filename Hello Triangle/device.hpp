@@ -31,13 +31,14 @@ namespace bmvk
         vk::UniqueDescriptorPool createDescriptorPool(vk::DescriptorPoolCreateFlags flags = vk::DescriptorPoolCreateFlags(), uint32_t maxSets = 0, vk::ArrayProxy<vk::DescriptorPoolSize> poolSizes = nullptr) const;
         CommandBuffer allocateCommandBuffer(const vk::UniqueCommandPool & pool, const vk::CommandBufferLevel level = vk::CommandBufferLevel::ePrimary) const;
         std::vector<CommandBuffer> allocateCommandBuffers(const vk::UniqueCommandPool & pool, const uint32_t count, const vk::CommandBufferLevel level = vk::CommandBufferLevel::ePrimary) const;
-        Sampler createSampler(const bool enableAnisotropy = false) const;
+        Sampler createSampler(const bool enableAnisotropy = false, const float minLod = 0.f, const float maxLod = 0.f) const;
 
         void waitIdle() const { m_device.waitIdle(); }
         void * mapMemory(const vk::UniqueDeviceMemory & memory, const vk::DeviceSize size, const vk::DeviceSize offset = 0, const vk::MemoryMapFlags flags = {}) const;
         void unmapMemory(const vk::UniqueDeviceMemory & memory) const;
         template <class T>
         void copyToMemory(const vk::UniqueDeviceMemory & memory, T & obj) const;
+        void copyToMemory(const vk::UniqueDeviceMemory & memory, const void * const objPtr, size_t objSize) const;
         uint32_t acquireNextImage(const Swapchain & swapchain, OptRefSemaphore semaphore = {}, OptRefFence fence = {}) const;
         void updateDescriptorSet(vk::WriteDescriptorSet set) const;
         void updateDescriptorSets(vk::ArrayProxy<const vk::WriteDescriptorSet> sets) const;

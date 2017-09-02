@@ -29,7 +29,7 @@ namespace bmvk
         void imguiNewFrame();
     private:
         vk::UniqueRenderPass m_renderPassImgui;
-        vk::UniqueSampler m_fontSamplerImgui;
+        Sampler m_fontSampler;
         vk::UniqueDescriptorSetLayout m_descriptorSetLayoutImgui;
         vk::UniquePipelineLayout m_pipelineLayoutImgui;
         vk::UniquePipeline m_graphicsPipelineImgui;
@@ -52,7 +52,6 @@ namespace bmvk
         std::vector<bool> m_imguiMousePressed = { false, false, false };
         float m_imguiMouseWheel = 0.f;
 
-        void createFontSampler();
         void createDescriptorSetLayout();
         void createRenderPass();
         void createGraphicsPipeline();
