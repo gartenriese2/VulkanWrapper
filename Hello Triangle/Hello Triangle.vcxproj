@@ -19,6 +19,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="buffer.cpp" />
+    <ClCompile Include="bufferFactory.cpp" />
     <ClCompile Include="commandbuffer.cpp" />
     <ClCompile Include="debugReport.cpp" />
     <ClCompile Include="demo.cpp" />
@@ -43,6 +45,11 @@
     <ClCompile Include="window.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="buffer.hpp">
+      <SubType>
+      </SubType>
+    </ClInclude>
+    <ClInclude Include="bufferFactory.hpp" />
     <ClInclude Include="commandbuffer.hpp" />
     <ClInclude Include="debugReport.hpp" />
     <ClInclude Include="demo.hpp" />

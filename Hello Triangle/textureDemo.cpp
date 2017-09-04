@@ -6,7 +6,7 @@
 #include <glm/gtc/matrix_transform.inl>
 
 #include "shader.hpp"
-
+#include "bufferFactory.hpp"
 
 namespace bmvk
 {
@@ -154,19 +154,22 @@ namespace bmvk
             throw std::runtime_error("failed to load texture image!");
         }
 
-        vk::UniqueBuffer stagingBuffer;
-        vk::UniqueDeviceMemory stagingBufferMemory;
-        createBuffer(imageSize, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, stagingBuffer, stagingBufferMemory);
+        StagingBuffer stagingBuffer{ m_bufferFactory.createStagingBuffer(static_cast<vk::Device>(m_device), m_instance.getPhysicalDevice(), imageSize) };
 
-        m_device.copyToMemory(stagingBufferMemory, pixels, imageSize);
+        m_device.copyToMemory(stagingBuffer.memory, pixels, imageSize);
 
         stbi_image_free(pixels);
 
         createImage(texWidth, texHeight, vk::Format::eR8G8B8A8Unorm, vk::ImageTiling::eOptimal, vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled, vk::MemoryPropertyFlagBits::eDeviceLocal, m_textureImage, m_textureImageMemory);
 
-        transitionImageLayout(m_textureImage, vk::Format::eR8G8B8A8Unorm, vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal);
-        copyBufferToImage(stagingBuffer, m_textureImage, texWidth, texHeight);
-        transitionImageLayout(m_textureImage, vk::Format::eB8G8R8A8Unorm, vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
+        auto cmdBuffer{ m_device.allocateCommandBuffer(m_commandPool) };
+        cmdBuffer.begin(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
+        transitionImageLayout(cmdBuffer, m_textureImage, vk::Format::eR8G8B8A8Unorm, vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal);
+        stagingBuffer.buffer.copyToImage(cmdBuffer, m_textureImage, texWidth, texHeight);
+        transitionImageLayout(cmdBuffer, m_textureImage, vk::Format::eB8G8R8A8Unorm, vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
+        cmdBuffer.end();
+        m_queue.submit(cmdBuffer);
+        m_queue.waitIdle();
     }
 
     void TextureDemo::createTextureImageView()

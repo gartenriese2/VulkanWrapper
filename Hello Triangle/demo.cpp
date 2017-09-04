@@ -67,12 +67,9 @@ namespace bmvk
         return m_device.createImageView(viewInfo);
     }
 
-    void Demo::transitionImageLayout(const vk::UniqueImage & image, vk::Format format, vk::ImageLayout oldLayout, vk::ImageLayout newLayout) const
+    void Demo::transitionImageLayout(const CommandBuffer & cmdBuffer, const vk::UniqueImage & image, vk::Format format, vk::ImageLayout oldLayout, vk::ImageLayout newLayout) const
     {
-        auto cmdBuffer{ m_device.allocateCommandBuffer(m_commandPool) };
-        cmdBuffer.begin(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
-
-        vk::ImageMemoryBarrier barrier{ {},{}, oldLayout, newLayout, VK_QUEUE_FAMILY_IGNORED, VK_QUEUE_FAMILY_IGNORED, *image,{ vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1 } };
+        vk::ImageMemoryBarrier barrier{ {},{}, oldLayout, newLayout, VK_QUEUE_FAMILY_IGNORED, VK_QUEUE_FAMILY_IGNORED, *image, { vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1 } };
         vk::PipelineStageFlags srcStage;;
         vk::PipelineStageFlags dstStage;
         if (oldLayout == vk::ImageLayout::eUndefined && newLayout == vk::ImageLayout::eTransferDstOptimal)
@@ -94,10 +91,6 @@ namespace bmvk
         }
         
         cmdBuffer.pipelineBarrier(srcStage, dstStage, {}, nullptr, nullptr, barrier);
-
-        cmdBuffer.end();
-        m_queue.submit(cmdBuffer);
-        m_queue.waitIdle();
     }
 
     void Demo::timing(const bool print)

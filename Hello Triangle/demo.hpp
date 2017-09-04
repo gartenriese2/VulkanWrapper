@@ -8,6 +8,7 @@
 #include "instance.hpp"
 #include "device.hpp"
 #include "queue.hpp"
+#include "bufferFactory.hpp"
 
 namespace bmvk
 {
@@ -28,6 +29,7 @@ namespace bmvk
         Device m_device;
         Queue m_queue;
         vk::UniqueCommandPool m_commandPool;
+        BufferFactory m_bufferFactory;
 
         double m_avgFrameTime = 0.0;
         double m_avgFps = 0.0;
@@ -37,7 +39,7 @@ namespace bmvk
         void createBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags properties, vk::UniqueBuffer & buffer, vk::UniqueDeviceMemory & bufferMemory);
         void createImage(uint32_t width, uint32_t height, vk::Format format, vk::ImageTiling tiling, vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties, vk::UniqueImage & image, vk::UniqueDeviceMemory & imageMemory);
         vk::UniqueImageView createImageView(const vk::UniqueImage & image, vk::Format format) const;
-        void transitionImageLayout(const vk::UniqueImage & image, vk::Format format, vk::ImageLayout oldLayout, vk::ImageLayout newLayout) const;
+        void transitionImageLayout(const CommandBuffer & cmdBuffer, const vk::UniqueImage & image, vk::Format format, vk::ImageLayout oldLayout, vk::ImageLayout newLayout) const;
         void timing(const bool print = true);
 
     private:

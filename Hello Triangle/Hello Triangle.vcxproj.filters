@@ -87,6 +87,12 @@
     <ClCompile Include="sampler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="buffer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bufferFactory.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="instance.hpp">
@@ -153,6 +159,12 @@
       <Filter>Header Files\Demos</Filter>
     </ClInclude>
     <ClInclude Include="sampler.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="buffer.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="bufferFactory.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
