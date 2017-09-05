@@ -14,7 +14,7 @@ namespace bmvk
         IndexbufferDemo(const IndexbufferDemo &) = delete;
         IndexbufferDemo(IndexbufferDemo && other) = default;
         IndexbufferDemo & operator=(const IndexbufferDemo &) = delete;
-        IndexbufferDemo & operator=(IndexbufferDemo && other) = default;
+        IndexbufferDemo & operator=(IndexbufferDemo &&) = delete;
         ~IndexbufferDemo() {}
 
         void run() override;
@@ -75,7 +75,7 @@ namespace bmvk
     };
 
     static_assert(std::is_move_constructible_v<IndexbufferDemo>);
-    static_assert(std::is_move_assignable_v<IndexbufferDemo>);
+    static_assert(!std::is_move_assignable_v<IndexbufferDemo>);
     static_assert(!std::is_copy_constructible_v<IndexbufferDemo>);
     static_assert(!std::is_copy_assignable_v<IndexbufferDemo>);
 }

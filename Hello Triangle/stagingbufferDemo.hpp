@@ -14,7 +14,7 @@ namespace bmvk
         StagingbufferDemo(const StagingbufferDemo &) = delete;
         StagingbufferDemo(StagingbufferDemo && other) = default;
         StagingbufferDemo & operator=(const StagingbufferDemo &) = delete;
-        StagingbufferDemo & operator=(StagingbufferDemo && other) = default;
+        StagingbufferDemo & operator=(StagingbufferDemo &&) = delete;
         ~StagingbufferDemo() {}
 
         void run() override;
@@ -66,7 +66,7 @@ namespace bmvk
     };
 
     static_assert(std::is_move_constructible_v<StagingbufferDemo>);
-    static_assert(std::is_move_assignable_v<StagingbufferDemo>);
+    static_assert(!std::is_move_assignable_v<StagingbufferDemo>);
     static_assert(!std::is_copy_constructible_v<StagingbufferDemo>);
     static_assert(!std::is_copy_assignable_v<StagingbufferDemo>);
 }

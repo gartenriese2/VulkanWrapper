@@ -14,7 +14,7 @@ namespace bmvk
         ImguiDemo(const ImguiDemo &) = delete;
         ImguiDemo(ImguiDemo && other) = default;
         ImguiDemo & operator=(const ImguiDemo &) = delete;
-        ImguiDemo & operator=(ImguiDemo && other) = default;
+        ImguiDemo & operator=(ImguiDemo &&) = delete;
         ~ImguiDemo() {}
 
         void run() override;
@@ -91,7 +91,7 @@ namespace bmvk
     };
 
     static_assert(std::is_move_constructible_v<ImguiDemo>);
-    static_assert(std::is_move_assignable_v<ImguiDemo>);
+    static_assert(!std::is_move_assignable_v<ImguiDemo>);
     static_assert(!std::is_copy_constructible_v<ImguiDemo>);
     static_assert(!std::is_copy_assignable_v<ImguiDemo>);
 }

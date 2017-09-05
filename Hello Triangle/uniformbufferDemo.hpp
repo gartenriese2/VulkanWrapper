@@ -15,7 +15,7 @@ namespace bmvk
         UniformbufferDemo(const UniformbufferDemo &) = delete;
         UniformbufferDemo(UniformbufferDemo && other) = default;
         UniformbufferDemo & operator=(const UniformbufferDemo &) = delete;
-        UniformbufferDemo & operator=(UniformbufferDemo && other) = default;
+        UniformbufferDemo & operator=(UniformbufferDemo &&) = delete;
         ~UniformbufferDemo() {}
 
         void run() override;
@@ -91,7 +91,7 @@ namespace bmvk
     };
 
     static_assert(std::is_move_constructible_v<UniformbufferDemo>);
-    static_assert(std::is_move_assignable_v<UniformbufferDemo>);
+    static_assert(!std::is_move_assignable_v<UniformbufferDemo>);
     static_assert(!std::is_copy_constructible_v<UniformbufferDemo>);
     static_assert(!std::is_copy_assignable_v<UniformbufferDemo>);
 }

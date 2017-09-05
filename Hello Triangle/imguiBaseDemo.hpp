@@ -14,7 +14,7 @@ namespace bmvk
         ImguiBaseDemo(const ImguiBaseDemo &) = delete;
         ImguiBaseDemo(ImguiBaseDemo && other) = default;
         ImguiBaseDemo & operator=(const ImguiBaseDemo &) = delete;
-        ImguiBaseDemo & operator=(ImguiBaseDemo && other) = default;
+        ImguiBaseDemo & operator=(ImguiBaseDemo &&) = delete;
         ~ImguiBaseDemo() {}
 
         virtual void recreateSwapChain();
@@ -64,7 +64,7 @@ namespace bmvk
     };
 
     static_assert(std::is_move_constructible_v<ImguiBaseDemo>);
-    static_assert(std::is_move_assignable_v<ImguiBaseDemo>);
+    static_assert(!std::is_move_assignable_v<ImguiBaseDemo>);
     static_assert(!std::is_copy_constructible_v<ImguiBaseDemo>);
     static_assert(!std::is_copy_assignable_v<ImguiBaseDemo>);
 }

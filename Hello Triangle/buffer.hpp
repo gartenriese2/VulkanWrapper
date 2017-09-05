@@ -21,6 +21,7 @@ namespace bmvk
 
         void bindToMemory(const vk::Device & device, const vk::UniqueDeviceMemory & memory, const vk::DeviceSize offset = 0) const;
         void copyToImage(CommandBuffer & cmdBuffer, vk::UniqueImage & image, uint32_t width, uint32_t height) const;
+        void copyToBuffer(CommandBuffer & cmdBuffer, vk::UniqueBuffer & buffer, vk::DeviceSize size) const;
     private:
         vk::UniqueBuffer m_buffer;
     };

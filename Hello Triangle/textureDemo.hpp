@@ -13,7 +13,7 @@ namespace bmvk
         TextureDemo(const TextureDemo &) = delete;
         TextureDemo(TextureDemo && other) = default;
         TextureDemo & operator=(const TextureDemo &) = delete;
-        TextureDemo & operator=(TextureDemo && other) = default;
+        TextureDemo & operator=(TextureDemo &&) = delete;
         ~TextureDemo() {}
 
         void run() override;
@@ -98,7 +98,7 @@ namespace bmvk
     };
 
     static_assert(std::is_move_constructible_v<TextureDemo>);
-    static_assert(std::is_move_assignable_v<TextureDemo>);
+    static_assert(!std::is_move_assignable_v<TextureDemo>);
     static_assert(!std::is_copy_constructible_v<TextureDemo>);
     static_assert(!std::is_copy_assignable_v<TextureDemo>);
 }

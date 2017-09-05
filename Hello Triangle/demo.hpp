@@ -19,7 +19,7 @@ namespace bmvk
         Demo(const Demo &) = delete;
         Demo(Demo && other) = default;
         Demo & operator=(const Demo &) = delete;
-        Demo & operator=(Demo && other) = default;
+        Demo & operator=(Demo &&) = delete;
         virtual ~Demo() {}
 
         virtual void run() {}
@@ -49,7 +49,7 @@ namespace bmvk
     };
 
     static_assert(std::is_move_constructible_v<Demo>);
-    static_assert(std::is_move_assignable_v<Demo>);
+    static_assert(!std::is_move_assignable_v<Demo>);
     static_assert(!std::is_copy_constructible_v<Demo>);
     static_assert(!std::is_copy_assignable_v<Demo>);
 }

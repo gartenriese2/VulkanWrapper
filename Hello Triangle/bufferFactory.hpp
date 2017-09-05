@@ -4,38 +4,62 @@
 #include <vulkan/vulkan.hpp>
 
 #include "buffer.hpp"
+#include "device.hpp"
 
 namespace bmvk
 {
-    class PhysicalDevice;
+    class Device;
 
     struct StagingBuffer
     {
-        StagingBuffer(Buffer && _buffer, vk::UniqueDeviceMemory && _memory)
+        StagingBuffer(Device & device, Buffer && _buffer, vk::UniqueDeviceMemory && _memory)
             : buffer{std::move(_buffer)},
-              memory{std::move(_memory)}
+              memory{std::move(_memory)},
+              m_device{device}
         {
+        }
+
+        void fill(const void * const objPtr, size_t objSize) const
+        {
+            auto data{ m_device.mapMemory(memory, objSize) };
+            memcpy(data, objPtr, objSize);
+            m_device.unmapMemory(memory);
+        }
+
+        template<class T>
+        void fill(T & obj) const
+        {
+            auto data{ m_device.mapMemory(memory, sizeof obj) };
+            memcpy(data, &obj, sizeof obj);
+            m_device.unmapMemory(memory);
         }
 
         Buffer buffer;
         vk::UniqueDeviceMemory memory;
+    private:
+        Device & m_device;
+        
     };
 
     class BufferFactory
     {
     public:
-        BufferFactory();
+        BufferFactory(Device & device, const vk::PhysicalDevice & physicalDevice);
         BufferFactory(const BufferFactory &) = delete;
         BufferFactory(BufferFactory && other) = default;
         BufferFactory & operator=(const BufferFactory &) = delete;
-        BufferFactory & operator=(BufferFactory &&) & = default;
-        ~BufferFactory() {}
+        BufferFactory & operator=(BufferFactory &&) = delete;
 
-        StagingBuffer createStagingBuffer(const vk::Device & device, const PhysicalDevice & physicalDevice, const vk::DeviceSize size) const;
+        StagingBuffer createStagingBuffer(const vk::DeviceSize size) const;
+    private:
+        Device & m_device;
+        vk::PhysicalDeviceMemoryProperties m_memoryProperties;
+
+        uint32_t findMemoryType(uint32_t typeFilter, vk::MemoryPropertyFlags properties) const;
     };
 
     static_assert(std::is_move_constructible_v<BufferFactory>);
     static_assert(!std::is_copy_constructible_v<BufferFactory>);
-    static_assert(std::is_move_assignable_v<BufferFactory>);
+    static_assert(!std::is_move_assignable_v<BufferFactory>);
     static_assert(!std::is_copy_assignable_v<BufferFactory>);
 }

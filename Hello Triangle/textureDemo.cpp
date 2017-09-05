@@ -154,9 +154,8 @@ namespace bmvk
             throw std::runtime_error("failed to load texture image!");
         }
 
-        StagingBuffer stagingBuffer{ m_bufferFactory.createStagingBuffer(static_cast<vk::Device>(m_device), m_instance.getPhysicalDevice(), imageSize) };
-
-        m_device.copyToMemory(stagingBuffer.memory, pixels, imageSize);
+        StagingBuffer stagingBuffer{ m_bufferFactory.createStagingBuffer(imageSize) };
+        stagingBuffer.fill(pixels, imageSize);
 
         stbi_image_free(pixels);
 
@@ -179,44 +178,40 @@ namespace bmvk
 
     void TextureDemo::createVertexBuffer()
     {
-        const auto bufferSize{ sizeof(vertices[0]) * vertices.size() };
+        const auto bufferSize{ sizeof vertices[0] * vertices.size() };
 
-        const auto stagingBufferUsageFlags{ vk::BufferUsageFlagBits::eTransferSrc };
-        const auto stagingBufferMemoryPropertyFlags{ vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
-        vk::UniqueBuffer stagingBuffer;
-        vk::UniqueDeviceMemory stagingBufferMemory;
-        createBuffer(bufferSize, stagingBufferUsageFlags, stagingBufferMemoryPropertyFlags, stagingBuffer, stagingBufferMemory);
-
-        auto data{ static_cast<vk::Device>(m_device).mapMemory(*stagingBufferMemory, 0, bufferSize) };
-        memcpy(data, vertices.data(), static_cast<size_t>(bufferSize));
-        static_cast<vk::Device>(m_device).unmapMemory(*stagingBufferMemory);
+        auto stagingBuffer{ m_bufferFactory.createStagingBuffer(bufferSize) };
+        stagingBuffer.fill(vertices.data(), bufferSize);
 
         const auto vertexBufferUsageFlags{ vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer };
         const auto vertexBufferMemoryPropertyFlags{ vk::MemoryPropertyFlagBits::eDeviceLocal };
         createBuffer(bufferSize, vertexBufferUsageFlags, vertexBufferMemoryPropertyFlags, m_vertexBuffer, m_vertexBufferMemory);
 
-        copyBuffer(stagingBuffer, m_vertexBuffer, bufferSize);
+        auto cmdBuffer{ m_device.allocateCommandBuffer(m_commandPool) };
+        cmdBuffer.begin(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
+        stagingBuffer.buffer.copyToBuffer(cmdBuffer, m_vertexBuffer, bufferSize);
+        cmdBuffer.end();
+        m_queue.submit(cmdBuffer);
+        m_queue.waitIdle();
     }
 
     void TextureDemo::createIndexBuffer()
     {
-        const auto bufferSize{ sizeof(indices[0]) * indices.size() };
+        const auto bufferSize{ sizeof indices[0] * indices.size() };
 
-        const auto stagingBufferUsageFlags{ vk::BufferUsageFlagBits::eTransferSrc };
-        const auto stagingBufferMemoryPropertyFlags{ vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
-        vk::UniqueBuffer stagingBuffer;
-        vk::UniqueDeviceMemory stagingBufferMemory;
-        createBuffer(bufferSize, stagingBufferUsageFlags, stagingBufferMemoryPropertyFlags, stagingBuffer, stagingBufferMemory);
-
-        auto data{ static_cast<vk::Device>(m_device).mapMemory(*stagingBufferMemory, 0, bufferSize) };
-        memcpy(data, indices.data(), static_cast<size_t>(bufferSize));
-        static_cast<vk::Device>(m_device).unmapMemory(*stagingBufferMemory);
+        auto stagingBuffer{ m_bufferFactory.createStagingBuffer(bufferSize) };
+        stagingBuffer.fill(indices.data(), bufferSize);
 
         const auto indexBufferUsageFlags{ vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer };
         const auto indexBufferMemoryPropertyFlags{ vk::MemoryPropertyFlagBits::eDeviceLocal };
         createBuffer(bufferSize, indexBufferUsageFlags, indexBufferMemoryPropertyFlags, m_indexBuffer, m_indexBufferMemory);
 
-        copyBuffer(stagingBuffer, m_indexBuffer, bufferSize);
+        auto cmdBuffer{ m_device.allocateCommandBuffer(m_commandPool) };
+        cmdBuffer.begin(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
+        stagingBuffer.buffer.copyToBuffer(cmdBuffer, m_indexBuffer, bufferSize);
+        cmdBuffer.end();
+        m_queue.submit(cmdBuffer);
+        m_queue.waitIdle();
     }
 
     void TextureDemo::createUniformBuffer()

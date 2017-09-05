@@ -12,7 +12,7 @@ namespace bmvk
         TriangleDemo(const TriangleDemo &) = delete;
         TriangleDemo(TriangleDemo && other) = default;
         TriangleDemo & operator=(const TriangleDemo &) = delete;
-        TriangleDemo & operator=(TriangleDemo && other) = default;
+        TriangleDemo & operator=(TriangleDemo &&) = delete;
         ~TriangleDemo() {}
 
         void run() override;
@@ -36,7 +36,7 @@ namespace bmvk
     };
 
     static_assert(std::is_move_constructible_v<TriangleDemo>);
-    static_assert(std::is_move_assignable_v<TriangleDemo>);
+    static_assert(!std::is_move_assignable_v<TriangleDemo>);
     static_assert(!std::is_copy_constructible_v<TriangleDemo>);
     static_assert(!std::is_copy_assignable_v<TriangleDemo>);
 }

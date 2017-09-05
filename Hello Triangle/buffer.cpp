@@ -24,4 +24,9 @@ namespace bmvk
         vk::BufferImageCopy region{ 0, 0, 0, { vk::ImageAspectFlagBits::eColor, 0, 0, 1 }, {}, { width, height, 1 } };
         cmdBuffer.copyBufferToImage(m_buffer, image, vk::ImageLayout::eTransferDstOptimal, region);
     }
+
+    void Buffer::copyToBuffer(CommandBuffer & cmdBuffer, vk::UniqueBuffer & buffer, vk::DeviceSize size) const
+    {
+        cmdBuffer.copyBuffer(m_buffer, buffer, size);
+    }
 }

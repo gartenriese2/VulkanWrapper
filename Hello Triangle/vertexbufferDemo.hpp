@@ -14,7 +14,7 @@ namespace bmvk
         VertexbufferDemo(const VertexbufferDemo &) = delete;
         VertexbufferDemo(VertexbufferDemo && other) = default;
         VertexbufferDemo & operator=(const VertexbufferDemo &) = delete;
-        VertexbufferDemo & operator=(VertexbufferDemo && other) = default;
+        VertexbufferDemo & operator=(VertexbufferDemo &&) = delete;
         ~VertexbufferDemo() {}
 
         void run() override;
@@ -66,7 +66,7 @@ namespace bmvk
     };
 
     static_assert(std::is_move_constructible_v<VertexbufferDemo>);
-    static_assert(std::is_move_assignable_v<VertexbufferDemo>);
+    static_assert(!std::is_move_assignable_v<VertexbufferDemo>);
     static_assert(!std::is_copy_constructible_v<VertexbufferDemo>);
     static_assert(!std::is_copy_assignable_v<VertexbufferDemo>);
 }
