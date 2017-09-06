@@ -25,8 +25,8 @@ namespace bmvk
         cmdBuffer.copyBufferToImage(m_buffer, image, vk::ImageLayout::eTransferDstOptimal, region);
     }
 
-    void Buffer::copyToBuffer(CommandBuffer & cmdBuffer, vk::UniqueBuffer & buffer, vk::DeviceSize size) const
+    void Buffer::copyToBuffer(CommandBuffer & cmdBuffer, vk::UniqueBuffer & buffer, vk::DeviceSize size, vk::DeviceSize srcOffset, vk::DeviceSize dstOffset) const
     {
-        cmdBuffer.copyBuffer(m_buffer, buffer, size);
+        cmdBuffer.copyBuffer(m_buffer, buffer, size, srcOffset, dstOffset);
     }
 }

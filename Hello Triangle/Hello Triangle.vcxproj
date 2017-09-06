@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClCompile Include="buffer.cpp" />
     <ClCompile Include="bufferFactory.cpp" />
+    <ClCompile Include="combinedBufferDemo.cpp" />
     <ClCompile Include="commandbuffer.cpp" />
     <ClCompile Include="debugReport.cpp" />
     <ClCompile Include="demo.cpp" />
@@ -50,6 +51,7 @@
       </SubType>
     </ClInclude>
     <ClInclude Include="bufferFactory.hpp" />
+    <ClInclude Include="combinedBufferDemo.hpp" />
     <ClInclude Include="commandbuffer.hpp" />
     <ClInclude Include="debugReport.hpp" />
     <ClInclude Include="demo.hpp" />

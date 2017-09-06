@@ -12,9 +12,9 @@ namespace bmvk
         m_commandBuffer->end();
     }
 
-    void CommandBuffer::copyBuffer(const vk::UniqueBuffer & srcBuffer, vk::UniqueBuffer & dstBuffer, vk::DeviceSize size) const
+    void CommandBuffer::copyBuffer(const vk::UniqueBuffer & srcBuffer, vk::UniqueBuffer & dstBuffer, vk::DeviceSize size, vk::DeviceSize srcOffset, vk::DeviceSize dstOffset) const
     {
-        m_commandBuffer->copyBuffer(*srcBuffer, *dstBuffer, { { 0, 0, size } });
+        m_commandBuffer->copyBuffer(*srcBuffer, *dstBuffer, { { srcOffset, dstOffset, size } });
     }
 
     void CommandBuffer::copyBufferToImage(const vk::UniqueBuffer & srcBuffer, vk::UniqueImage & dstImage, vk::ImageLayout dstImageLayout, vk::ArrayProxy<const vk::BufferImageCopy> regions) const
@@ -57,14 +57,14 @@ namespace bmvk
         m_commandBuffer->bindDescriptorSets(bindPoint, *layout, 0, *set, nullptr);
     }
 
-    void CommandBuffer::bindVertexBuffer(const vk::UniqueBuffer & buffer) const
+    void CommandBuffer::bindVertexBuffer(const vk::UniqueBuffer & buffer, const vk::DeviceSize offset) const
     {
-        m_commandBuffer->bindVertexBuffers(0, *buffer, {0});
+        m_commandBuffer->bindVertexBuffers(0, *buffer, {offset});
     }
 
-    void CommandBuffer::bindIndexBuffer(const vk::UniqueBuffer & buffer, vk::IndexType type) const
+    void CommandBuffer::bindIndexBuffer(const vk::UniqueBuffer & buffer, vk::IndexType type, const vk::DeviceSize offset) const
     {
-        m_commandBuffer->bindIndexBuffer(*buffer, {}, type);
+        m_commandBuffer->bindIndexBuffer(*buffer, offset, type);
     }
 
     void CommandBuffer::drawIndexed(uint32_t indexCount, uint32_t instanceCount, uint32_t firstIndex, int32_t vertexOffset, uint32_t firstInstance) const

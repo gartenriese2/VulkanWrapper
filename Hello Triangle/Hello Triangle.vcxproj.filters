@@ -93,6 +93,9 @@
     <ClCompile Include="bufferFactory.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="combinedBufferDemo.cpp">
+      <Filter>Source Files\Demos</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="instance.hpp">
@@ -166,6 +169,9 @@
     </ClInclude>
     <ClInclude Include="bufferFactory.hpp">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="combinedBufferDemo.hpp">
+      <Filter>Header Files\Demos</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

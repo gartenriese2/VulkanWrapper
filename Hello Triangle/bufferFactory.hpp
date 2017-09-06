@@ -19,20 +19,20 @@ namespace bmvk
         {
         }
 
-        void fill(const void * const objPtr, size_t objSize) const
+        void fill(const void * const objPtr, size_t objSize, vk::DeviceSize offset = 0) const
         {
-            auto data{ m_device.mapMemory(memory, objSize) };
-            memcpy(data, objPtr, objSize);
+            auto data{ reinterpret_cast<vk::DeviceSize *>(m_device.mapMemory(memory, objSize, offset)) };
+            memcpy(data + offset, objPtr, objSize);
             m_device.unmapMemory(memory);
         }
 
-        template<class T>
-        void fill(T & obj) const
+        /*template<class T>
+        void fill(T & obj, size_t offset = 0) const
         {
-            auto data{ m_device.mapMemory(memory, sizeof obj) };
-            memcpy(data, &obj, sizeof obj);
+            auto data{ reinterpret_cast<char *>(m_device.mapMemory(memory, sizeof obj, offset)) };
+            memcpy(data + offset, &obj, sizeof obj);
             m_device.unmapMemory(memory);
-        }
+        }*/
 
         Buffer buffer;
         vk::UniqueDeviceMemory memory;
