@@ -97,10 +97,10 @@ namespace bmvk
         void createDescriptorSetLayout();
         void createRenderPass();
         void createGraphicsPipeline();
+        void createDepthResources();
         void createFramebuffers();
         void createTextureImage();
         void createTextureImageView();
-        void createDepthResources();
         void createCombinedBuffer();
         void createUniformBuffer();
         void createDescriptorPool();

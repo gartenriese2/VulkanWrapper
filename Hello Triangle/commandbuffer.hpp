@@ -24,7 +24,7 @@ namespace bmvk
         void copyBuffer(const vk::UniqueBuffer & srcBuffer, vk::UniqueBuffer & dstBuffer, vk::DeviceSize size, vk::DeviceSize srcOffset = 0, vk::DeviceSize dstOffset = 0) const;
         void copyBufferToImage(const vk::UniqueBuffer & srcBuffer, vk::UniqueImage & dstImage, vk::ImageLayout dstImageLayout, vk::ArrayProxy<const vk::BufferImageCopy> regions) const;
 
-        void beginRenderPass(const vk::UniqueRenderPass & renderPass, const vk::UniqueFramebuffer & framebuffer, vk::Rect2D renderArea, vk::ClearValue clearColor, vk::SubpassContents contents = vk::SubpassContents::eInline) const;
+        void beginRenderPass(const vk::UniqueRenderPass & renderPass, const vk::UniqueFramebuffer & framebuffer, vk::Rect2D renderArea, vk::ArrayProxy<vk::ClearValue> clearColors, vk::SubpassContents contents = vk::SubpassContents::eInline) const;
         void endRenderPass() const;
 
         void setViewport(vk::Viewport viewport) const;

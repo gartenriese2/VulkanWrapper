@@ -484,7 +484,8 @@ namespace bmvk
         m_commandBufferImguiPtr.reset();
         m_commandBufferImguiPtr = std::make_unique<CommandBuffer>(m_device.allocateCommandBuffer(m_commandPool));
         m_commandBufferImguiPtr->begin(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
-        m_commandBufferImguiPtr->beginRenderPass(m_renderPassImgui, m_swapChainFramebuffers[imageIndex], { { 0, 0 }, m_swapchain.getExtent() }, { ClearColorValue{ 0.f, 0.f, 0.f, 1.f } });
+        std::vector<vk::ClearValue> clearValues{ vk::ClearColorValue{ std::array<float, 4>{ 0.f, 0.f, 0.f, 1.f } } };
+        m_commandBufferImguiPtr->beginRenderPass(m_renderPassImgui, m_swapChainFramebuffers[imageIndex], { { 0, 0 }, m_swapchain.getExtent() }, clearValues);
 
         imguiRenderDrawLists(ImGui::GetDrawData());
 

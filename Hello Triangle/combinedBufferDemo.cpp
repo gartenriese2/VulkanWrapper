@@ -268,7 +268,8 @@ namespace bmvk
         {
             const auto & cmdBuffer{ m_commandBuffers[i] };
             cmdBuffer.begin(vk::CommandBufferUsageFlagBits::eSimultaneousUse);
-            cmdBuffer.beginRenderPass(m_renderPass, m_swapChainFramebuffers[i], { { 0, 0 }, m_swapchain.getExtent() }, { ClearColorValue{ 0.f, 0.f, 0.f, 1.f } });
+            std::vector<vk::ClearValue> clearValues{ vk::ClearColorValue{ std::array<float, 4>{ 0.f, 0.f, 0.f, 1.f } } };
+            cmdBuffer.beginRenderPass(m_renderPass, m_swapChainFramebuffers[i], { { 0, 0 }, m_swapchain.getExtent() }, clearValues);
             cmdBuffer.bindPipeline(m_graphicsPipeline);
             cmdBuffer.bindDescriptorSet(m_pipelineLayout, m_descriptorSets[0]);
             cmdBuffer.bindVertexBuffer(m_vertexBuffer);

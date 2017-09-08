@@ -22,9 +22,9 @@ namespace bmvk
         m_commandBuffer->copyBufferToImage(*srcBuffer, *dstImage, dstImageLayout, regions);
     }
 
-    void CommandBuffer::beginRenderPass(const vk::UniqueRenderPass & renderPass, const vk::UniqueFramebuffer & framebuffer, vk::Rect2D renderArea, vk::ClearValue clearColor, vk::SubpassContents contents) const
+    void CommandBuffer::beginRenderPass(const vk::UniqueRenderPass & renderPass, const vk::UniqueFramebuffer & framebuffer, vk::Rect2D renderArea, vk::ArrayProxy<vk::ClearValue> clearColors, vk::SubpassContents contents) const
     {
-        m_commandBuffer->beginRenderPass({ *renderPass, *framebuffer, renderArea, 1, &clearColor }, contents);
+        m_commandBuffer->beginRenderPass({ *renderPass, *framebuffer, renderArea, clearColors.size(), clearColors.data() }, contents);
     }
 
     void CommandBuffer::endRenderPass() const

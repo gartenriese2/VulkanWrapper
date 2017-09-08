@@ -19,10 +19,10 @@ namespace bmvk
         createDescriptorSetLayout();
         createRenderPass();
         createGraphicsPipeline();
+        createDepthResources();
         createFramebuffers();
         createTextureImage();
         createTextureImageView();
-        createDepthResources();
         createCombinedBuffer();
         createUniformBuffer();
         createDescriptorPool();
@@ -86,8 +86,8 @@ namespace bmvk
 
         createRenderPass();
         createGraphicsPipeline();
-        createFramebuffers();
         createDepthResources();
+        createFramebuffers();
         createCommandBuffers();
     }
 
@@ -104,9 +104,12 @@ namespace bmvk
     {
         vk::AttachmentDescription colorAttachment{ {}, m_swapchain.getImageFormat().format, vk::SampleCountFlagBits::e1, vk::AttachmentLoadOp::eClear, vk::AttachmentStoreOp::eStore, vk::AttachmentLoadOp::eDontCare, vk::AttachmentStoreOp::eDontCare, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal };
         vk::AttachmentReference colorAttachmentRef{ 0, vk::ImageLayout::eColorAttachmentOptimal };
-        vk::SubpassDescription subpass{ {}, vk::PipelineBindPoint::eGraphics, 0, nullptr, 1, &colorAttachmentRef };
+        vk::AttachmentDescription depthAttachment{ {}, m_instance.getPhysicalDevice().findDepthFormat(), vk::SampleCountFlagBits::e1, vk::AttachmentLoadOp::eClear, vk::AttachmentStoreOp::eDontCare, vk::AttachmentLoadOp::eDontCare, vk::AttachmentStoreOp::eDontCare, vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal };
+        vk::AttachmentReference depthAttachmentRef{ 1, vk::ImageLayout::eDepthStencilAttachmentOptimal };
+        vk::SubpassDescription subpass{ {}, vk::PipelineBindPoint::eGraphics, 0, nullptr, 1, &colorAttachmentRef, nullptr, &depthAttachmentRef };
         vk::SubpassDependency dependency{ VK_SUBPASS_EXTERNAL, 0, vk::PipelineStageFlagBits::eColorAttachmentOutput, vk::PipelineStageFlagBits::eColorAttachmentOutput,{}, vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite };
-        RenderPassCreateInfo renderPassInfo{ {}, colorAttachment, subpass, dependency };
+        std::vector<vk::AttachmentDescription> vec{ colorAttachment, depthAttachment };
+        RenderPassCreateInfo renderPassInfo{ {}, vec, subpass, dependency };
         m_renderPass = static_cast<vk::Device>(m_device).createRenderPassUnique(renderPassInfo);
     }
 
@@ -127,13 +130,14 @@ namespace bmvk
         vk::PipelineViewportStateCreateInfo viewportState{ {}, 1, &viewport, 1, &scissor };
         vk::PipelineRasterizationStateCreateInfo rasterizer{ {}, false, false, vk::PolygonMode::eFill, vk::CullModeFlagBits::eBack, vk::FrontFace::eCounterClockwise, false, 0.f, 0.f, 0.f, 1.f };
         vk::PipelineMultisampleStateCreateInfo multisampling;
+        vk::PipelineDepthStencilStateCreateInfo depthStencil{ {}, true, true, vk::CompareOp::eLess, false, false };
         vk::PipelineColorBlendAttachmentState colorBlendAttachment{ false, vk::BlendFactor::eSrcAlpha, vk::BlendFactor::eOneMinusSrcAlpha, vk::BlendOp::eAdd, vk::BlendFactor::eOne, vk::BlendFactor::eZero, vk::BlendOp::eAdd, vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA };
         vk::PipelineColorBlendStateCreateInfo colorBlending{ {}, false, vk::LogicOp::eCopy, 1, &colorBlendAttachment };
         auto descriptorSetLayout{ *m_descriptorSetLayout };
         vk::PipelineLayoutCreateInfo pipelineLayoutInfo{ {}, 1, &descriptorSetLayout };
         m_pipelineLayout = static_cast<vk::Device>(m_device).createPipelineLayoutUnique(pipelineLayoutInfo);
 
-        vk::GraphicsPipelineCreateInfo pipelineInfo({}, 2, shaderStages, &vertexInputInfo, &inputAssembly, nullptr, &viewportState, &rasterizer, &multisampling, nullptr, &colorBlending, nullptr, *m_pipelineLayout, *m_renderPass, 0, nullptr, -1);
+        vk::GraphicsPipelineCreateInfo pipelineInfo({}, 2, shaderStages, &vertexInputInfo, &inputAssembly, nullptr, &viewportState, &rasterizer, &multisampling, &depthStencil, &colorBlending, nullptr, *m_pipelineLayout, *m_renderPass, 0, nullptr, -1);
         m_graphicsPipeline = static_cast<vk::Device>(m_device).createGraphicsPipelineUnique(nullptr, pipelineInfo);
     }
 
@@ -142,8 +146,8 @@ namespace bmvk
         m_swapChainFramebuffers.clear();
         for (auto & uniqueImageView : m_swapchain.getImageViews())
         {
-            auto imageView{ *uniqueImageView };
-            m_swapChainFramebuffers.emplace_back(m_device.createFramebuffer(m_renderPass, imageView, m_swapchain.getExtent().width, m_swapchain.getExtent().height, 1));
+            std::vector<vk::ImageView> imageViews{ *uniqueImageView, *m_depthImageView };
+            m_swapChainFramebuffers.emplace_back(m_device.createFramebuffer(m_renderPass, imageViews, m_swapchain.getExtent().width, m_swapchain.getExtent().height, 1));
         }
     }
 
@@ -281,7 +285,8 @@ namespace bmvk
         {
             const auto & cmdBuffer{ m_commandBuffers[i] };
             cmdBuffer.begin(vk::CommandBufferUsageFlagBits::eSimultaneousUse);
-            cmdBuffer.beginRenderPass(m_renderPass, m_swapChainFramebuffers[i], { { 0, 0 }, m_swapchain.getExtent() }, { ClearColorValue{ 0.f, 0.f, 0.f, 1.f } });
+            std::vector<vk::ClearValue> clearValues{ vk::ClearColorValue{ std::array<float, 4>{ 0.f, 0.f, 0.f, 1.f } }, vk::ClearDepthStencilValue{ 1.f, 0 } };
+            cmdBuffer.beginRenderPass(m_renderPass, m_swapChainFramebuffers[i], { { 0, 0 }, m_swapchain.getExtent() }, clearValues);
             cmdBuffer.bindPipeline(m_graphicsPipeline);
             cmdBuffer.bindDescriptorSet(m_pipelineLayout, m_descriptorSets[0]);
             cmdBuffer.bindVertexBuffer(m_vertexBuffer);
