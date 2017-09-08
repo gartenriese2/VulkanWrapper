@@ -25,6 +25,7 @@
     <ClCompile Include="commandbuffer.cpp" />
     <ClCompile Include="debugReport.cpp" />
     <ClCompile Include="demo.cpp" />
+    <ClCompile Include="depthBufferDemo.cpp" />
     <ClCompile Include="device.cpp" />
     <ClCompile Include="imguiBaseDemo.cpp" />
     <ClCompile Include="imguiDemo.cpp" />
@@ -55,6 +56,7 @@
     <ClInclude Include="commandbuffer.hpp" />
     <ClInclude Include="debugReport.hpp" />
     <ClInclude Include="demo.hpp" />
+    <ClInclude Include="depthBufferDemo.hpp" />
     <ClInclude Include="device.hpp" />
     <ClInclude Include="imguiBaseDemo.hpp" />
     <ClInclude Include="imguiDemo.hpp" />
