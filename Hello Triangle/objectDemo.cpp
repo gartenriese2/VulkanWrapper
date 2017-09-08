@@ -8,7 +8,6 @@
 
 #include "shader.hpp"
 #include "bufferFactory.hpp"
-#include <iostream>
 
 namespace bmvk
 {
