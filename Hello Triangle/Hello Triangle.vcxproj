@@ -32,6 +32,7 @@
     <ClCompile Include="indexbufferDemo.cpp" />
     <ClCompile Include="instance.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="objectDemo.cpp" />
     <ClCompile Include="physicalDevice.cpp" />
     <ClCompile Include="queue.cpp" />
     <ClCompile Include="sampler.cpp" />
@@ -62,6 +63,7 @@
     <ClInclude Include="imguiDemo.hpp" />
     <ClInclude Include="indexbufferDemo.hpp" />
     <ClInclude Include="instance.hpp" />
+    <ClInclude Include="objectDemo.hpp" />
     <ClInclude Include="physicalDevice.hpp" />
     <ClInclude Include="queue.hpp" />
     <ClInclude Include="sampler.hpp" />
@@ -148,7 +150,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)extern\Vulkan-1.0.57.0\include;$(SolutionDir)extern\glm-0.9.8.4;$(SolutionDir)extern\GLFW-3.2.1\include;$(SolutionDir)extern\imgui-1.50-20170822\include;$(SolutionDir)extern\stb_image-2.16;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)extern\Vulkan-1.0.57.0\include;$(SolutionDir)extern\glm-0.9.8.4;$(SolutionDir)extern\GLFW-3.2.1\include;$(SolutionDir)extern\imgui-1.50-20170822\include;$(SolutionDir)extern\stb_image-2.16;$(SolutionDir)extern\tinyobjloader-1.0.6;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
@@ -164,7 +166,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)extern\Vulkan-1.0.57.0\include;$(SolutionDir)extern\glm-0.9.8.4;$(SolutionDir)extern\GLFW-3.2.1\include;$(SolutionDir)extern\imgui-1.50-20170822\include;$(SolutionDir)extern\stb_image-2.16;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)extern\Vulkan-1.0.57.0\include;$(SolutionDir)extern\glm-0.9.8.4;$(SolutionDir)extern\GLFW-3.2.1\include;$(SolutionDir)extern\imgui-1.50-20170822\include;$(SolutionDir)extern\stb_image-2.16;$(SolutionDir)extern\tinyobjloader-1.0.6;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
@@ -182,7 +184,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)extern\Vulkan-1.0.57.0\include;$(SolutionDir)extern\glm-0.9.8.4;$(SolutionDir)extern\GLFW-3.2.1\include;$(SolutionDir)extern\imgui-1.50-20170822\include;$(SolutionDir)extern\stb_image-2.16;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)extern\Vulkan-1.0.57.0\include;$(SolutionDir)extern\glm-0.9.8.4;$(SolutionDir)extern\GLFW-3.2.1\include;$(SolutionDir)extern\imgui-1.50-20170822\include;$(SolutionDir)extern\stb_image-2.16;$(SolutionDir)extern\tinyobjloader-1.0.6;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
@@ -202,7 +204,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)extern\Vulkan-1.0.57.0\include;$(SolutionDir)extern\glm-0.9.8.4;$(SolutionDir)extern\GLFW-3.2.1\include;$(SolutionDir)extern\imgui-1.50-20170822\include;$(SolutionDir)extern\stb_image-2.16;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)extern\Vulkan-1.0.57.0\include;$(SolutionDir)extern\glm-0.9.8.4;$(SolutionDir)extern\GLFW-3.2.1\include;$(SolutionDir)extern\imgui-1.50-20170822\include;$(SolutionDir)extern\stb_image-2.16;$(SolutionDir)extern\tinyobjloader-1.0.6;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>

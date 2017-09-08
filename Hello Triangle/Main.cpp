@@ -9,7 +9,8 @@
 //#include "imguiDemo.hpp"
 //#include "textureDemo.hpp"
 //#include "combinedBufferDemo.hpp"
-#include "depthBufferDemo.hpp"
+//#include "depthBufferDemo.hpp"
+#include "objectDemo.hpp"
 
 const int WIDTH = 800;
 const int HEIGHT = 600;
@@ -32,7 +33,8 @@ int main()
         //bmvk::ImguiDemo app(enableValidationLayers, WIDTH, HEIGHT);
         //bmvk::TextureDemo app(enableValidationLayers, WIDTH, HEIGHT);
         //bmvk::CombinedBufferDemo app(enableValidationLayers, WIDTH, HEIGHT);
-        bmvk::DepthBufferDemo app(enableValidationLayers, WIDTH, HEIGHT);
+        //bmvk::DepthBufferDemo app(enableValidationLayers, WIDTH, HEIGHT);
+        bmvk::ObjectDemo app(enableValidationLayers, WIDTH, HEIGHT);
         app.run();
     }
     catch (const std::runtime_error & e)

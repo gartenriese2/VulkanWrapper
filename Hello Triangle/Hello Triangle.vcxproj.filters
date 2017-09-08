@@ -99,6 +99,9 @@
     <ClCompile Include="depthBufferDemo.cpp">
       <Filter>Source Files\Demos</Filter>
     </ClCompile>
+    <ClCompile Include="objectDemo.cpp">
+      <Filter>Source Files\Demos</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="instance.hpp">
@@ -177,6 +180,9 @@
       <Filter>Header Files\Demos</Filter>
     </ClInclude>
     <ClInclude Include="depthBufferDemo.hpp">
+      <Filter>Header Files\Demos</Filter>
+    </ClInclude>
+    <ClInclude Include="objectDemo.hpp">
       <Filter>Header Files\Demos</Filter>
     </ClInclude>
   </ItemGroup>

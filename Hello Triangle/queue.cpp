@@ -19,8 +19,12 @@ namespace bmvk
 
     void Queue::submit(const CommandBuffer & cmdBuffer, const vk::UniqueSemaphore & waitSemaphore, const vk::UniqueSemaphore & signalSemaphore, vk::PipelineStageFlags flags, vk::Fence fence) const
     {
-        const SubmitInfo info{ reinterpret_cast<const vk::UniqueCommandBuffer &>(cmdBuffer), waitSemaphore, signalSemaphore, flags };
-        const vk::SubmitInfo info_vk{ info };
+        vk::Semaphore waitSemaphores[] = { *waitSemaphore };
+        vk::PipelineStageFlags waitStages[] = { flags };
+        const auto & uniqueCmdBuffer{ reinterpret_cast<const vk::UniqueCommandBuffer &>(cmdBuffer) };
+        vk::CommandBuffer commandBuffers[] = { *uniqueCmdBuffer };
+        vk::Semaphore signalSemaphores[] = { *signalSemaphore };
+        vk::SubmitInfo info_vk{ 1, waitSemaphores, waitStages, 1, commandBuffers, 1, signalSemaphores };
         m_queue.submit(info_vk, fence);
     }
 
