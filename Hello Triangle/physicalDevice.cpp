@@ -37,6 +37,30 @@ namespace bmvk
         throw std::runtime_error("failed to find suitable memory type!");
     }
 
+    vk::Format PhysicalDevice::findSupportedFormat(const std::vector<vk::Format> & candidates, vk::ImageTiling tiling, vk::FormatFeatureFlags features) const
+    {
+        for (auto format : candidates)
+        {
+            const auto props{ m_physicalDevice.getFormatProperties(format) };
+            if (tiling == vk::ImageTiling::eLinear && (props.linearTilingFeatures & features) == features)
+            {
+                return format;
+            }
+
+            if (tiling == vk::ImageTiling::eOptimal && (props.optimalTilingFeatures & features) == features)
+            {
+                return format;
+            }
+        }
+
+        throw std::runtime_error("failed to find supported format!");
+    }
+
+    vk::Format PhysicalDevice::findDepthFormat() const
+    {
+        return findSupportedFormat({ vk::Format::eD32Sfloat, vk::Format::eD32SfloatS8Uint, vk::Format::eD24UnormS8Uint }, vk::ImageTiling::eOptimal, vk::FormatFeatureFlagBits::eDepthStencilAttachment);
+    }
+
     std::tuple<bool, int> PhysicalDevice::isDeviceSuitable(const vk::PhysicalDevice & device, const vk::SurfaceKHR & surface)
     {
         const auto features = device.getFeatures();

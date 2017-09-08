@@ -22,6 +22,7 @@ namespace bmvk
         createFramebuffers();
         createTextureImage();
         createTextureImageView();
+        createDepthResources();
         createCombinedBuffer();
         createUniformBuffer();
         createDescriptorPool();
@@ -74,6 +75,9 @@ namespace bmvk
         }
 
         m_commandBuffers.clear();
+        m_depthImageView.reset(nullptr);
+        m_depthImageMemory.reset(nullptr);
+        m_depthImage.reset(nullptr);
         m_graphicsPipeline.reset(nullptr);
         m_pipelineLayout.reset(nullptr);
         m_renderPass.reset(nullptr);
@@ -83,6 +87,7 @@ namespace bmvk
         createRenderPass();
         createGraphicsPipeline();
         createFramebuffers();
+        createDepthResources();
         createCommandBuffers();
     }
 
@@ -152,7 +157,7 @@ namespace bmvk
             throw std::runtime_error("failed to load texture image!");
         }
 
-        StagingBuffer stagingBuffer{ m_bufferFactory.createStagingBuffer(imageSize) };
+        auto stagingBuffer{ m_bufferFactory.createStagingBuffer(imageSize) };
         stagingBuffer.fill(pixels, imageSize);
 
         stbi_image_free(pixels);
@@ -172,6 +177,20 @@ namespace bmvk
     void DepthBufferDemo::createTextureImageView()
     {
         m_textureImageView = createImageView(m_textureImage, vk::Format::eR8G8B8A8Unorm);
+    }
+
+    void DepthBufferDemo::createDepthResources()
+    {
+        const auto depthFormat{ m_instance.getPhysicalDevice().findDepthFormat() };
+        createImage(m_swapchain.getExtent().width, m_swapchain.getExtent().height, depthFormat, vk::ImageTiling::eOptimal, vk::ImageUsageFlagBits::eDepthStencilAttachment, vk::MemoryPropertyFlagBits::eDeviceLocal, m_depthImage, m_depthImageMemory);
+        m_depthImageView = createImageView(m_depthImage, depthFormat, vk::ImageAspectFlagBits::eDepth);
+
+        auto cmdBuffer{ m_device.allocateCommandBuffer(m_commandPool) };
+        cmdBuffer.begin(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
+        transitionImageLayout(cmdBuffer, m_depthImage, depthFormat, vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal);
+        cmdBuffer.end();
+        m_queue.submit(cmdBuffer);
+        m_queue.waitIdle();
     }
 
     void DepthBufferDemo::createCombinedBuffer()

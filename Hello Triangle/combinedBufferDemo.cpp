@@ -153,7 +153,7 @@ namespace bmvk
             throw std::runtime_error("failed to load texture image!");
         }
 
-        StagingBuffer stagingBuffer{ m_bufferFactory.createStagingBuffer(imageSize) };
+        auto stagingBuffer{ m_bufferFactory.createStagingBuffer(imageSize) };
         stagingBuffer.fill(pixels, imageSize);
 
         stbi_image_free(pixels);

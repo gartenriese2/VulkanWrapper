@@ -52,7 +52,7 @@ namespace bmvk
 
     void Demo::createImage(uint32_t width, uint32_t height, vk::Format format, vk::ImageTiling tiling, vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties, vk::UniqueImage & image, vk::UniqueDeviceMemory & imageMemory)
     {
-        vk::ImageCreateInfo imageInfo{ {}, vk::ImageType::e2D, format, { width, height, 1 }, 1, 1, vk::SampleCountFlagBits::e1, tiling, vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled, vk::SharingMode::eExclusive };
+        vk::ImageCreateInfo imageInfo{ {}, vk::ImageType::e2D, format, { width, height, 1 }, 1, 1, vk::SampleCountFlagBits::e1, tiling, usage, vk::SharingMode::eExclusive };
         image = static_cast<vk::Device>(m_device).createImageUnique(imageInfo);
 
         const auto memRequirements{ static_cast<vk::Device>(m_device).getImageMemoryRequirements(*image) };
@@ -62,17 +62,32 @@ namespace bmvk
         static_cast<vk::Device>(m_device).bindImageMemory(*image, *imageMemory, 0);
     }
 
-    vk::UniqueImageView Demo::createImageView(const vk::UniqueImage & image, vk::Format format) const
+    vk::UniqueImageView Demo::createImageView(const vk::UniqueImage & image, vk::Format format, vk::ImageAspectFlags aspectFlags) const
     {
-        vk::ImageViewCreateInfo viewInfo{ {}, *image, vk::ImageViewType::e2D, format, {} ,{ vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1 } };
+        vk::ImageViewCreateInfo viewInfo{ {}, *image, vk::ImageViewType::e2D, format, {} ,{ aspectFlags, 0, 1, 0, 1 } };
         return m_device.createImageView(viewInfo);
+    }
+
+    bool Demo::hasStencilComponent(const vk::Format format) const
+    {
+        return format == vk::Format::eD32SfloatS8Uint || format == vk::Format::eD24UnormS8Uint;
     }
 
     void Demo::transitionImageLayout(const CommandBuffer & cmdBuffer, const vk::UniqueImage & image, vk::Format format, vk::ImageLayout oldLayout, vk::ImageLayout newLayout) const
     {
         vk::ImageMemoryBarrier barrier{ {},{}, oldLayout, newLayout, VK_QUEUE_FAMILY_IGNORED, VK_QUEUE_FAMILY_IGNORED, *image, { vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1 } };
-        vk::PipelineStageFlags srcStage;;
+        vk::PipelineStageFlags srcStage;
         vk::PipelineStageFlags dstStage;
+
+        if (newLayout == vk::ImageLayout::eDepthStencilAttachmentOptimal)
+        {
+            barrier.subresourceRange.setAspectMask(vk::ImageAspectFlagBits::eDepth);
+            if (hasStencilComponent(format))
+            {
+                barrier.subresourceRange.aspectMask |= vk::ImageAspectFlagBits::eStencil;
+            }
+        }
+
         if (oldLayout == vk::ImageLayout::eUndefined && newLayout == vk::ImageLayout::eTransferDstOptimal)
         {
             barrier.setDstAccessMask(vk::AccessFlagBits::eTransferWrite);
@@ -85,6 +100,12 @@ namespace bmvk
             barrier.setDstAccessMask(vk::AccessFlagBits::eShaderRead);
             srcStage = vk::PipelineStageFlagBits::eTransfer;
             dstStage = vk::PipelineStageFlagBits::eFragmentShader;
+        }
+        else if (oldLayout == vk::ImageLayout::eUndefined && newLayout == vk::ImageLayout::eDepthStencilAttachmentOptimal)
+        {
+            barrier.setDstAccessMask(vk::AccessFlagBits::eDepthStencilAttachmentRead | vk::AccessFlagBits::eDepthStencilAttachmentWrite);
+            srcStage = vk::PipelineStageFlagBits::eTopOfPipe;
+            dstStage = vk::PipelineStageFlagBits::eEarlyFragmentTests;
         }
         else
         {
