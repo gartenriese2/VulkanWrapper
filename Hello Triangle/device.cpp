@@ -81,6 +81,18 @@ namespace bmvk
         return Sampler(m_device, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerMipmapMode::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerAddressMode::eRepeat, vk::SamplerAddressMode::eRepeat, 0.f, enableAnisotropy, enableAnisotropy ? 16.f : 1.f, false, vk::CompareOp::eAlways, minLod, maxLod, vk::BorderColor::eIntOpaqueBlack, false);
     }
 
+    vk::UniqueDescriptorSetLayout Device::createDescriptorSetLayout(const std::vector<vk::DescriptorSetLayoutBinding> & bindings) const
+    {
+        DescriptorSetLayoutCreateInfo info{ bindings };
+        return m_device.createDescriptorSetLayoutUnique(info);
+    }
+
+    vk::UniquePipelineLayout Device::createPipelineLayout(const std::vector<vk::DescriptorSetLayout> & setLayouts, const std::vector<vk::PushConstantRange> & pushConstantRanges) const
+    {
+        PipelineLayoutCreateInfo info{ setLayouts, pushConstantRanges };
+        return m_device.createPipelineLayoutUnique(info);
+    }
+
     void * Device::mapMemory(const vk::UniqueDeviceMemory & memory, const vk::DeviceSize size, const vk::DeviceSize offset, const vk::MemoryMapFlags flags) const
     {
         return m_device.mapMemory(*memory, offset, size, flags);

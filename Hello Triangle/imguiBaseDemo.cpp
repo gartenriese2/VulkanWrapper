@@ -230,9 +230,7 @@ namespace bmvk
         vk::PipelineDynamicStateCreateInfo dynamicState{ PipelineDynamicStateCreateInfo{ { vk::DynamicState::eViewport, vk::DynamicState::eScissor } } };
 
         vk::PushConstantRange pushConstantRange{ vk::ShaderStageFlagBits::eVertex, sizeof(float) * 0, sizeof(float) * 4 };
-        auto descriptorSetLayoutImgui{ *m_descriptorSetLayoutImgui };
-        vk::PipelineLayoutCreateInfo pipelineLayoutInfoImgui{ PipelineLayoutCreateInfo{ descriptorSetLayoutImgui, pushConstantRange } };
-        m_pipelineLayoutImgui = static_cast<vk::Device>(m_device).createPipelineLayoutUnique(pipelineLayoutInfoImgui);
+        m_pipelineLayoutImgui = m_device.createPipelineLayout({ *m_descriptorSetLayoutImgui }, { pushConstantRange });
 
         vk::GraphicsPipelineCreateInfo pipelineInfoImgui{ {}, 2, shaderStagesImgui, &vertexInputInfoImgui, &inputAssemblyImgui, nullptr, &viewportStateImgui, &rasterizerImgui, &multisamplingImgui, &depthStencilState, &colorBlendingImgui, &dynamicState, *m_pipelineLayoutImgui, *m_renderPassImgui, 0, nullptr, -1 };
         m_graphicsPipelineImgui = static_cast<vk::Device>(m_device).createGraphicsPipelineUnique(nullptr, pipelineInfoImgui);

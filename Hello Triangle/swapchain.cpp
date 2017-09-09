@@ -23,6 +23,19 @@ namespace bmvk
         create(physicalDevice, surface, window, device);
     }
 
+    vk::PipelineViewportStateCreateInfo Swapchain::getPipelineViewportStateCreateInfo(vk::Viewport & viewport, vk::Rect2D & scissor, const float minDepth, const float maxDepth) const
+    {
+        viewport.setX(0.f);
+        viewport.setY(0.f);
+        viewport.setWidth(static_cast<float>(m_extent.width));
+        viewport.setHeight(static_cast<float>(m_extent.height));
+        viewport.setMinDepth(minDepth);
+        viewport.setMaxDepth(maxDepth);
+        scissor.setOffset({});
+        scissor.setExtent(m_extent);
+        return { {}, 1, &viewport, 1, &scissor };
+    }
+
     void Swapchain::create(const PhysicalDevice & physicalDevice, const Surface & surface, const Window & window, const Device & device)
     {
         m_capabilities = physicalDevice.getSurfaceCapabilities(static_cast<vk::SurfaceKHR>(surface));

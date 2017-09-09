@@ -271,8 +271,8 @@ namespace bmvk
         {
         }
 
-        DescriptorSetLayoutCreateInfo(vk::ArrayProxy<vk::DescriptorSetLayoutBinding> bindings)
-            : VkStructBase{ { {}, bindings.size(), bindings.data() } }
+        DescriptorSetLayoutCreateInfo(const std::vector<vk::DescriptorSetLayoutBinding> & bindings)
+            : VkStructBase{ { {}, static_cast<uint32_t>(bindings.size()), bindings.data() } }
         {
         }
     };
@@ -318,8 +318,8 @@ namespace bmvk
         {
         }
 
-        PipelineLayoutCreateInfo(vk::ArrayProxy<vk::DescriptorSetLayout> setLayouts, vk::ArrayProxy<vk::PushConstantRange> pushConstantRanges)
-            : VkStructBase{ { {}, setLayouts.size(), setLayouts.data(), pushConstantRanges.size(), pushConstantRanges.data() } }
+        PipelineLayoutCreateInfo(const std::vector<vk::DescriptorSetLayout> & setLayouts, const std::vector<vk::PushConstantRange> & pushConstantRanges = {})
+            : VkStructBase{ { {}, static_cast<uint32_t>(setLayouts.size()), setLayouts.data(), static_cast<uint32_t>(pushConstantRanges.size()), pushConstantRanges.data() } }
         {
         }
     };

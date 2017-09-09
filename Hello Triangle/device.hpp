@@ -32,6 +32,8 @@ namespace bmvk
         CommandBuffer allocateCommandBuffer(const vk::UniqueCommandPool & pool, const vk::CommandBufferLevel level = vk::CommandBufferLevel::ePrimary) const;
         std::vector<CommandBuffer> allocateCommandBuffers(const vk::UniqueCommandPool & pool, const uint32_t count, const vk::CommandBufferLevel level = vk::CommandBufferLevel::ePrimary) const;
         Sampler createSampler(const bool enableAnisotropy = false, const float minLod = 0.f, const float maxLod = 0.f) const;
+        vk::UniqueDescriptorSetLayout createDescriptorSetLayout(const std::vector<vk::DescriptorSetLayoutBinding> & bindings) const;
+        vk::UniquePipelineLayout createPipelineLayout(const std::vector<vk::DescriptorSetLayout> & setLayouts, const std::vector<vk::PushConstantRange> & pushConstantRanges = {}) const;
 
         void waitIdle() const { m_device.waitIdle(); }
         void * mapMemory(const vk::UniqueDeviceMemory & memory, const vk::DeviceSize size, const vk::DeviceSize offset = 0, const vk::MemoryMapFlags flags = {}) const;

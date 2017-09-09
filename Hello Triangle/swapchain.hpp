@@ -27,6 +27,8 @@ namespace bmvk
         const auto & getImageViews() const noexcept { return m_imageViews; }
 
         void recreate(const PhysicalDevice & physicalDevice, const Surface & surface, const Window & window, const Device & device);
+
+        vk::PipelineViewportStateCreateInfo getPipelineViewportStateCreateInfo(vk::Viewport & viewport, vk::Rect2D & scissor, const float minDepth = 0.f, const float maxDepth = 1.f) const;
     private:
         vk::UniqueSwapchainKHR m_swapchain;
         vk::SurfaceFormatKHR m_imageFormat;
