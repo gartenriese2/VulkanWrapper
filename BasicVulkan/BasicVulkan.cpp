@@ -140,6 +140,13 @@ struct UniformBufferObject {
     glm::mat4 proj;
 };
 
+struct GLFWwindowDeleter {
+    void operator()(GLFWwindow * ptr) const
+    {
+        glfwDestroyWindow(ptr);
+    }
+};
+
 class HelloTriangleApplication {
 public:
     void run() {
@@ -150,7 +157,7 @@ public:
     }
 
 private:
-    GLFWwindow* window;
+    std::unique_ptr<GLFWwindow, GLFWwindowDeleter> m_window;
 
     vk::UniqueInstance m_instance;
     VkDebugReportCallbackEXT callback;
@@ -208,10 +215,10 @@ private:
 
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-        window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
+        m_window.reset(glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr));
 
-        glfwSetWindowUserPointer(window, this);
-        glfwSetWindowSizeCallback(window, HelloTriangleApplication::onWindowResized);
+        glfwSetWindowUserPointer(m_window.get(), this);
+        glfwSetWindowSizeCallback(m_window.get(), HelloTriangleApplication::onWindowResized);
     }
 
     void initVulkan() {
@@ -242,7 +249,7 @@ private:
     }
 
     void mainLoop() {
-        while (!glfwWindowShouldClose(window)) {
+        while (!glfwWindowShouldClose(m_window.get())) {
             glfwPollEvents();
 
             updateUniformBuffer();
@@ -309,7 +316,7 @@ private:
         m_surface.reset(nullptr);
         m_instance.reset(nullptr);
 
-        glfwDestroyWindow(window);
+        m_window.reset(nullptr);
 
         glfwTerminate();
     }
@@ -389,7 +396,7 @@ private:
     {
         const auto instance{ static_cast<VkInstance>(*m_instance) };
         VkSurfaceKHR surface;
-        if (glfwCreateWindowSurface(instance, window, nullptr, &surface) != VK_SUCCESS) {
+        if (glfwCreateWindowSurface(instance, m_window.get(), nullptr, &surface) != VK_SUCCESS) {
             throw std::runtime_error("failed to create window surface!");
         }
 
@@ -1385,7 +1392,7 @@ private:
         }
         else {
             int width, height;
-            glfwGetWindowSize(window, &width, &height);
+            glfwGetWindowSize(m_window.get(), &width, &height);
 
             VkExtent2D actualExtent = {
                 static_cast<uint32_t>(width),
