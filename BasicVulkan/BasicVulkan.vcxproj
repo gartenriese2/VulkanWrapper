@@ -90,6 +90,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(SolutionDir)extern\Vulkan-1.0.57.0\include;$(SolutionDir)extern\GLFW-3.2.1\include;$(SolutionDir)extern\glm-0.9.8.4;$(SolutionDir)extern\stb_image-2.16;$(SolutionDir)extern\assimp-4.0.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -106,6 +107,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(SolutionDir)extern\Vulkan-1.0.57.0\include;$(SolutionDir)extern\GLFW-3.2.1\include;$(SolutionDir)extern\glm-0.9.8.4;$(SolutionDir)extern\stb_image-2.16;$(SolutionDir)extern\assimp-4.0.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -124,6 +126,7 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(SolutionDir)extern\Vulkan-1.0.57.0\include;$(SolutionDir)extern\GLFW-3.2.1\include;$(SolutionDir)extern\glm-0.9.8.4;$(SolutionDir)extern\stb_image-2.16;$(SolutionDir)extern\assimp-4.0.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -144,6 +147,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(SolutionDir)extern\Vulkan-1.0.57.0\include;$(SolutionDir)extern\GLFW-3.2.1\include;$(SolutionDir)extern\glm-0.9.8.4;$(SolutionDir)extern\stb_image-2.16;$(SolutionDir)extern\assimp-4.0.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -156,6 +160,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="BasicVulkan.cpp" />
+    <ClCompile Include="vulkan_ext.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="vulkan_ext.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

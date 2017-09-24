@@ -24,6 +24,8 @@
 #include <set>
 #include <unordered_map>
 
+#include "vulkan_ext.h"
+
 const int WIDTH = 800;
 const int HEIGHT = 600;
 
@@ -47,24 +49,6 @@ const bool enableValidationLayers = true;
 #endif
 
 const bool enableCompleteDebugOutput = true;
-
-VkResult CreateDebugReportCallbackEXT(const vk::UniqueInstance & uniqueInstance, const VkDebugReportCallbackCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugReportCallbackEXT* pCallback) {
-    const auto instance{ static_cast<VkInstance>(*uniqueInstance) };
-    auto func = (PFN_vkCreateDebugReportCallbackEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugReportCallbackEXT");
-    if (func != nullptr) {
-        return func(instance, pCreateInfo, pAllocator, pCallback);
-    }
-    else {
-        return VK_ERROR_EXTENSION_NOT_PRESENT;
-    }
-}
-
-void DestroyDebugReportCallbackEXT(VkInstance instance, VkDebugReportCallbackEXT callback, const VkAllocationCallbacks* pAllocator) {
-    auto func = (PFN_vkDestroyDebugReportCallbackEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugReportCallbackEXT");
-    if (func != nullptr) {
-        func(instance, callback, pAllocator);
-    }
-}
 
 struct QueueFamilyIndices {
     int graphicsFamily = -1;
@@ -160,7 +144,7 @@ private:
     std::unique_ptr<GLFWwindow, GLFWwindowDeleter> m_window;
 
     vk::UniqueInstance m_instance;
-    VkDebugReportCallbackEXT callback;
+    vk::UniqueDebugReportCallbackEXT m_callback;
     vk::UniqueSurfaceKHR m_surface;
 
     vk::PhysicalDevice m_physicalDevice = nullptr;
@@ -311,8 +295,7 @@ private:
         vkDestroyCommandPool(device, commandPool, nullptr);
 
         m_device.reset(nullptr);
-        const auto instance{ static_cast<VkInstance>(*m_instance) };
-        DestroyDebugReportCallbackEXT(instance, callback, nullptr);
+        m_callback.reset(nullptr);
         m_surface.reset(nullptr);
         m_instance.reset(nullptr);
 
@@ -372,24 +355,24 @@ private:
         }
 
         m_instance = vk::createInstanceUnique(createInfo);
+
+        auto instance{ *m_instance };
+        vkExtInitInstance(static_cast<VkInstance>(instance));
     }
 
     void setupDebugCallback() {
         if (!enableValidationLayers) return;
 
-        VkDebugReportCallbackCreateInfoEXT createInfo = {};
-        createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
-        createInfo.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT;
+        vk::DebugReportCallbackCreateInfoEXT createInfo{};
+        createInfo.flags = vk::DebugReportFlagBitsEXT::eError | vk::DebugReportFlagBitsEXT::eWarning;
         if (enableCompleteDebugOutput)
         {
-            createInfo.flags |= VK_DEBUG_REPORT_INFORMATION_BIT_EXT | VK_DEBUG_REPORT_DEBUG_BIT_EXT | VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT;
+            createInfo.flags |= vk::DebugReportFlagBitsEXT::eInformation | vk::DebugReportFlagBitsEXT::eDebug | vk::DebugReportFlagBitsEXT::ePerformanceWarning;
         }
 
         createInfo.pfnCallback = debugCallback;
 
-        if (CreateDebugReportCallbackEXT(m_instance, &createInfo, nullptr, &callback) != VK_SUCCESS) {
-            throw std::runtime_error("failed to set up debug callback!");
-        }
+        m_callback = m_instance->createDebugReportCallbackEXTUnique(createInfo);
     }
 
     void createSurface()
