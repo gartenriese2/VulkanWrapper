@@ -1,3 +1,5 @@
+#include <vw/window.hpp>
+
 #include <vulkan/vulkan.hpp>
 #include <GLFW/glfw3.h>
 
@@ -25,7 +27,6 @@
 #include <unordered_map>
 
 #include "vulkan_ext.h"
-#include "../Hello Triangle/sampler.hpp"
 
 const int WIDTH = 800;
 const int HEIGHT = 600;
@@ -117,14 +118,6 @@ struct UniformBufferObject
     glm::mat4 proj;
 };
 
-struct GLFWwindowDeleter
-{
-    void operator()(GLFWwindow * ptr) const
-    {
-        glfwDestroyWindow(ptr);
-    }
-};
-
 class HelloTriangleApplication
 {
 public:
@@ -137,7 +130,7 @@ public:
     }
 
 private:
-    std::unique_ptr<GLFWwindow, GLFWwindowDeleter> m_window;
+    std::unique_ptr<vw::Window> m_window;
 
     vk::UniqueInstance m_instance;
     vk::UniqueDebugReportCallbackEXT m_callback;
@@ -192,14 +185,10 @@ private:
 
     void initWindow()
     {
-        glfwInit();
+        m_window.reset(new vw::Window(WIDTH, HEIGHT, "Vulkan"));
 
-        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-
-        m_window.reset(glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr));
-
-        glfwSetWindowUserPointer(m_window.get(), this);
-        glfwSetWindowSizeCallback(m_window.get(), HelloTriangleApplication::onWindowResized);
+        m_window->setWindowUserPointer(this);
+        m_window->setWindowSizeCallback(onWindowResized);
     }
 
     void initVulkan()
@@ -232,9 +221,9 @@ private:
 
     void mainLoop()
     {
-        while (!glfwWindowShouldClose(m_window.get()))
+        while (!m_window->shouldClose())
         {
-            glfwPollEvents();
+            m_window->pollEvents();
 
             updateUniformBuffer();
             drawFrame();
@@ -296,15 +285,13 @@ private:
         m_instance.reset(nullptr);
 
         m_window.reset(nullptr);
-
-        glfwTerminate();
     }
 
     static void onWindowResized(GLFWwindow* window, int width, int height)
     {
-        if (width == 0 || height == 0) return;
+        if (width <= 0 || height <= 0) return;
 
-        auto * app = reinterpret_cast<HelloTriangleApplication*>(glfwGetWindowUserPointer(window));
+        auto * app = reinterpret_cast<HelloTriangleApplication *>(glfwGetWindowUserPointer(window));
         app->recreateSwapChain();
     }
 
@@ -333,7 +320,12 @@ private:
         vk::ApplicationInfo appInfo{ "Blinn-Phong Demo", VK_MAKE_VERSION(1, 0, 0), "No Engine", VK_MAKE_VERSION(1, 0, 0), VK_API_VERSION_1_0 };
 
         const auto extensions = getRequiredExtensions();
-        vk::InstanceCreateInfo createInfo{ {}, &appInfo, 0, nullptr, static_cast<uint32_t>(extensions.size()), extensions.data() };
+        std::vector<const char*> extensionsAsCstrings{};
+        for (const auto& string : extensions)
+        {
+            extensionsAsCstrings.emplace_back(string.c_str());
+        }
+        vk::InstanceCreateInfo createInfo{ {}, &appInfo, 0, nullptr, static_cast<uint32_t>(extensionsAsCstrings.size()), extensionsAsCstrings.data() };
         if (enableValidationLayers) {
             createInfo.setEnabledLayerCount(static_cast<uint32_t>(validationLayers.size()));
             createInfo.setPpEnabledLayerNames(validationLayers.data());
@@ -363,14 +355,7 @@ private:
 
     void createSurface()
     {
-        const auto instance{ static_cast<VkInstance>(*m_instance) };
-        VkSurfaceKHR surface;
-        if (glfwCreateWindowSurface(instance, m_window.get(), nullptr, &surface) != VK_SUCCESS) {
-            throw std::runtime_error("failed to create window surface!");
-        }
-
-        vk::UniqueSurfaceKHR s{ static_cast<vk::SurfaceKHR>(surface), vk::SurfaceKHRDeleter{ *m_instance } };
-        m_surface = std::move(s);
+        m_surface = m_window->createSurface(m_instance);
     }
 
     void pickPhysicalDevice()
@@ -1085,7 +1070,7 @@ private:
         }
 
         int width, height;
-        glfwGetWindowSize(m_window.get(), &width, &height);
+        std::tie(width, height) = m_window->getSize();
 
         vk::Extent2D actualExtent{ static_cast<uint32_t>(width), static_cast<uint32_t>(height) };
         actualExtent.width = std::max(capabilities.minImageExtent.width, std::min(capabilities.maxImageExtent.width, actualExtent.width));
@@ -1165,14 +1150,13 @@ private:
         return indices;
     }
 
-    std::vector<const char*> getRequiredExtensions() const
+    std::vector<std::string> getRequiredExtensions() const
     {
-        std::vector<const char*> extensions;
+        std::vector<std::string> extensions;
 
-        unsigned int glfwExtensionCount = 0;
-        const char ** glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+        const auto glfwExtensions{ m_window->getRequiredExtensions() };
 
-        for (unsigned int i = 0; i < glfwExtensionCount; ++i)
+        for (unsigned int i = 0; i < glfwExtensions.size(); ++i)
         {
             extensions.push_back(glfwExtensions[i]);
         }
