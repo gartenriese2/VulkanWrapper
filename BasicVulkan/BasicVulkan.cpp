@@ -51,28 +51,33 @@ const bool enableValidationLayers = true;
 
 const bool enableCompleteDebugOutput = true;
 
-struct QueueFamilyIndices {
+struct QueueFamilyIndices
+{
     int graphicsFamily = -1;
     int presentFamily = -1;
 
-    bool isComplete() const {
+    bool isComplete() const
+    {
         return graphicsFamily >= 0 && presentFamily >= 0;
     }
 };
 
-struct SwapChainSupportDetails {
+struct SwapChainSupportDetails
+{
     vk::SurfaceCapabilitiesKHR capabilities;
     std::vector<vk::SurfaceFormatKHR> formats;
     std::vector<vk::PresentModeKHR> presentModes;
 };
 
-struct Vertex {
+struct Vertex
+{
     glm::vec3 pos;
     glm::vec3 normal;
     glm::vec3 color;
     glm::vec2 texCoord;
 
-    static vk::VertexInputBindingDescription getBindingDescription() {
+    static vk::VertexInputBindingDescription getBindingDescription()
+    {
         vk::VertexInputBindingDescription bindingDescription = {};
         bindingDescription.binding = 0;
         bindingDescription.stride = sizeof(Vertex);
@@ -80,7 +85,8 @@ struct Vertex {
         return bindingDescription;
     }
 
-    static std::array<vk::VertexInputAttributeDescription, 4> getAttributeDescriptions() {
+    static std::array<vk::VertexInputAttributeDescription, 4> getAttributeDescriptions()
+    {
         std::array<vk::VertexInputAttributeDescription, 4> attributeDescriptions = {};
 
         attributeDescriptions[0].binding = 0;
@@ -106,35 +112,43 @@ struct Vertex {
         return attributeDescriptions;
     }
 
-    bool operator==(const Vertex& other) const {
+    bool operator==(const Vertex& other) const
+    {
         return pos == other.pos && normal == other.normal && color == other.color && texCoord == other.texCoord;
     }
 };
 
-namespace std {
-    template<> struct hash<Vertex> {
-        size_t operator()(Vertex const& vertex) const {
+namespace std
+{
+    template<> struct hash<Vertex>
+    {
+        size_t operator()(Vertex const& vertex) const
+        {
             return ((hash<glm::vec3>()(vertex.pos) ^ (hash<glm::vec3>()(vertex.color) << 1)) >> 1) ^ (hash<glm::vec2>()(vertex.texCoord) << 1) ^ hash<glm::vec3>()(vertex.normal);
         }
     };
 }
 
-struct UniformBufferObject {
+struct UniformBufferObject
+{
     glm::mat4 model;
     glm::mat4 view;
     glm::mat4 proj;
 };
 
-struct GLFWwindowDeleter {
+struct GLFWwindowDeleter
+{
     void operator()(GLFWwindow * ptr) const
     {
         glfwDestroyWindow(ptr);
     }
 };
 
-class HelloTriangleApplication {
+class HelloTriangleApplication
+{
 public:
-    void run() {
+    void run()
+    {
         initWindow();
         initVulkan();
         mainLoop();
@@ -177,8 +191,8 @@ private:
     vk::UniqueImageView m_textureImageView;
     vk::UniqueSampler m_textureSampler;
 
-    std::vector<Vertex> vertices;
-    std::vector<uint32_t> indices;
+    std::vector<Vertex> m_vertices;
+    std::vector<uint32_t> m_indices;
     vk::UniqueBuffer m_vertexBuffer;
     vk::UniqueDeviceMemory m_vertexBufferMemory;
     vk::UniqueBuffer m_indexBuffer;
@@ -192,10 +206,11 @@ private:
 
     std::vector<vk::UniqueCommandBuffer> m_commandBuffers;
 
-    VkSemaphore imageAvailableSemaphore;
-    VkSemaphore renderFinishedSemaphore;
+    vk::UniqueSemaphore m_imageAvailableSemaphore;
+    vk::UniqueSemaphore m_renderFinishedSemaphore;
 
-    void initWindow() {
+    void initWindow()
+    {
         glfwInit();
 
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -206,7 +221,8 @@ private:
         glfwSetWindowSizeCallback(m_window.get(), HelloTriangleApplication::onWindowResized);
     }
 
-    void initVulkan() {
+    void initVulkan()
+    {
         createInstance();
         setupDebugCallback();
         createSurface();
@@ -233,7 +249,8 @@ private:
         createSemaphores();
     }
 
-    void mainLoop() {
+    void mainLoop()
+    {
         while (!glfwWindowShouldClose(m_window.get())) {
             glfwPollEvents();
 
@@ -244,7 +261,8 @@ private:
         m_device->waitIdle();
     }
 
-    void cleanupSwapChain() {
+    void cleanupSwapChain()
+    {
         m_depthImageView.reset(nullptr);
         m_depthImage.reset(nullptr);
         m_depthImageMemory.reset(nullptr);
@@ -262,10 +280,9 @@ private:
         m_swapChain.reset(nullptr);
     }
 
-    void cleanup() {
+    void cleanup()
+    {
         cleanupSwapChain();
-
-        const auto device{ static_cast<VkDevice>(*m_device) };
 
         m_textureSampler.reset(nullptr);
         m_textureImageView.reset(nullptr);
@@ -286,8 +303,8 @@ private:
         m_vertexBuffer.reset(nullptr);
         m_vertexBufferMemory.reset(nullptr);
 
-        vkDestroySemaphore(device, renderFinishedSemaphore, nullptr);
-        vkDestroySemaphore(device, imageAvailableSemaphore, nullptr);
+        m_renderFinishedSemaphore.reset(nullptr);
+        m_imageAvailableSemaphore.reset(nullptr);
 
         m_commandPool.reset(nullptr);
 
@@ -301,14 +318,16 @@ private:
         glfwTerminate();
     }
 
-    static void onWindowResized(GLFWwindow* window, int width, int height) {
+    static void onWindowResized(GLFWwindow* window, int width, int height)
+    {
         if (width == 0 || height == 0) return;
 
-        HelloTriangleApplication* app = reinterpret_cast<HelloTriangleApplication*>(glfwGetWindowUserPointer(window));
+        auto * app = reinterpret_cast<HelloTriangleApplication*>(glfwGetWindowUserPointer(window));
         app->recreateSwapChain();
     }
 
-    void recreateSwapChain() {
+    void recreateSwapChain()
+    {
         m_device->waitIdle();
 
         cleanupSwapChain();
@@ -322,33 +341,20 @@ private:
         createCommandBuffers();
     }
 
-    void createInstance() {
-        if (enableValidationLayers && !checkValidationLayerSupport()) {
+    void createInstance()
+    {
+        if (enableValidationLayers && !checkValidationLayerSupport())
+        {
             throw std::runtime_error("validation layers requested, but not available!");
         }
 
-        VkApplicationInfo appInfo = {};
-        appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-        appInfo.pApplicationName = "Hello Triangle";
-        appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-        appInfo.pEngineName = "No Engine";
-        appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-        appInfo.apiVersion = VK_API_VERSION_1_0;
+        vk::ApplicationInfo appInfo{ "Blinn-Phong Demo", VK_MAKE_VERSION(1, 0, 0), "No Engine", VK_MAKE_VERSION(1, 0, 0), VK_API_VERSION_1_0 };
 
-        VkInstanceCreateInfo createInfo = {};
-        createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-        createInfo.pApplicationInfo = &appInfo;
-
-        auto extensions = getRequiredExtensions();
-        createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
-        createInfo.ppEnabledExtensionNames = extensions.data();
-
+        const auto extensions = getRequiredExtensions();
+        vk::InstanceCreateInfo createInfo{ {}, &appInfo, 0, nullptr, static_cast<uint32_t>(extensions.size()), extensions.data() };
         if (enableValidationLayers) {
-            createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
-            createInfo.ppEnabledLayerNames = validationLayers.data();
-        }
-        else {
-            createInfo.enabledLayerCount = 0;
+            createInfo.setEnabledLayerCount(static_cast<uint32_t>(validationLayers.size()));
+            createInfo.setPpEnabledLayerNames(validationLayers.data());
         }
 
         m_instance = vk::createInstanceUnique(createInfo);
@@ -357,17 +363,18 @@ private:
         vkExtInitInstance(static_cast<VkInstance>(instance));
     }
 
-    void setupDebugCallback() {
-        if (!enableValidationLayers) return;
+    void setupDebugCallback()
+    {
+        if (!enableValidationLayers)
+        {
+            return;
+        }
 
-        vk::DebugReportCallbackCreateInfoEXT createInfo{};
-        createInfo.flags = vk::DebugReportFlagBitsEXT::eError | vk::DebugReportFlagBitsEXT::eWarning;
+        vk::DebugReportCallbackCreateInfoEXT createInfo{ vk::DebugReportFlagBitsEXT::eError | vk::DebugReportFlagBitsEXT::eWarning, debugCallback };
         if (enableCompleteDebugOutput)
         {
             createInfo.flags |= vk::DebugReportFlagBitsEXT::eInformation | vk::DebugReportFlagBitsEXT::eDebug | vk::DebugReportFlagBitsEXT::ePerformanceWarning;
         }
-
-        createInfo.pfnCallback = debugCallback;
 
         m_callback = m_instance->createDebugReportCallbackEXTUnique(createInfo);
     }
@@ -384,63 +391,52 @@ private:
         m_surface = std::move(s);
     }
 
-    void pickPhysicalDevice() {
+    void pickPhysicalDevice()
+    {
         const auto physicalDevices{ m_instance->enumeratePhysicalDevices() };
-
         if (physicalDevices.empty()) {
             throw std::runtime_error("failed to find GPUs with Vulkan support!");
         }
 
-        bool found = false;
-        for (const auto & device : physicalDevices) {
-            if (isDeviceSuitable(device)) {
+        auto found = false;
+        for (const auto & device : physicalDevices)
+        {
+            if (isDeviceSuitable(device))
+            {
                 m_physicalDevice = device;
                 found = true;
                 break;
             }
         }
 
-        if (!found) {
+        if (!found)
+        {
             throw std::runtime_error("failed to find a suitable GPU!");
         }
     }
 
-    void createLogicalDevice() {
-        QueueFamilyIndices indices = findQueueFamilies(m_physicalDevice);
+    void createLogicalDevice()
+    {
+       const auto indices = findQueueFamilies(m_physicalDevice);
 
-        std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
+        std::vector<vk::DeviceQueueCreateInfo> queueCreateInfos;
         std::set<int> uniqueQueueFamilies = { indices.graphicsFamily, indices.presentFamily };
 
-        float queuePriority = 1.0f;
-        for (int queueFamily : uniqueQueueFamilies) {
-            VkDeviceQueueCreateInfo queueCreateInfo = {};
-            queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-            queueCreateInfo.queueFamilyIndex = queueFamily;
-            queueCreateInfo.queueCount = 1;
-            queueCreateInfo.pQueuePriorities = &queuePriority;
-            queueCreateInfos.push_back(queueCreateInfo);
+        auto queuePriority = 1.0f;
+        for (auto queueFamily : uniqueQueueFamilies)
+        {
+            vk::DeviceQueueCreateInfo queueCreateInfo{ {}, static_cast<uint32_t>(queueFamily), 1, &queuePriority };
+            queueCreateInfos.emplace_back(queueCreateInfo);
         }
 
-        VkPhysicalDeviceFeatures deviceFeatures = {};
-        deviceFeatures.samplerAnisotropy = VK_TRUE;
+        vk::PhysicalDeviceFeatures deviceFeatures = {};
+        deviceFeatures.setSamplerAnisotropy(true);
 
-        VkDeviceCreateInfo createInfo = {};
-        createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-
-        createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
-        createInfo.pQueueCreateInfos = queueCreateInfos.data();
-
-        createInfo.pEnabledFeatures = &deviceFeatures;
-
-        createInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
-        createInfo.ppEnabledExtensionNames = deviceExtensions.data();
-
-        if (enableValidationLayers) {
-            createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
-            createInfo.ppEnabledLayerNames = validationLayers.data();
-        }
-        else {
-            createInfo.enabledLayerCount = 0;
+        vk::DeviceCreateInfo createInfo{ {}, static_cast<uint32_t>(queueCreateInfos.size()), queueCreateInfos.data(), 0, nullptr, static_cast<uint32_t>(deviceExtensions.size()), deviceExtensions.data(), &deviceFeatures };
+        if (enableValidationLayers)
+        {
+            createInfo.setEnabledLayerCount(static_cast<uint32_t>(validationLayers.size()));
+            createInfo.setPpEnabledLayerNames(validationLayers.data());
         }
 
         m_device = m_physicalDevice.createDeviceUnique(createInfo);
@@ -872,11 +868,11 @@ private:
                     vertex.normal = n;
 
                     if (uniqueVertices.count(vertex) == 0) {
-                        uniqueVertices[vertex] = static_cast<uint32_t>(vertices.size());
-                        vertices.push_back(vertex);
+                        uniqueVertices[vertex] = static_cast<uint32_t>(m_vertices.size());
+                        m_vertices.push_back(vertex);
                     }
 
-                    indices.push_back(uniqueVertices[vertex]);
+                    m_indices.push_back(uniqueVertices[vertex]);
                 }
             }
         }
@@ -884,14 +880,14 @@ private:
 
     void createVertexBuffer()
     {
-        vk::DeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
+        vk::DeviceSize bufferSize = sizeof(m_vertices[0]) * m_vertices.size();
 
         vk::UniqueBuffer stagingBuffer;
         vk::UniqueDeviceMemory stagingBufferMemory;
         createBuffer(bufferSize, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, stagingBuffer, stagingBufferMemory);
 
         auto * data{ m_device->mapMemory(*stagingBufferMemory, 0, bufferSize, {}) };
-        memcpy(data, vertices.data(), static_cast<size_t>(bufferSize));
+        memcpy(data, m_vertices.data(), static_cast<size_t>(bufferSize));
         m_device->unmapMemory(*stagingBufferMemory);
 
         createBuffer(bufferSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal, m_vertexBuffer, m_vertexBufferMemory);
@@ -903,14 +899,14 @@ private:
     }
 
     void createIndexBuffer() {
-        VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
+        VkDeviceSize bufferSize = sizeof(m_indices[0]) * m_indices.size();
 
         vk::UniqueBuffer stagingBuffer;
         vk::UniqueDeviceMemory stagingBufferMemory;
         createBuffer(bufferSize, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, stagingBuffer, stagingBufferMemory);
 
         auto * data{ m_device->mapMemory(*stagingBufferMemory, 0, bufferSize, {}) };
-        memcpy(data, indices.data(), static_cast<size_t>(bufferSize));
+        memcpy(data, m_indices.data(), static_cast<size_t>(bufferSize));
         m_device->unmapMemory(*stagingBufferMemory);
 
         createBuffer(bufferSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal, m_indexBuffer, m_indexBufferMemory);
@@ -1034,7 +1030,7 @@ private:
 
             m_commandBuffers[i]->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, *m_pipelineLayout, 0, *m_descriptorSet, nullptr);
 
-            m_commandBuffers[i]->drawIndexed(static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
+            m_commandBuffers[i]->drawIndexed(static_cast<uint32_t>(m_indices.size()), 1, 0, 0, 0);
 
             m_commandBuffers[i]->endRenderPass();
 
@@ -1042,16 +1038,11 @@ private:
         }
     }
 
-    void createSemaphores() {
-        VkSemaphoreCreateInfo semaphoreInfo = {};
-        semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-
-        const auto device{ static_cast<VkDevice>(*m_device) };
-        if (vkCreateSemaphore(device, &semaphoreInfo, nullptr, &imageAvailableSemaphore) != VK_SUCCESS ||
-            vkCreateSemaphore(device, &semaphoreInfo, nullptr, &renderFinishedSemaphore) != VK_SUCCESS) {
-
-            throw std::runtime_error("failed to create semaphores!");
-        }
+    void createSemaphores()
+    {
+        vk::SemaphoreCreateInfo semaphoreInfo;
+        m_imageAvailableSemaphore = m_device->createSemaphoreUnique(semaphoreInfo);
+        m_renderFinishedSemaphore = m_device->createSemaphoreUnique(semaphoreInfo);
     }
 
     void updateUniformBuffer() {
@@ -1075,20 +1066,22 @@ private:
         uint32_t imageIndex;
         const auto device{ static_cast<VkDevice>(*m_device) };
         auto swapChain{ *m_swapChain };
-        VkResult result = vkAcquireNextImageKHR(device, static_cast<VkSwapchainKHR>(swapChain), std::numeric_limits<uint64_t>::max(), imageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
+        auto imageAvailableSemaphore{ *m_imageAvailableSemaphore };
+        auto result = vkAcquireNextImageKHR(device, static_cast<VkSwapchainKHR>(swapChain), std::numeric_limits<uint64_t>::max(), static_cast<VkSemaphore>(imageAvailableSemaphore), VK_NULL_HANDLE, &imageIndex);
 
         if (result == VK_ERROR_OUT_OF_DATE_KHR) {
             recreateSwapChain();
             return;
         }
-        else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
+
+        if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
             throw std::runtime_error("failed to acquire swap chain image!");
         }
 
         VkSubmitInfo submitInfo = {};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-        VkSemaphore waitSemaphores[] = { imageAvailableSemaphore };
+        VkSemaphore waitSemaphores[] = { static_cast<VkSemaphore>(imageAvailableSemaphore) };
         VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
         submitInfo.waitSemaphoreCount = 1;
         submitInfo.pWaitSemaphores = waitSemaphores;
@@ -1099,7 +1092,8 @@ private:
         auto cb{ static_cast<VkCommandBuffer>(cb_vk) };
         submitInfo.pCommandBuffers = &cb;
 
-        VkSemaphore signalSemaphores[] = { renderFinishedSemaphore };
+        auto renderFinishedSemaphore{ *m_renderFinishedSemaphore };
+        VkSemaphore signalSemaphores[] = { static_cast<VkSemaphore>(renderFinishedSemaphore) };
         submitInfo.signalSemaphoreCount = 1;
         submitInfo.pSignalSemaphores = signalSemaphores;
 
