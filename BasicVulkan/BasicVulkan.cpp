@@ -78,41 +78,22 @@ struct Vertex
 
     static vk::VertexInputBindingDescription getBindingDescription()
     {
-        vk::VertexInputBindingDescription bindingDescription = {};
-        bindingDescription.binding = 0;
-        bindingDescription.stride = sizeof(Vertex);
-        bindingDescription.inputRate = vk::VertexInputRate::eVertex;
-        return bindingDescription;
+        return { 0, sizeof Vertex, vk::VertexInputRate::eVertex };
     }
 
     static std::array<vk::VertexInputAttributeDescription, 4> getAttributeDescriptions()
     {
-        std::array<vk::VertexInputAttributeDescription, 4> attributeDescriptions = {};
-
-        attributeDescriptions[0].binding = 0;
-        attributeDescriptions[0].location = 0;
-        attributeDescriptions[0].format = vk::Format::eR32G32B32Sfloat;
-        attributeDescriptions[0].offset = offsetof(Vertex, pos);
-
-        attributeDescriptions[1].binding = 0;
-        attributeDescriptions[1].location = 1;
-        attributeDescriptions[1].format = vk::Format::eR32G32B32Sfloat;
-        attributeDescriptions[1].offset = offsetof(Vertex, normal);
-
-        attributeDescriptions[2].binding = 0;
-        attributeDescriptions[2].location = 2;
-        attributeDescriptions[2].format = vk::Format::eR32G32B32Sfloat;
-        attributeDescriptions[2].offset = offsetof(Vertex, color);
-
-        attributeDescriptions[3].binding = 0;
-        attributeDescriptions[3].location = 3;
-        attributeDescriptions[3].format = vk::Format::eR32G32Sfloat;
-        attributeDescriptions[3].offset = offsetof(Vertex, texCoord);
-
+        std::array<vk::VertexInputAttributeDescription, 4> attributeDescriptions =
+        {
+            vk::VertexInputAttributeDescription{ 0, 0, vk::Format::eR32G32B32Sfloat, offsetof(Vertex, pos) },
+            vk::VertexInputAttributeDescription{ 1, 0, vk::Format::eR32G32B32Sfloat, offsetof(Vertex, normal) },
+            vk::VertexInputAttributeDescription{ 2, 0, vk::Format::eR32G32B32Sfloat, offsetof(Vertex, color) },
+            vk::VertexInputAttributeDescription{ 3, 0, vk::Format::eR32G32Sfloat, offsetof(Vertex, texCoord) }
+        };
         return attributeDescriptions;
     }
 
-    bool operator==(const Vertex& other) const
+    bool operator==(const Vertex & other) const
     {
         return pos == other.pos && normal == other.normal && color == other.color && texCoord == other.texCoord;
     }
@@ -251,7 +232,8 @@ private:
 
     void mainLoop()
     {
-        while (!glfwWindowShouldClose(m_window.get())) {
+        while (!glfwWindowShouldClose(m_window.get()))
+        {
             glfwPollEvents();
 
             updateUniformBuffer();
