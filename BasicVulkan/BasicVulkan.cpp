@@ -28,36 +28,36 @@
 
 #include "vulkan_ext.h"
 
-const int WIDTH = 800;
-const int HEIGHT = 600;
+constexpr int32_t K_WIDTH{ 800 };
+constexpr int32_t K_HEIGHT{ 600 };
 
-const std::string MODEL_PATH = "../models/stanford_dragon/dragon.obj";
-const std::string TEXTURE_PATH = "../textures/chalet.jpg";
-const std::string VERTEX_SHADER_PATH = "../shaders/blinnphong.vert.spv";
-const std::string FRAGMENT_SHADER_PATH = "../shaders/blinnphong.frag.spv";
+const std::string K_MODEL_PATH{ "../models/stanford_dragon/dragon.obj" };
+const std::string K_TEXTURE_PATH{ "../textures/chalet.jpg" };
+const std::string K_VERTEX_SHADER_PATH{ "../shaders/blinnphong.vert.spv" };
+const std::string K_FRAGMENT_SHADER_PATH{ "../shaders/blinnphong.frag.spv" };
 
-const std::vector<const char*> validationLayers = {
+const std::vector<const char*> K_VALIDATION_LAYERS = {
     "VK_LAYER_LUNARG_standard_validation"
 };
 
-const std::vector<const char*> deviceExtensions = {
+const std::vector<const char*> K_DEVICE_EXTENSIONS = {
     VK_KHR_SWAPCHAIN_EXTENSION_NAME
 };
 
 #ifdef NDEBUG
-const bool enableValidationLayers = false;
+constexpr bool enableValidationLayers{ false };
 #else
-const bool enableValidationLayers = true;
+constexpr bool enableValidationLayers{ true };
 #endif
 
-const bool enableCompleteDebugOutput = true;
+constexpr bool enableCompleteDebugOutput{ true };
 
 struct QueueFamilyIndices
 {
-    int graphicsFamily = -1;
-    int presentFamily = -1;
+    int32_t graphicsFamily = -1;
+    int32_t presentFamily = -1;
 
-    bool isComplete() const
+    auto isComplete() const
     {
         return graphicsFamily >= 0 && presentFamily >= 0;
     }
@@ -82,7 +82,7 @@ struct Vertex
         return { 0, sizeof Vertex, vk::VertexInputRate::eVertex };
     }
 
-    static std::array<vk::VertexInputAttributeDescription, 4> getAttributeDescriptions()
+    static auto getAttributeDescriptions()
     {
         std::array<vk::VertexInputAttributeDescription, 4> attributeDescriptions =
         {
@@ -94,7 +94,7 @@ struct Vertex
         return attributeDescriptions;
     }
 
-    bool operator==(const Vertex & other) const
+    auto operator==(const Vertex & other) const
     {
         return pos == other.pos && normal == other.normal && color == other.color && texCoord == other.texCoord;
     }
@@ -104,7 +104,7 @@ namespace std
 {
     template<> struct hash<Vertex>
     {
-        size_t operator()(Vertex const& vertex) const
+        size_t operator()(Vertex const & vertex) const
         {
             return ((hash<glm::vec3>()(vertex.pos) ^ (hash<glm::vec3>()(vertex.color) << 1)) >> 1) ^ (hash<glm::vec2>()(vertex.texCoord) << 1) ^ hash<glm::vec3>()(vertex.normal);
         }
@@ -123,12 +123,11 @@ class HelloTriangleApplication
 public:
     void run()
     {
-        initWindow();
+        initWindow(K_WIDTH, K_HEIGHT, "Blinn-Phong Demo");
         initVulkan();
         mainLoop();
         cleanup();
     }
-
 private:
     std::unique_ptr<vw::Window> m_window;
 
@@ -183,10 +182,9 @@ private:
     vk::UniqueSemaphore m_imageAvailableSemaphore;
     vk::UniqueSemaphore m_renderFinishedSemaphore;
 
-    void initWindow()
+    void initWindow(const int32_t width, const int32_t height, std::string_view title)
     {
-        m_window.reset(new vw::Window(WIDTH, HEIGHT, "Vulkan"));
-
+        m_window.reset(new vw::Window(width, height, title.data()));
         m_window->setWindowUserPointer(this);
         m_window->setWindowSizeCallback(onWindowResized);
     }
@@ -289,7 +287,10 @@ private:
 
     static void onWindowResized(GLFWwindow* window, int width, int height)
     {
-        if (width <= 0 || height <= 0) return;
+        if (width <= 0 || height <= 0)
+        {
+            return;
+        }
 
         auto * app = reinterpret_cast<HelloTriangleApplication *>(glfwGetWindowUserPointer(window));
         app->recreateSwapChain();
@@ -321,14 +322,15 @@ private:
 
         const auto extensions = getRequiredExtensions();
         std::vector<const char*> extensionsAsCstrings{};
-        for (const auto& string : extensions)
+        for (const auto & string : extensions)
         {
             extensionsAsCstrings.emplace_back(string.c_str());
         }
+
         vk::InstanceCreateInfo createInfo{ {}, &appInfo, 0, nullptr, static_cast<uint32_t>(extensionsAsCstrings.size()), extensionsAsCstrings.data() };
         if (enableValidationLayers) {
-            createInfo.setEnabledLayerCount(static_cast<uint32_t>(validationLayers.size()));
-            createInfo.setPpEnabledLayerNames(validationLayers.data());
+            createInfo.setEnabledLayerCount(static_cast<uint32_t>(K_VALIDATION_LAYERS.size()));
+            createInfo.setPpEnabledLayerNames(K_VALIDATION_LAYERS.data());
         }
 
         m_instance = vk::createInstanceUnique(createInfo);
@@ -399,11 +401,11 @@ private:
         vk::PhysicalDeviceFeatures deviceFeatures = {};
         deviceFeatures.setSamplerAnisotropy(true);
 
-        vk::DeviceCreateInfo createInfo{ {}, static_cast<uint32_t>(queueCreateInfos.size()), queueCreateInfos.data(), 0, nullptr, static_cast<uint32_t>(deviceExtensions.size()), deviceExtensions.data(), &deviceFeatures };
+        vk::DeviceCreateInfo createInfo{ {}, static_cast<uint32_t>(queueCreateInfos.size()), queueCreateInfos.data(), 0, nullptr, static_cast<uint32_t>(K_DEVICE_EXTENSIONS.size()), K_DEVICE_EXTENSIONS.data(), &deviceFeatures };
         if (enableValidationLayers)
         {
-            createInfo.setEnabledLayerCount(static_cast<uint32_t>(validationLayers.size()));
-            createInfo.setPpEnabledLayerNames(validationLayers.data());
+            createInfo.setEnabledLayerCount(static_cast<uint32_t>(K_VALIDATION_LAYERS.size()));
+            createInfo.setPpEnabledLayerNames(K_VALIDATION_LAYERS.data());
         }
 
         m_device = m_physicalDevice.createDeviceUnique(createInfo);
@@ -482,8 +484,8 @@ private:
 
     void createGraphicsPipeline()
     {
-        auto vertShaderCode = readFile(VERTEX_SHADER_PATH);
-        auto fragShaderCode = readFile(FRAGMENT_SHADER_PATH);
+        auto vertShaderCode = readFile(K_VERTEX_SHADER_PATH);
+        auto fragShaderCode = readFile(K_FRAGMENT_SHADER_PATH);
 
         auto vertShaderModule = createShaderModule(vertShaderCode);
         auto fragShaderModule = createShaderModule(fragShaderCode);
@@ -589,7 +591,7 @@ private:
     void createTextureImage()
     {
         int texWidth, texHeight, texChannels;
-        auto * pixels = stbi_load(TEXTURE_PATH.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+        auto * pixels = stbi_load(K_TEXTURE_PATH.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
         vk::DeviceSize imageSize = texWidth * texHeight * 4;
 
         if (!pixels)
@@ -1108,7 +1110,7 @@ private:
     {
         const auto availableExtensions{ physicalDevice.enumerateDeviceExtensionProperties() };
 
-        std::set<std::string> requiredExtensions(deviceExtensions.begin(), deviceExtensions.end());
+        std::set<std::string> requiredExtensions(K_DEVICE_EXTENSIONS.begin(), K_DEVICE_EXTENSIONS.end());
 
         for (const auto& extension : availableExtensions)
         {
@@ -1172,7 +1174,7 @@ private:
     bool checkValidationLayerSupport() const
     {
         const auto availableLayers = vk::enumerateInstanceLayerProperties();
-        for (const char * layerName : validationLayers)
+        for (const char * layerName : K_VALIDATION_LAYERS)
         {
             auto layerFound = false;
 
