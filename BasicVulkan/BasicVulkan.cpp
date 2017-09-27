@@ -207,7 +207,7 @@ private:
         createTextureImage();
         createTextureImageView();
         createTextureSampler();
-        loadModel();
+        loadModels();
         createVertexBuffer();
         createIndexBuffer();
         createUniformBuffer();
@@ -636,7 +636,7 @@ private:
         return m_device->createImageViewUnique(viewInfo);
     }
 
-    void createImage(uint32_t width, uint32_t height, vk::Format format, vk::ImageTiling tiling, vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties, vk::UniqueImage & image, vk::UniqueDeviceMemory & imageMemory)
+    void createImage(uint32_t width, uint32_t height, vk::Format format, vk::ImageTiling tiling, vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties, vk::UniqueImage & image, vk::UniqueDeviceMemory & imageMemory) const
     {
         vk::ImageCreateInfo imageInfo{ {}, vk::ImageType::e2D, format, { width, height, 1 }, 1, 1, vk::SampleCountFlagBits::e1, tiling, usage, vk::SharingMode::eExclusive };
         image = m_device->createImageUnique(imageInfo);
@@ -720,10 +720,76 @@ private:
         endSingleTimeCommands(commandBuffer);
     }
 
-    void loadModel()
+    void loadCornell(Assimp::Importer & importer)
     {
-        Assimp::Importer importer;
+        const auto * scene = importer.ReadFile("../models/cornell_box/cornell_box.obj", aiProcess_Triangulate);
+        if (!scene)
+        {
+            throw std::runtime_error(importer.GetErrorString());
+        }
 
+        std::unordered_map<Vertex, uint32_t> uniqueVertices = {};
+
+        const auto meshes = scene->mMeshes;
+        const auto numMeshes = scene->mNumMeshes;
+        for (uint32_t i = 0; i < numMeshes; ++i)
+        {
+            const auto mesh = meshes[i];
+            const auto vertices0 = mesh->mVertices;
+            const auto faces = mesh->mFaces;
+            const auto numVertices = mesh->mNumVertices;
+            const auto numFaces = mesh->mNumFaces;
+
+            for (uint32_t j = 0; j < numFaces; ++j)
+            {
+                const auto face = faces[j];
+                const auto indices0 = face.mIndices;
+                const auto numIndices = face.mNumIndices;
+                if (numIndices != 3)
+                {
+                    throw std::runtime_error("no triangles");
+                }
+
+                const auto a_assimp = vertices0[indices0[0]];
+                const auto a = glm::vec3(a_assimp.x, a_assimp.y, a_assimp.z);
+                const auto b_assimp = vertices0[indices0[1]];
+                const auto b = glm::vec3(b_assimp.x, b_assimp.y, b_assimp.z);
+                const auto c_assimp = vertices0[indices0[2]];
+                const auto c = glm::vec3(c_assimp.x, c_assimp.y, c_assimp.z);
+                const auto n = glm::normalize(glm::cross(c - a, b - a));
+
+                for (uint32_t k = 0; k < numIndices; ++k)
+                {
+                    const auto index = indices0[k];
+                    if (index >= numVertices)
+                    {
+                        throw std::runtime_error("index too big");
+                    }
+
+                    const auto v = vertices0[index];
+
+                    Vertex vertex = {};
+
+                    const float scale = 0.08f;
+                    vertex.pos = { v.x * scale - 35.f, v.y * scale, v.z * scale - 12.f };
+                    vertex.texCoord = { 0.f, 1.f };
+                    vertex.color = { 1.0f, 0.0f, 0.0f };
+                    vertex.normal = n;
+
+                    if (uniqueVertices.count(vertex) == 0)
+                    {
+                        uniqueVertices[vertex] = static_cast<uint32_t>(m_vertices.size());
+                        m_vertices.push_back(vertex);
+                    }
+
+                    m_indices.push_back(uniqueVertices[vertex]);
+                }
+            }
+        }
+    }
+
+    void loadDragon(Assimp::Importer & importer)
+    {
         const auto * scene = importer.ReadFile("../models/stanford_dragon/dragon.obj", aiProcess_Triangulate);
         if (!scene)
         {
@@ -787,6 +853,14 @@ private:
                 }
             }
         }
+    }
+
+    void loadModels()
+    {
+        Assimp::Importer importer;
+
+        loadCornell(importer);
+        loadDragon(importer);
     }
 
     void createVertexBuffer()
@@ -865,7 +939,7 @@ private:
         m_device->updateDescriptorSets(descriptorWrites, nullptr);
     }
 
-    void createBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags properties, vk::UniqueBuffer & buffer, vk::UniqueDeviceMemory & bufferMemory)
+    void createBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags properties, vk::UniqueBuffer & buffer, vk::UniqueDeviceMemory & bufferMemory) const
     {
         vk::BufferCreateInfo bufferInfo{ {}, size, usage, vk::SharingMode::eExclusive };
         buffer = m_device->createBufferUnique(bufferInfo);
@@ -968,10 +1042,10 @@ private:
         const auto currentTime = std::chrono::high_resolution_clock::now();
         const auto time = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - startTime).count() / 1000.f;
 
-        UniformBufferObject ubo = {};
-        ubo.model = glm::rotate(glm::mat4(1.f), time * glm::radians(90.f), glm::vec3(0.f, 0.f, 1.f));
-        ubo.view = glm::lookAt(glm::vec3(20.f, 20.f, 20.f), glm::vec3(0.f, 0.f, 0.f), glm::vec3(0.f, 0.f, 1.f));
-        ubo.proj = glm::perspective(glm::radians(45.f), m_swapChainExtent.width / static_cast<float>(m_swapChainExtent.height), 0.1f, 50.f);
+        UniformBufferObject ubo;
+        ubo.model = glm::rotate(glm::mat4(1.f), time * glm::radians(90.f), glm::vec3(0.f, 1.f, 0.f));
+        ubo.view = glm::lookAt(glm::vec3(0.f, 40.f, -80.f), glm::vec3(0.f, 20.f, 0.f), glm::vec3(0.f, 0.f, 1.f));
+        ubo.proj = glm::perspective(glm::radians(45.f), m_swapChainExtent.width / static_cast<float>(m_swapChainExtent.height), 0.1f, 200.f);
         ubo.proj[1][1] *= -1;
 
         auto * data{ m_device->mapMemory(*m_uniformBufferMemory, 0, sizeof ubo, {}) };
@@ -1090,7 +1164,7 @@ private:
         return details;
     }
 
-    bool isDeviceSuitable(vk::PhysicalDevice physicalDevice)
+    bool isDeviceSuitable(vk::PhysicalDevice physicalDevice) const
     {
         const auto indices = findQueueFamilies(physicalDevice);
         const auto extensionsSupported = checkDeviceExtensionSupport(physicalDevice);
