@@ -100,6 +100,36 @@ struct Vertex
     }
 };
 
+struct Model
+{
+    void bind(const vk::UniqueCommandBuffer & commandBuffer) const
+    {
+        vk::DeviceSize offsets = 0;
+        commandBuffer->bindVertexBuffers(0, *vertexBuffer, offsets);
+        commandBuffer->bindIndexBuffer(*indexBuffer, 0, vk::IndexType::eUint32);
+    }
+
+    void draw(const vk::UniqueCommandBuffer & commandBuffer) const
+    {
+        commandBuffer->drawIndexed(static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
+    }
+
+    void reset()
+    {
+        indexBuffer.reset(nullptr);
+        indexBufferMemory.reset(nullptr);
+        vertexBuffer.reset(nullptr);
+        vertexBufferMemory.reset(nullptr);
+    }
+
+    std::vector<Vertex> vertices;
+    std::vector<uint32_t> indices;
+    vk::UniqueBuffer vertexBuffer;
+    vk::UniqueDeviceMemory vertexBufferMemory;
+    vk::UniqueBuffer indexBuffer;
+    vk::UniqueDeviceMemory indexBufferMemory;
+};
+
 namespace std
 {
     template<> struct hash<Vertex>
@@ -164,12 +194,8 @@ private:
     vk::UniqueImageView m_textureImageView;
     vk::UniqueSampler m_textureSampler;
 
-    std::vector<Vertex> m_vertices;
-    std::vector<uint32_t> m_indices;
-    vk::UniqueBuffer m_vertexBuffer;
-    vk::UniqueDeviceMemory m_vertexBufferMemory;
-    vk::UniqueBuffer m_indexBuffer;
-    vk::UniqueDeviceMemory m_indexBufferMemory;
+    Model m_dragonModel;
+    Model m_cornellModel;
 
     vk::UniqueBuffer m_uniformBuffer;
     vk::UniqueDeviceMemory m_uniformBufferMemory;
@@ -208,8 +234,10 @@ private:
         createTextureImageView();
         createTextureSampler();
         loadModels();
-        createVertexBuffer();
-        createIndexBuffer();
+        createVertexBuffer(m_dragonModel);
+        createIndexBuffer(m_dragonModel);
+        createVertexBuffer(m_cornellModel);
+        createIndexBuffer(m_cornellModel);
         createUniformBuffer();
         createDescriptorPool();
         createDescriptorSet();
@@ -266,11 +294,8 @@ private:
         m_uniformBuffer.reset(nullptr);
         m_uniformBufferMemory.reset(nullptr);
 
-        m_indexBuffer.reset(nullptr);
-        m_indexBufferMemory.reset(nullptr);
-
-        m_vertexBuffer.reset(nullptr);
-        m_vertexBufferMemory.reset(nullptr);
+        m_dragonModel.reset();
+        m_cornellModel.reset();
 
         m_renderFinishedSemaphore.reset(nullptr);
         m_imageAvailableSemaphore.reset(nullptr);
@@ -720,77 +745,12 @@ private:
         endSingleTimeCommands(commandBuffer);
     }
 
-    void loadCornell(Assimp::Importer & importer)
+    void loadModel(Assimp::Importer & importer, Model & model, std::string_view file) const
     {
-        const auto * scene = importer.ReadFile("../models/cornell_box/cornell_box.obj", aiProcess_Triangulate);
-        if (!scene)
-        {
-            throw std::runtime_error(importer.GetErrorString());
-        }
+        model.vertices.clear();
+        model.indices.clear();
 
-        std::unordered_map<Vertex, uint32_t> uniqueVertices = {};
-
-        const auto meshes = scene->mMeshes;
-        const auto numMeshes = scene->mNumMeshes;
-        for (uint32_t i = 0; i < numMeshes; ++i)
-        {
-            const auto mesh = meshes[i];
-            const auto vertices0 = mesh->mVertices;
-            const auto faces = mesh->mFaces;
-            const auto numVertices = mesh->mNumVertices;
-            const auto numFaces = mesh->mNumFaces;
-
-            for (uint32_t j = 0; j < numFaces; ++j)
-            {
-                const auto face = faces[j];
-                const auto indices0 = face.mIndices;
-                const auto numIndices = face.mNumIndices;
-                if (numIndices != 3)
-                {
-                    throw std::runtime_error("no triangles");
-                }
-
-                const auto a_assimp = vertices0[indices0[0]];
-                const auto a = glm::vec3(a_assimp.x, a_assimp.y, a_assimp.z);
-                const auto b_assimp = vertices0[indices0[1]];
-                const auto b = glm::vec3(b_assimp.x, b_assimp.y, b_assimp.z);
-                const auto c_assimp = vertices0[indices0[2]];
-                const auto c = glm::vec3(c_assimp.x, c_assimp.y, c_assimp.z);
-                const auto n = glm::normalize(glm::cross(c - a, b - a));
-
-                for (uint32_t k = 0; k < numIndices; ++k)
-                {
-                    const auto index = indices0[k];
-                    if (index >= numVertices)
-                    {
-                        throw std::runtime_error("index too big");
-                    }
-
-                    const auto v = vertices0[index];
-
-                    Vertex vertex = {};
-
-                    const float scale = 0.08f;
-                    vertex.pos = { v.x * scale - 35.f, v.y * scale, v.z * scale - 12.f };
-                    vertex.texCoord = { 0.f, 1.f };
-                    vertex.color = { 1.0f, 0.0f, 0.0f };
-                    vertex.normal = n;
-
-                    if (uniqueVertices.count(vertex) == 0)
-                    {
-                        uniqueVertices[vertex] = static_cast<uint32_t>(m_vertices.size());
-                        m_vertices.push_back(vertex);
-                    }
-
-                    m_indices.push_back(uniqueVertices[vertex]);
-                }
-            }
-        }
-    }
-
-    void loadDragon(Assimp::Importer & importer)
-    {
-        const auto * scene = importer.ReadFile("../models/stanford_dragon/dragon.obj", aiProcess_Triangulate);
+        const auto * scene = importer.ReadFile(file.data(), aiProcess_Triangulate);
         if (!scene)
         {
             throw std::runtime_error(importer.GetErrorString());
@@ -845,11 +805,11 @@ private:
 
                     if (uniqueVertices.count(vertex) == 0)
                     {
-                        uniqueVertices[vertex] = static_cast<uint32_t>(m_vertices.size());
-                        m_vertices.push_back(vertex);
+                        uniqueVertices[vertex] = static_cast<uint32_t>(model.vertices.size());
+                        model.vertices.push_back(vertex);
                     }
 
-                    m_indices.push_back(uniqueVertices[vertex]);
+                    model.indices.push_back(uniqueVertices[vertex]);
                 }
             }
         }
@@ -859,45 +819,45 @@ private:
     {
         Assimp::Importer importer;
 
-        loadCornell(importer);
-        loadDragon(importer);
+        loadModel(importer, m_cornellModel, "../models/cornell_box/cornell_box.obj");
+        loadModel(importer, m_dragonModel, "../models/stanford_dragon/dragon.obj");
     }
 
-    void createVertexBuffer()
+    void createVertexBuffer(Model & model) const
     {
-        vk::DeviceSize bufferSize = sizeof(m_vertices[0]) * m_vertices.size();
+        vk::DeviceSize bufferSize = sizeof(model.vertices[0]) * model.vertices.size();
 
         vk::UniqueBuffer stagingBuffer;
         vk::UniqueDeviceMemory stagingBufferMemory;
         createBuffer(bufferSize, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, stagingBuffer, stagingBufferMemory);
 
         auto * data{ m_device->mapMemory(*stagingBufferMemory, 0, bufferSize, {}) };
-        memcpy(data, m_vertices.data(), static_cast<size_t>(bufferSize));
+        memcpy(data, model.vertices.data(), static_cast<size_t>(bufferSize));
         m_device->unmapMemory(*stagingBufferMemory);
 
-        createBuffer(bufferSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal, m_vertexBuffer, m_vertexBufferMemory);
+        createBuffer(bufferSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal, model.vertexBuffer, model.vertexBufferMemory);
 
-        copyBuffer(stagingBuffer, m_vertexBuffer, bufferSize);
+        copyBuffer(stagingBuffer, model.vertexBuffer, bufferSize);
 
         stagingBuffer.reset(nullptr);
         stagingBufferMemory.reset(nullptr);
     }
 
-    void createIndexBuffer()
+    void createIndexBuffer(Model & model) const
     {
-        vk::DeviceSize bufferSize = sizeof(m_indices[0]) * m_indices.size();
+        vk::DeviceSize bufferSize = sizeof(model.indices[0]) * model.indices.size();
 
         vk::UniqueBuffer stagingBuffer;
         vk::UniqueDeviceMemory stagingBufferMemory;
         createBuffer(bufferSize, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, stagingBuffer, stagingBufferMemory);
 
         auto * data{ m_device->mapMemory(*stagingBufferMemory, 0, bufferSize, {}) };
-        memcpy(data, m_indices.data(), static_cast<size_t>(bufferSize));
+        memcpy(data, model.indices.data(), static_cast<size_t>(bufferSize));
         m_device->unmapMemory(*stagingBufferMemory);
 
-        createBuffer(bufferSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal, m_indexBuffer, m_indexBufferMemory);
+        createBuffer(bufferSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal, model.indexBuffer, model.indexBufferMemory);
 
-        copyBuffer(stagingBuffer, m_indexBuffer, bufferSize);
+        copyBuffer(stagingBuffer, model.indexBuffer, bufferSize);
 
         stagingBuffer.reset(nullptr);
         stagingBufferMemory.reset(nullptr);
@@ -1014,13 +974,11 @@ private:
 
             m_commandBuffers[i]->bindPipeline(vk::PipelineBindPoint::eGraphics, *m_graphicsPipeline);
 
-            vk::DeviceSize offsets = 0;
-            m_commandBuffers[i]->bindVertexBuffers(0, *m_vertexBuffer, offsets);
-            m_commandBuffers[i]->bindIndexBuffer(*m_indexBuffer, 0, vk::IndexType::eUint32);
+            m_dragonModel.bind(m_commandBuffers[i]);
 
             m_commandBuffers[i]->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, *m_pipelineLayout, 0, *m_descriptorSet, nullptr);
 
-            m_commandBuffers[i]->drawIndexed(static_cast<uint32_t>(m_indices.size()), 1, 0, 0, 0);
+            m_dragonModel.draw(m_commandBuffers[i]);
 
             m_commandBuffers[i]->endRenderPass();
 
