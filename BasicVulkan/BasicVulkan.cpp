@@ -973,12 +973,12 @@ private:
             m_commandBuffers[i]->beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
 
             m_commandBuffers[i]->bindPipeline(vk::PipelineBindPoint::eGraphics, *m_graphicsPipeline);
-
-            m_dragonModel.bind(m_commandBuffers[i]);
-
             m_commandBuffers[i]->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, *m_pipelineLayout, 0, *m_descriptorSet, nullptr);
 
+            m_dragonModel.bind(m_commandBuffers[i]);
             m_dragonModel.draw(m_commandBuffers[i]);
+            m_cornellModel.bind(m_commandBuffers[i]);
+            m_cornellModel.draw(m_commandBuffers[i]);
 
             m_commandBuffers[i]->endRenderPass();
 
