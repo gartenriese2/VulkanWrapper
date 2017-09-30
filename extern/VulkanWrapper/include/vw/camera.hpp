@@ -14,6 +14,10 @@ namespace vw::util
         Camera(const glm::vec3 & pos, const glm::vec3 & dir, const glm::vec3 & up,
                const float fov, const float ratio, const float near, const float far = std::numeric_limits<float>::infinity());
 
+        const auto & getPos() const noexcept { return m_pos; }
+        const auto & getDir() const noexcept { return m_dir; }
+        const auto & getUp() const noexcept { return m_up; }
+
         const glm::mat4 & getViewMatrix() const;
         const glm::mat4 & getProjMatrix() const;
 

@@ -234,8 +234,8 @@ private:
         m_window->setWindowUserPointer(this);
         m_window->setWindowSizeCallback(onWindowResized);
 
-        //m_camera = vw::util::Camera(glm::vec3{ 0.f, 40.f, -80.f }, glm::vec3{ 0.f, -20.f, 80.f }, glm::vec3{ 0.f, 0.f, 1.f }, glm::radians(45.f), m_swapChainExtent.width / static_cast<float>(m_swapChainExtent.height), 0.1f, 200.f);
-        m_camera = vw::util::Camera(glm::vec3{ -20.f, 20.f, 10.f }, glm::vec3{ -5.f, -1.f, -0.5f }, glm::vec3{ 0.f, 1.f, 0.f }, 45.f, 1.f, 0.01f, std::numeric_limits<float>::infinity());
+        m_camera = vw::util::Camera(glm::vec3{ -10.f, 40.f, -80.f }, glm::vec3{ -1.f, -1.f, 0.15f }, glm::vec3{ 0.f, -1.f, 0.f }, 45.f, 1.f, 0.01f, std::numeric_limits<float>::infinity());
+        m_camera.rotate(glm::radians(180.f), glm::vec3{ 0.f, 1.f, 0.f });
 
         m_window->setKeyCallback([](GLFWwindow * window, int key, int scancode, int action, int mods)
         {
@@ -297,6 +297,16 @@ private:
             if (key == GLFW_KEY_E && (action == GLFW_PRESS || action == GLFW_REPEAT))
             {
                 app->m_camera.rotate(-glm::radians(5.f), glm::vec3{ 0.f, 1.f, 0.f });
+            }
+
+            if (key == GLFW_KEY_P && (action == GLFW_PRESS || action == GLFW_REPEAT))
+            {
+                const auto & pos{ app->m_camera.getPos() };
+                const auto & dir{ app->m_camera.getDir() };
+                const auto & up{ app->m_camera.getUp() };
+                std::cout << "Pos: (" << pos.x << '|' << pos.y << '|' << pos.z << ")\n";
+                std::cout << "Dir: (" << dir.x << '|' << dir.y << '|' << dir.z << ")\n";
+                std::cout << "Up: (" << up.x << '|' << up.y << '|' << up.z << ")\n";
             }
 
             if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
