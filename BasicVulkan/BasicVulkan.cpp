@@ -174,6 +174,7 @@ public:
     {
         initWindow(K_WIDTH, K_HEIGHT, "Blinn-Phong Demo");
         initVulkan();
+        setupCamera();
         mainLoop();
         cleanup();
     }
@@ -214,8 +215,9 @@ private:
     vk::UniqueImageView m_textureImageView;
     vk::UniqueSampler m_textureSampler;
 
-    Model m_dragonModel;
-    Model m_cornellModel;
+    /*Model m_dragonModel;
+    Model m_cornellModel;*/
+    Model m_triangle;
 
     vk::UniqueBuffer m_uniformBuffer;
     vk::UniqueDeviceMemory m_uniformBufferMemory;
@@ -234,69 +236,38 @@ private:
         m_window->setWindowUserPointer(this);
         m_window->setWindowSizeCallback(onWindowResized);
 
-        m_camera = vw::util::Camera(glm::vec3{ -10.f, 40.f, -80.f }, glm::vec3{ -1.f, -1.f, 0.15f }, glm::vec3{ 0.f, -1.f, 0.f }, 45.f, 1.f, 0.01f, std::numeric_limits<float>::infinity());
-        m_camera.rotate(glm::radians(180.f), glm::vec3{ 0.f, 1.f, 0.f });
-
         m_window->setKeyCallback([](GLFWwindow * window, int key, int scancode, int action, int mods)
         {
             auto * app = reinterpret_cast<HelloTriangleApplication *>(glfwGetWindowUserPointer(window));
 
             if (key == GLFW_KEY_W && (action == GLFW_PRESS || action == GLFW_REPEAT))
             {
-                if ((mods & GLFW_MOD_SHIFT) != 0)
-                {
-                    app->m_camera.translateLocal({ 0.f, 0.f, -2.5f });
-                }
-                else
-                {
-                    app->m_camera.translateLocal({ 0.f, 0.f, -0.5f });
-                }
+                app->m_camera.translateLocal({ 0.f, 0.f, -0.5f });
             }
 
             if (key == GLFW_KEY_S && (action == GLFW_PRESS || action == GLFW_REPEAT))
             {
-                if ((mods & GLFW_MOD_SHIFT) != 0)
-                {
-                    app->m_camera.translateLocal({ 0.f, 0.f, 2.5f });
-                }
-                else
-                {
-                    app->m_camera.translateLocal({ 0.f, 0.f, 0.5f });
-                }
+                app->m_camera.translateLocal({ 0.f, 0.f, 0.5f });
             }
 
             if (key == GLFW_KEY_A && (action == GLFW_PRESS || action == GLFW_REPEAT))
             {
-                if ((mods & GLFW_MOD_SHIFT) != 0)
-                {
-                    app->m_camera.translateLocal({ -2.5f, 0.f, 0.f });
-                }
-                else
-                {
-                    app->m_camera.translateLocal({ -0.5f, 0.f, 0.f });
-                }
+                app->m_camera.translateLocal({ -0.5f, 0.f, 0.f });
             }
 
             if (key == GLFW_KEY_D && (action == GLFW_PRESS || action == GLFW_REPEAT))
             {
-                if ((mods & GLFW_MOD_SHIFT) != 0)
-                {
-                    app->m_camera.translateLocal({ 2.5f, 0.f, 0.f });
-                }
-                else
-                {
-                    app->m_camera.translateLocal({ 0.5f, 0.f, 0.f });
-                }
+                app->m_camera.translateLocal({ 0.5f, 0.f, 0.f });
             }
 
             if (key == GLFW_KEY_Q && (action == GLFW_PRESS || action == GLFW_REPEAT))
             {
-                app->m_camera.rotate(glm::radians(5.f), glm::vec3{ 0.f, 1.f, 0.f });
+                app->m_camera.rotate(glm::radians(1.f), glm::vec3{ 0.f, 1.f, 0.f });
             }
 
             if (key == GLFW_KEY_E && (action == GLFW_PRESS || action == GLFW_REPEAT))
             {
-                app->m_camera.rotate(-glm::radians(5.f), glm::vec3{ 0.f, 1.f, 0.f });
+                app->m_camera.rotate(-glm::radians(1.f), glm::vec3{ 0.f, 1.f, 0.f });
             }
 
             if (key == GLFW_KEY_P && (action == GLFW_PRESS || action == GLFW_REPEAT))
@@ -314,6 +285,17 @@ private:
                 app->m_window->setShouldClose(true);
             }
         });
+    }
+
+    void setupCamera()
+    {
+        /*const glm::vec3 pos{ -10.f, 40.f, -80.f };
+        const glm::vec3 dir{ -1.f, -1.f, 0.15f };*/
+        const glm::vec3 pos{ 0.f, 0.f, 5.f };
+        const glm::vec3 dir{ 0.f, 0.f, -1.f };
+        const glm::vec3 up{ 0.f, 1.f, 0.f };
+        m_camera = vw::util::Camera(pos, dir, up, 45.f, m_swapChainExtent.width / static_cast<float>(m_swapChainExtent.height), 0.01f, std::numeric_limits<float>::infinity());
+        //m_camera.rotate(glm::radians(180.f), glm::vec3{ 0.f, 1.f, 0.f });
     }
 
     void initVulkan()
@@ -335,10 +317,12 @@ private:
         createTextureImageView();
         createTextureSampler();
         loadModels();
-        createVertexBuffer(m_dragonModel);
+        /*createVertexBuffer(m_dragonModel);
         createIndexBuffer(m_dragonModel);
         createVertexBuffer(m_cornellModel);
-        createIndexBuffer(m_cornellModel);
+        createIndexBuffer(m_cornellModel);*/
+        createVertexBuffer(m_triangle);
+        createIndexBuffer(m_triangle);
         createUniformBuffer();
         createDescriptorPool();
         createDescriptorSet();
@@ -395,8 +379,9 @@ private:
         m_uniformBuffer.reset(nullptr);
         m_uniformBufferMemory.reset(nullptr);
 
-        m_dragonModel.reset();
-        m_cornellModel.reset();
+        /*m_dragonModel.reset();
+        m_cornellModel.reset();*/
+        m_triangle.reset();
 
         m_renderFinishedSemaphore.reset(nullptr);
         m_imageAvailableSemaphore.reset(nullptr);
@@ -420,6 +405,7 @@ private:
 
         auto * app = reinterpret_cast<HelloTriangleApplication *>(glfwGetWindowUserPointer(window));
         app->recreateSwapChain();
+        app->m_camera.setRatio(app->m_swapChainExtent.width / static_cast<float>(app->m_swapChainExtent.height));
     }
 
     void recreateSwapChain()
@@ -631,7 +617,7 @@ private:
         vk::Rect2D scissor{ { 0, 0 }, m_swapChainExtent };
         vk::PipelineViewportStateCreateInfo viewportState{ {}, 1, &viewport, 1, &scissor };
 
-        vk::PipelineRasterizationStateCreateInfo rasterizer{ {}, false, false, vk::PolygonMode::eFill, vk::CullModeFlagBits::eBack, vk::FrontFace::eCounterClockwise, false, 0.f, 0.f, 0.f, 1.f };
+        vk::PipelineRasterizationStateCreateInfo rasterizer{ {}, false, false, vk::PolygonMode::eFill, vk::CullModeFlagBits::eNone, vk::FrontFace::eCounterClockwise, false, 0.f, 0.f, 0.f, 1.f };
 
         vk::PipelineMultisampleStateCreateInfo multisampling{ {}, vk::SampleCountFlagBits::e1, false };
 
@@ -902,7 +888,7 @@ private:
 
                     vertex.pos = { v.x, v.y, v.z };
                     vertex.texCoord = { 0.f, 1.f };
-                    vertex.color = { 1.0f, 0.0f, 0.0f };
+                    vertex.color = { 1.f, 0.f, 0.f };
                     vertex.normal = n;
 
                     if (uniqueVertices.count(vertex) == 0)
@@ -917,15 +903,47 @@ private:
         }
     }
 
+    void loadTriangle(Model & model) const
+    {
+        model.vertices.clear();
+        model.indices.clear();
+
+        Vertex v1;
+        v1.pos = { -1.f, -1.f, 0.f };
+        v1.texCoord = { 0.f, 1.f };
+        v1.color = { 1.f, 0.f, 0.f };
+        v1.normal = { 0.f, 0.f, 1.f };
+        Vertex v2;
+        v2.pos = { 1.f, -1.f, 0.f };
+        v2.texCoord = { 0.f, 1.f };
+        v2.color = { 0.f, 1.f, 0.f };
+        v2.normal = { 0.f, 0.f, 1.f };
+        Vertex v3;
+        v3.pos = { 0.f, 1.f, 0.f };
+        v3.texCoord = { 0.f, 1.f };
+        v3.color = { 0.f, 0.f, 1.f };
+        v3.normal = { 0.f, 0.f, 1.f };
+
+        model.vertices.push_back(v1);
+        model.vertices.push_back(v2);
+        model.vertices.push_back(v3);
+
+        model.indices.push_back(0);
+        model.indices.push_back(1);
+        model.indices.push_back(2);
+    }
+
     void loadModels()
     {
-        Assimp::Importer importer;
+        /*Assimp::Importer importer;
 
         loadModel(importer, m_cornellModel, "../models/cornell_box/cornell_box.obj");
         m_cornellModel.scale(glm::vec3{ 0.1f });
         m_cornellModel.translate(glm::vec3{ -400.f, 0.f, -60.f });
         loadModel(importer, m_dragonModel, "../models/stanford_dragon/dragon.obj");
-        m_dragonModel.scale(glm::vec3{ 2.f });
+        m_dragonModel.scale(glm::vec3{ 2.f });*/
+
+        loadTriangle(m_triangle);
     }
 
     void createVertexBuffer(Model & model) const
@@ -1080,11 +1098,14 @@ private:
             m_commandBuffers[i]->bindPipeline(vk::PipelineBindPoint::eGraphics, *m_graphicsPipeline);
             m_commandBuffers[i]->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, *m_pipelineLayout, 0, *m_descriptorSet, nullptr);
 
-            m_dragonModel.pushConstants(m_commandBuffers[i], m_pipelineLayout);
+            /*m_dragonModel.pushConstants(m_commandBuffers[i], m_pipelineLayout);
             m_dragonModel.draw(m_commandBuffers[i]);
 
             m_cornellModel.pushConstants(m_commandBuffers[i], m_pipelineLayout);
-            m_cornellModel.draw(m_commandBuffers[i]);
+            m_cornellModel.draw(m_commandBuffers[i]);*/
+
+            m_triangle.pushConstants(m_commandBuffers[i], m_pipelineLayout);
+            m_triangle.draw(m_commandBuffers[i]);
 
             m_commandBuffers[i]->endRenderPass();
 
@@ -1109,8 +1130,6 @@ private:
         UniformBufferObject ubo;
         ubo.view = m_camera.getViewMatrix();
         ubo.proj = m_camera.getProjMatrix();
-        /*ubo.view = glm::lookAt(glm::vec3(0.f, 40.f, -80.f), glm::vec3(0.f, 20.f, 0.f), glm::vec3(0.f, 0.f, 1.f));
-        ubo.proj = glm::perspective(glm::radians(45.f), m_swapChainExtent.width / static_cast<float>(m_swapChainExtent.height), 0.1f, 200.f);*/
         ubo.proj[1][1] *= -1;
 
         auto * data{ m_device->mapMemory(*m_uniformBufferMemory, 0, sizeof ubo, {}) };
