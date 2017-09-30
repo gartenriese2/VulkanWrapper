@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <tuple>
 
-namespace vw
+namespace vw::util
 {
     constexpr int32_t k_minWidth{ 320 };
     constexpr int32_t k_minHeight{ 240 };
@@ -36,6 +36,11 @@ namespace vw
         return glfwWindowShouldClose(m_window.get());
     }
 
+    void Window::setShouldClose(const bool shouldClose) const
+    {
+        glfwSetWindowShouldClose(m_window.get(), shouldClose);
+    }
+
     void Window::pollEvents() const
     {
         glfwPollEvents();
@@ -56,6 +61,21 @@ namespace vw
     void Window::setWindowSizeCallback(GLFWwindowsizefun fun) const
     {
         glfwSetWindowSizeCallback(m_window.get(), fun);
+    }
+
+    void Window::setKeyCallback(GLFWkeyfun fun) const
+    {
+        glfwSetKeyCallback(m_window.get(), fun);
+    }
+
+    void Window::setMouseButtonCallback(GLFWmousebuttonfun fun) const
+    {
+        glfwSetMouseButtonCallback(m_window.get(), fun);
+    }
+
+    void Window::setCursorPosCallback(GLFWcursorposfun fun) const
+    {
+        glfwSetCursorPosCallback(m_window.get(), fun);
     }
 
     std::vector<std::string> Window::getRequiredExtensions() const

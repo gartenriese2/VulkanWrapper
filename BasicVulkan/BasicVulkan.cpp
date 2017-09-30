@@ -1,4 +1,5 @@
 #include <vw/window.hpp>
+#include <vw/camera.hpp>
 
 #include <vulkan/vulkan.hpp>
 #include <GLFW/glfw3.h>
@@ -177,7 +178,8 @@ public:
         cleanup();
     }
 private:
-    std::unique_ptr<vw::Window> m_window;
+    std::unique_ptr<vw::util::Window> m_window;
+    vw::util::Camera m_camera;
 
     vk::UniqueInstance m_instance;
     vk::UniqueDebugReportCallbackEXT m_callback;
@@ -228,9 +230,80 @@ private:
 
     void initWindow(const int32_t width, const int32_t height, std::string_view title)
     {
-        m_window.reset(new vw::Window(width, height, title.data()));
+        m_window.reset(new vw::util::Window(width, height, title.data()));
         m_window->setWindowUserPointer(this);
         m_window->setWindowSizeCallback(onWindowResized);
+
+        //m_camera = vw::util::Camera(glm::vec3{ 0.f, 40.f, -80.f }, glm::vec3{ 0.f, -20.f, 80.f }, glm::vec3{ 0.f, 0.f, 1.f }, glm::radians(45.f), m_swapChainExtent.width / static_cast<float>(m_swapChainExtent.height), 0.1f, 200.f);
+        m_camera = vw::util::Camera(glm::vec3{ -20.f, 20.f, 10.f }, glm::vec3{ -5.f, -1.f, -0.5f }, glm::vec3{ 0.f, 1.f, 0.f }, 45.f, 1.f, 0.01f, std::numeric_limits<float>::infinity());
+
+        m_window->setKeyCallback([](GLFWwindow * window, int key, int scancode, int action, int mods)
+        {
+            auto * app = reinterpret_cast<HelloTriangleApplication *>(glfwGetWindowUserPointer(window));
+
+            if (key == GLFW_KEY_W && (action == GLFW_PRESS || action == GLFW_REPEAT))
+            {
+                if ((mods & GLFW_MOD_SHIFT) != 0)
+                {
+                    app->m_camera.translateLocal({ 0.f, 0.f, -2.5f });
+                }
+                else
+                {
+                    app->m_camera.translateLocal({ 0.f, 0.f, -0.5f });
+                }
+            }
+
+            if (key == GLFW_KEY_S && (action == GLFW_PRESS || action == GLFW_REPEAT))
+            {
+                if ((mods & GLFW_MOD_SHIFT) != 0)
+                {
+                    app->m_camera.translateLocal({ 0.f, 0.f, 2.5f });
+                }
+                else
+                {
+                    app->m_camera.translateLocal({ 0.f, 0.f, 0.5f });
+                }
+            }
+
+            if (key == GLFW_KEY_A && (action == GLFW_PRESS || action == GLFW_REPEAT))
+            {
+                if ((mods & GLFW_MOD_SHIFT) != 0)
+                {
+                    app->m_camera.translateLocal({ -2.5f, 0.f, 0.f });
+                }
+                else
+                {
+                    app->m_camera.translateLocal({ -0.5f, 0.f, 0.f });
+                }
+            }
+
+            if (key == GLFW_KEY_D && (action == GLFW_PRESS || action == GLFW_REPEAT))
+            {
+                if ((mods & GLFW_MOD_SHIFT) != 0)
+                {
+                    app->m_camera.translateLocal({ 2.5f, 0.f, 0.f });
+                }
+                else
+                {
+                    app->m_camera.translateLocal({ 0.5f, 0.f, 0.f });
+                }
+            }
+
+            if (key == GLFW_KEY_Q && (action == GLFW_PRESS || action == GLFW_REPEAT))
+            {
+                app->m_camera.rotate(glm::radians(5.f), glm::vec3{ 0.f, 1.f, 0.f });
+            }
+
+            if (key == GLFW_KEY_E && (action == GLFW_PRESS || action == GLFW_REPEAT))
+            {
+                app->m_camera.rotate(-glm::radians(5.f), glm::vec3{ 0.f, 1.f, 0.f });
+            }
+
+            if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+            {
+                app->m_window->setShouldClose(true);
+            }
+        });
     }
 
     void initVulkan()
@@ -1024,8 +1097,10 @@ private:
         const auto time = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - startTime).count() / 1000.f;
 
         UniformBufferObject ubo;
-        ubo.view = glm::lookAt(glm::vec3(0.f, 40.f, -80.f), glm::vec3(0.f, 20.f, 0.f), glm::vec3(0.f, 0.f, 1.f));
-        ubo.proj = glm::perspective(glm::radians(45.f), m_swapChainExtent.width / static_cast<float>(m_swapChainExtent.height), 0.1f, 200.f);
+        ubo.view = m_camera.getViewMatrix();
+        ubo.proj = m_camera.getProjMatrix();
+        /*ubo.view = glm::lookAt(glm::vec3(0.f, 40.f, -80.f), glm::vec3(0.f, 20.f, 0.f), glm::vec3(0.f, 0.f, 1.f));
+        ubo.proj = glm::perspective(glm::radians(45.f), m_swapChainExtent.width / static_cast<float>(m_swapChainExtent.height), 0.1f, 200.f);*/
         ubo.proj[1][1] *= -1;
 
         auto * data{ m_device->mapMemory(*m_uniformBufferMemory, 0, sizeof ubo, {}) };

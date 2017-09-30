@@ -10,7 +10,7 @@
 #include <memory>
 #include <vector>
 
-namespace vw
+namespace vw::util
 {
     class Window
     {
@@ -23,10 +23,14 @@ namespace vw
         ~Window();
 
         bool shouldClose() const;
+        void setShouldClose(const bool shouldClose) const;
         void pollEvents() const;
         std::tuple<int32_t, int32_t> getSize() const;
         void setWindowUserPointer(void * pointer) const;
         void setWindowSizeCallback(GLFWwindowsizefun fun) const;
+        void setKeyCallback(GLFWkeyfun fun) const;
+        void setMouseButtonCallback(GLFWmousebuttonfun fun) const;
+        void setCursorPosCallback(GLFWcursorposfun fun) const;
         std::vector<std::string> getRequiredExtensions() const;
         vk::UniqueSurfaceKHR createSurface(const vk::UniqueInstance & instance) const;
     private:
