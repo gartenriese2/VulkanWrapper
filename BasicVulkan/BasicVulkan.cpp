@@ -102,15 +102,32 @@ struct Vertex
 
 struct Model
 {
-    void bind(const vk::UniqueCommandBuffer & commandBuffer) const
+    void translate(const glm::vec3 & translate)
     {
-        vk::DeviceSize offsets = 0;
-        commandBuffer->bindVertexBuffers(0, *vertexBuffer, offsets);
-        commandBuffer->bindIndexBuffer(*indexBuffer, 0, vk::IndexType::eUint32);
+        modelMatrix = glm::translate(modelMatrix, translate);
+    }
+    
+    void scale(const glm::vec3 & scale)
+    {
+        modelMatrix = glm::scale(modelMatrix, scale);
+    }
+
+    void rotate(const glm::vec3 & axis, const float radians)
+    {
+        modelMatrix = glm::rotate(modelMatrix, radians, axis);
+    }
+
+    void pushConstants(const vk::UniqueCommandBuffer & commandBuffer, const vk::UniquePipelineLayout & pipelineLayout) const
+    {
+        std::array<glm::mat4, 1> pushConstants = { modelMatrix };
+        commandBuffer->pushConstants(*pipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, sizeof pushConstants, pushConstants.data());
     }
 
     void draw(const vk::UniqueCommandBuffer & commandBuffer) const
     {
+        vk::DeviceSize offsets = 0;
+        commandBuffer->bindVertexBuffers(0, *vertexBuffer, offsets);
+        commandBuffer->bindIndexBuffer(*indexBuffer, 0, vk::IndexType::eUint32);
         commandBuffer->drawIndexed(static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
     }
 
@@ -128,6 +145,8 @@ struct Model
     vk::UniqueDeviceMemory vertexBufferMemory;
     vk::UniqueBuffer indexBuffer;
     vk::UniqueDeviceMemory indexBufferMemory;
+
+    glm::mat4 modelMatrix;
 };
 
 namespace std
@@ -143,7 +162,6 @@ namespace std
 
 struct UniformBufferObject
 {
-    glm::mat4 model;
     glm::mat4 view;
     glm::mat4 proj;
 };
@@ -540,8 +558,9 @@ private:
 
         vk::PipelineColorBlendStateCreateInfo colorBlending{ {}, false, vk::LogicOp::eCopy, 1, &colorBlendAttachment, { { 0.f, 0.f, 0.f, 0.f } } };
 
+        vk::PushConstantRange pushConstant{ vk::ShaderStageFlagBits::eVertex, 0, sizeof glm::mat4 };
         const auto descriptorSetLayout{ *m_descriptorSetLayout };
-        vk::PipelineLayoutCreateInfo pipelineLayoutInfo{ {}, 1, &descriptorSetLayout };
+        vk::PipelineLayoutCreateInfo pipelineLayoutInfo{ {}, 1, &descriptorSetLayout, 1, &pushConstant };
         m_pipelineLayout = m_device->createPipelineLayoutUnique(pipelineLayoutInfo);
 
         vk::GraphicsPipelineCreateInfo pipelineInfo{ {}, 2, shaderStages, &vertexInputInfo, &inputAssembly, nullptr, &viewportState, &rasterizer, &multisampling, &depthStencil, &colorBlending, nullptr, *m_pipelineLayout, *m_renderPass, 0, nullptr, 0 };
@@ -820,7 +839,10 @@ private:
         Assimp::Importer importer;
 
         loadModel(importer, m_cornellModel, "../models/cornell_box/cornell_box.obj");
+        m_cornellModel.scale(glm::vec3{ 0.1f });
+        m_cornellModel.translate(glm::vec3{ -400.f, 0.f, -60.f });
         loadModel(importer, m_dragonModel, "../models/stanford_dragon/dragon.obj");
+        m_dragonModel.scale(glm::vec3{ 2.f });
     }
 
     void createVertexBuffer(Model & model) const
@@ -975,9 +997,10 @@ private:
             m_commandBuffers[i]->bindPipeline(vk::PipelineBindPoint::eGraphics, *m_graphicsPipeline);
             m_commandBuffers[i]->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, *m_pipelineLayout, 0, *m_descriptorSet, nullptr);
 
-            m_dragonModel.bind(m_commandBuffers[i]);
+            m_dragonModel.pushConstants(m_commandBuffers[i], m_pipelineLayout);
             m_dragonModel.draw(m_commandBuffers[i]);
-            m_cornellModel.bind(m_commandBuffers[i]);
+
+            m_cornellModel.pushConstants(m_commandBuffers[i], m_pipelineLayout);
             m_cornellModel.draw(m_commandBuffers[i]);
 
             m_commandBuffers[i]->endRenderPass();
@@ -1001,7 +1024,6 @@ private:
         const auto time = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - startTime).count() / 1000.f;
 
         UniformBufferObject ubo;
-        ubo.model = glm::rotate(glm::mat4(1.f), time * glm::radians(90.f), glm::vec3(0.f, 1.f, 0.f));
         ubo.view = glm::lookAt(glm::vec3(0.f, 40.f, -80.f), glm::vec3(0.f, 20.f, 0.f), glm::vec3(0.f, 0.f, 1.f));
         ubo.proj = glm::perspective(glm::radians(45.f), m_swapChainExtent.width / static_cast<float>(m_swapChainExtent.height), 0.1f, 200.f);
         ubo.proj[1][1] *= -1;
