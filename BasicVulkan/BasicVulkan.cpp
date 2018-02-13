@@ -1,5 +1,6 @@
 #include <vw/window.hpp>
 #include <vw/camera.hpp>
+#include <vw/modelLoader.hpp>
 
 #include <vulkan/vulkan.hpp>
 #include <GLFW/glfw3.h>
@@ -12,10 +13,6 @@
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
-
-#include <assimp/Importer.hpp>
-#include <assimp/postprocess.h>
-#include <assimp/scene.h>
 
 #include <iostream>
 #include <fstream>
@@ -71,96 +68,6 @@ struct SwapChainSupportDetails
     std::vector<vk::PresentModeKHR> presentModes;
 };
 
-struct Vertex
-{
-    glm::vec3 pos;
-    glm::vec3 normal;
-    glm::vec3 color;
-    glm::vec2 texCoord;
-
-    static vk::VertexInputBindingDescription getBindingDescription()
-    {
-        return { 0, sizeof Vertex, vk::VertexInputRate::eVertex };
-    }
-
-    static auto getAttributeDescriptions()
-    {
-        std::array<vk::VertexInputAttributeDescription, 4> attributeDescriptions =
-        {
-            vk::VertexInputAttributeDescription{ 0, 0, vk::Format::eR32G32B32Sfloat, offsetof(Vertex, pos) },
-            vk::VertexInputAttributeDescription{ 1, 0, vk::Format::eR32G32B32Sfloat, offsetof(Vertex, normal) },
-            vk::VertexInputAttributeDescription{ 2, 0, vk::Format::eR32G32B32Sfloat, offsetof(Vertex, color) },
-            vk::VertexInputAttributeDescription{ 3, 0, vk::Format::eR32G32Sfloat, offsetof(Vertex, texCoord) }
-        };
-        return attributeDescriptions;
-    }
-
-    auto operator==(const Vertex & other) const
-    {
-        return pos == other.pos && normal == other.normal && color == other.color && texCoord == other.texCoord;
-    }
-};
-
-struct Model
-{
-    void translate(const glm::vec3 & translate)
-    {
-        modelMatrix = glm::translate(modelMatrix, translate);
-    }
-    
-    void scale(const glm::vec3 & scale)
-    {
-        modelMatrix = glm::scale(modelMatrix, scale);
-    }
-
-    void rotate(const glm::vec3 & axis, const float radians)
-    {
-        modelMatrix = glm::rotate(modelMatrix, radians, axis);
-    }
-
-    void pushConstants(const vk::UniqueCommandBuffer & commandBuffer, const vk::UniquePipelineLayout & pipelineLayout) const
-    {
-        std::array<glm::mat4, 1> pushConstants = { modelMatrix };
-        commandBuffer->pushConstants(*pipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, sizeof pushConstants, pushConstants.data());
-    }
-
-    void draw(const vk::UniqueCommandBuffer & commandBuffer) const
-    {
-        vk::DeviceSize offsets = 0;
-        commandBuffer->bindVertexBuffers(0, *vertexBuffer, offsets);
-        commandBuffer->bindIndexBuffer(*indexBuffer, 0, vk::IndexType::eUint32);
-        commandBuffer->drawIndexed(static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
-    }
-
-    void reset()
-    {
-        indexBuffer.reset(nullptr);
-        indexBufferMemory.reset(nullptr);
-        vertexBuffer.reset(nullptr);
-        vertexBufferMemory.reset(nullptr);
-    }
-
-    std::vector<Vertex> vertices;
-    std::vector<uint32_t> indices;
-    vk::UniqueBuffer vertexBuffer;
-    vk::UniqueDeviceMemory vertexBufferMemory;
-    vk::UniqueBuffer indexBuffer;
-    vk::UniqueDeviceMemory indexBufferMemory;
-
-    glm::mat4 modelMatrix;
-};
-
-namespace std
-{
-    template<> struct hash<Vertex>
-    {
-        size_t operator()(Vertex const & vertex) const
-        {
-            return ((hash<glm::vec3>()(vertex.pos) ^ (hash<glm::vec3>()(vertex.color) << 1)) >> 1) ^ (hash<glm::vec2>()(vertex.texCoord) << 1) ^ hash<glm::vec3>()(vertex.normal);
-        }
-    };
-}
-
 struct UniformBufferObject
 {
     glm::mat4 view;
@@ -215,9 +122,9 @@ private:
     vk::UniqueImageView m_textureImageView;
     vk::UniqueSampler m_textureSampler;
 
-    /*Model m_dragonModel;
-    Model m_cornellModel;*/
-    Model m_triangle;
+    vw::util::Model m_dragonModel;
+    //Model m_cornellModel;
+    vw::util::Model m_triangle;
 
     vk::UniqueBuffer m_uniformBuffer;
     vk::UniqueDeviceMemory m_uniformBufferMemory;
@@ -242,12 +149,12 @@ private:
 
             if (key == GLFW_KEY_W && (action == GLFW_PRESS || action == GLFW_REPEAT))
             {
-                app->m_camera.translateLocal({ 0.f, 0.f, -0.5f });
+                app->m_camera.translateLocal({ 0.f, 0.f, 0.5f });
             }
 
             if (key == GLFW_KEY_S && (action == GLFW_PRESS || action == GLFW_REPEAT))
             {
-                app->m_camera.translateLocal({ 0.f, 0.f, 0.5f });
+                app->m_camera.translateLocal({ 0.f, 0.f, -0.5f });
             }
 
             if (key == GLFW_KEY_A && (action == GLFW_PRESS || action == GLFW_REPEAT))
@@ -289,13 +196,20 @@ private:
 
     void setupCamera()
     {
-        /*const glm::vec3 pos{ -10.f, 40.f, -80.f };
-        const glm::vec3 dir{ -1.f, -1.f, 0.15f };*/
         const glm::vec3 pos{ 0.f, 0.f, 5.f };
         const glm::vec3 dir{ 0.f, 0.f, -1.f };
         const glm::vec3 up{ 0.f, 1.f, 0.f };
         m_camera = vw::util::Camera(pos, dir, up, 45.f, m_swapChainExtent.width / static_cast<float>(m_swapChainExtent.height), 0.01f, std::numeric_limits<float>::infinity());
-        //m_camera.rotate(glm::radians(180.f), glm::vec3{ 0.f, 1.f, 0.f });
+        m_camera.rotate(glm::radians(180.f), glm::vec3{ 0.f, 1.f, 0.f });
+        m_camera.translateLocal(glm::vec3{ 0.f, 0.f, -10.f });
+
+        vw::util::Camera camera1{ pos, dir, up, 45.f, m_swapChainExtent.width / static_cast<float>(m_swapChainExtent.height), 0.01f, std::numeric_limits<float>::infinity() };
+        camera1.rotate(glm::radians(180.f), glm::vec3{ 0.f, 1.f, 0.f });
+        camera1.translateLocal(glm::vec3{ 0.f, 0.f, -10.f });
+        camera1.getViewMatrix();
+        vw::util::Camera camera2{ -pos, -dir, up, 45.f, m_swapChainExtent.width / static_cast<float>(m_swapChainExtent.height), 0.01f, std::numeric_limits<float>::infinity() };
+        camera2.rotate(glm::radians(360.f), glm::vec3{ 0.f, 1.f, 0.f });
+        camera2.getViewMatrix();
     }
 
     void initVulkan()
@@ -317,9 +231,9 @@ private:
         createTextureImageView();
         createTextureSampler();
         loadModels();
-        /*createVertexBuffer(m_dragonModel);
+        createVertexBuffer(m_dragonModel);
         createIndexBuffer(m_dragonModel);
-        createVertexBuffer(m_cornellModel);
+        /*createVertexBuffer(m_cornellModel);
         createIndexBuffer(m_cornellModel);*/
         createVertexBuffer(m_triangle);
         createIndexBuffer(m_triangle);
@@ -379,8 +293,8 @@ private:
         m_uniformBuffer.reset(nullptr);
         m_uniformBufferMemory.reset(nullptr);
 
-        /*m_dragonModel.reset();
-        m_cornellModel.reset();*/
+        m_dragonModel.reset();
+        /*m_cornellModel.reset();*/
         m_triangle.reset();
 
         m_renderFinishedSemaphore.reset(nullptr);
@@ -607,8 +521,8 @@ private:
 
         vk::PipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageInfo, fragShaderStageInfo };
 
-        auto bindingDescription = Vertex::getBindingDescription();
-        auto attributeDescriptions = Vertex::getAttributeDescriptions();
+        auto bindingDescription = vw::util::Vertex::getBindingDescription();
+        auto attributeDescriptions = vw::util::Vertex::getAttributeDescriptions();
         vk::PipelineVertexInputStateCreateInfo vertexInputInfo{ {}, 1, &bindingDescription, static_cast<uint32_t>(attributeDescriptions.size()), attributeDescriptions.data() };
 
         vk::PipelineInputAssemblyStateCreateInfo inputAssembly{ {}, vk::PrimitiveTopology::eTriangleList, false };
@@ -833,154 +747,56 @@ private:
         endSingleTimeCommands(commandBuffer);
     }
 
-    void loadModel(Assimp::Importer & importer, Model & model, std::string_view file) const
-    {
-        model.vertices.clear();
-        model.indices.clear();
-
-        const auto * scene = importer.ReadFile(file.data(), aiProcess_Triangulate);
-        if (!scene)
-        {
-            throw std::runtime_error(importer.GetErrorString());
-        }
-
-        std::unordered_map<Vertex, uint32_t> uniqueVertices = {};
-
-        const auto meshes = scene->mMeshes;
-        const auto numMeshes = scene->mNumMeshes;
-        for (uint32_t i = 0; i < numMeshes; ++i)
-        {
-            const auto mesh = meshes[i];
-            const auto vertices0 = mesh->mVertices;
-            const auto faces = mesh->mFaces;
-            const auto numVertices = mesh->mNumVertices;
-            const auto numFaces = mesh->mNumFaces;
-
-            for (uint32_t j = 0; j < numFaces; ++j)
-            {
-                const auto face = faces[j];
-                const auto indices0 = face.mIndices;
-                const auto numIndices = face.mNumIndices;
-                if (numIndices != 3)
-                {
-                    throw std::runtime_error("no triangles");
-                }
-
-                const auto a_assimp = vertices0[indices0[0]];
-                const auto a = glm::vec3(a_assimp.x, a_assimp.y, a_assimp.z);
-                const auto b_assimp = vertices0[indices0[1]];
-                const auto b = glm::vec3(b_assimp.x, b_assimp.y, b_assimp.z);
-                const auto c_assimp = vertices0[indices0[2]];
-                const auto c = glm::vec3(c_assimp.x, c_assimp.y, c_assimp.z);
-                const auto n = glm::normalize(glm::cross(c - a, b - a));
-
-                for (uint32_t k = 0; k < numIndices; ++k)
-                {
-                    const auto index = indices0[k];
-                    if (index >= numVertices)
-                    {
-                        throw std::runtime_error("index too big");
-                    }
-
-                    const auto v = vertices0[index];
-
-                    Vertex vertex = {};
-
-                    vertex.pos = { v.x, v.y, v.z };
-                    vertex.texCoord = { 0.f, 1.f };
-                    vertex.color = { 1.f, 0.f, 0.f };
-                    vertex.normal = n;
-
-                    if (uniqueVertices.count(vertex) == 0)
-                    {
-                        uniqueVertices[vertex] = static_cast<uint32_t>(model.vertices.size());
-                        model.vertices.push_back(vertex);
-                    }
-
-                    model.indices.push_back(uniqueVertices[vertex]);
-                }
-            }
-        }
-    }
-
-    void loadTriangle(Model & model) const
-    {
-        model.vertices.clear();
-        model.indices.clear();
-
-        Vertex v1;
-        v1.pos = { -1.f, -1.f, 0.f };
-        v1.texCoord = { 0.f, 1.f };
-        v1.color = { 1.f, 0.f, 0.f };
-        v1.normal = { 0.f, 0.f, 1.f };
-        Vertex v2;
-        v2.pos = { 1.f, -1.f, 0.f };
-        v2.texCoord = { 0.f, 1.f };
-        v2.color = { 0.f, 1.f, 0.f };
-        v2.normal = { 0.f, 0.f, 1.f };
-        Vertex v3;
-        v3.pos = { 0.f, 1.f, 0.f };
-        v3.texCoord = { 0.f, 1.f };
-        v3.color = { 0.f, 0.f, 1.f };
-        v3.normal = { 0.f, 0.f, 1.f };
-
-        model.vertices.push_back(v1);
-        model.vertices.push_back(v2);
-        model.vertices.push_back(v3);
-
-        model.indices.push_back(0);
-        model.indices.push_back(1);
-        model.indices.push_back(2);
-    }
-
     void loadModels()
     {
-        /*Assimp::Importer importer;
-
-        loadModel(importer, m_cornellModel, "../models/cornell_box/cornell_box.obj");
+        /*loadModel(importer, m_cornellModel, "../models/cornell_box/cornell_box.obj");
         m_cornellModel.scale(glm::vec3{ 0.1f });
-        m_cornellModel.translate(glm::vec3{ -400.f, 0.f, -60.f });
-        loadModel(importer, m_dragonModel, "../models/stanford_dragon/dragon.obj");
-        m_dragonModel.scale(glm::vec3{ 2.f });*/
+        m_cornellModel.translate(glm::vec3{ -400.f, 0.f, -60.f });*/
 
-        loadTriangle(m_triangle);
+        vw::util::ModelLoader ml;
+        m_dragonModel = ml.loadModel("../models/stanford_dragon/dragon.obj");
+        m_dragonModel.scale(glm::vec3{ 0.1f });
+
+        m_triangle = ml.loadTriangle();
     }
 
-    void createVertexBuffer(Model & model) const
+    void createVertexBuffer(vw::util::Model & model) const
     {
-        vk::DeviceSize bufferSize = sizeof(model.vertices[0]) * model.vertices.size();
+        auto & modelVertices{ model.getVertices() };
+        vk::DeviceSize bufferSize = sizeof(modelVertices[0]) * modelVertices.size();
 
         vk::UniqueBuffer stagingBuffer;
         vk::UniqueDeviceMemory stagingBufferMemory;
         createBuffer(bufferSize, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, stagingBuffer, stagingBufferMemory);
 
         auto * data{ m_device->mapMemory(*stagingBufferMemory, 0, bufferSize, {}) };
-        memcpy(data, model.vertices.data(), static_cast<size_t>(bufferSize));
+        memcpy(data, modelVertices.data(), static_cast<size_t>(bufferSize));
         m_device->unmapMemory(*stagingBufferMemory);
 
-        createBuffer(bufferSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal, model.vertexBuffer, model.vertexBufferMemory);
+        createBuffer(bufferSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal, model.getVertexBuffer(), model.getVertexBufferMemory());
 
-        copyBuffer(stagingBuffer, model.vertexBuffer, bufferSize);
+        copyBuffer(stagingBuffer, model.getVertexBuffer(), bufferSize);
 
         stagingBuffer.reset(nullptr);
         stagingBufferMemory.reset(nullptr);
     }
 
-    void createIndexBuffer(Model & model) const
+    void createIndexBuffer(vw::util::Model & model) const
     {
-        vk::DeviceSize bufferSize = sizeof(model.indices[0]) * model.indices.size();
+        auto & modelIndices{ model.getIndices() };
+        vk::DeviceSize bufferSize = sizeof(modelIndices[0]) * modelIndices.size();
 
         vk::UniqueBuffer stagingBuffer;
         vk::UniqueDeviceMemory stagingBufferMemory;
         createBuffer(bufferSize, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, stagingBuffer, stagingBufferMemory);
 
         auto * data{ m_device->mapMemory(*stagingBufferMemory, 0, bufferSize, {}) };
-        memcpy(data, model.indices.data(), static_cast<size_t>(bufferSize));
+        memcpy(data, modelIndices.data(), static_cast<size_t>(bufferSize));
         m_device->unmapMemory(*stagingBufferMemory);
 
-        createBuffer(bufferSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal, model.indexBuffer, model.indexBufferMemory);
+        createBuffer(bufferSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal, model.getIndexBuffer(), model.getIndexBufferMemory());
 
-        copyBuffer(stagingBuffer, model.indexBuffer, bufferSize);
+        copyBuffer(stagingBuffer, model.getIndexBuffer(), bufferSize);
 
         stagingBuffer.reset(nullptr);
         stagingBufferMemory.reset(nullptr);
@@ -1098,10 +914,10 @@ private:
             m_commandBuffers[i]->bindPipeline(vk::PipelineBindPoint::eGraphics, *m_graphicsPipeline);
             m_commandBuffers[i]->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, *m_pipelineLayout, 0, *m_descriptorSet, nullptr);
 
-            /*m_dragonModel.pushConstants(m_commandBuffers[i], m_pipelineLayout);
+            m_dragonModel.pushConstants(m_commandBuffers[i], m_pipelineLayout);
             m_dragonModel.draw(m_commandBuffers[i]);
 
-            m_cornellModel.pushConstants(m_commandBuffers[i], m_pipelineLayout);
+            /*m_cornellModel.pushConstants(m_commandBuffers[i], m_pipelineLayout);
             m_cornellModel.draw(m_commandBuffers[i]);*/
 
             m_triangle.pushConstants(m_commandBuffers[i], m_pipelineLayout);
