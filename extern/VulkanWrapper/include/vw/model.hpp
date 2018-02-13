@@ -23,6 +23,14 @@ namespace vw::util
         auto & getVertices() noexcept { return m_vertices; }
         const auto & getIndices() const noexcept { return m_indices; }
         auto & getIndices() noexcept { return m_indices; }
+        const auto & getVertexBuffer() const noexcept { return m_vertexBuffer; }
+        auto & getVertexBuffer() noexcept { return m_vertexBuffer; }
+        const auto & getVertexBufferMemory() const noexcept { return m_vertexBufferMemory; }
+        auto & getVertexBufferMemory() noexcept { return m_vertexBufferMemory; }
+        const auto & getIndexBuffer() const noexcept { return m_indexBuffer; }
+        auto & getIndexBuffer() noexcept { return m_indexBuffer; }
+        const auto & getIndexBufferMemory() const noexcept { return m_indexBufferMemory; }
+        auto & getIndexBufferMemory() noexcept { return m_indexBufferMemory; }
 
         void translate(const glm::vec3 & translate)
         {

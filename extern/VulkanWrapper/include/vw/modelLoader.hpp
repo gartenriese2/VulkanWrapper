@@ -87,6 +87,41 @@ namespace vw::util
 
             return model;
         }
+
+        Model loadTriangle() const
+        {
+            Model model;
+            auto & modelVertices{ model.getVertices() };
+            auto & modelIndices{ model.getIndices() };
+            modelVertices.clear();
+            modelIndices.clear();
+
+            Vertex v1;
+            v1.pos = { -1.f, -1.f, 0.f };
+            v1.texCoord = { 0.f, 1.f };
+            v1.color = { 1.f, 0.f, 0.f };
+            v1.normal = { 0.f, 0.f, 1.f };
+            Vertex v2;
+            v2.pos = { 1.f, -1.f, 0.f };
+            v2.texCoord = { 0.f, 1.f };
+            v2.color = { 0.f, 1.f, 0.f };
+            v2.normal = { 0.f, 0.f, 1.f };
+            Vertex v3;
+            v3.pos = { 0.f, 1.f, 0.f };
+            v3.texCoord = { 0.f, 1.f };
+            v3.color = { 0.f, 0.f, 1.f };
+            v3.normal = { 0.f, 0.f, 1.f };
+
+            modelVertices.push_back(v1);
+            modelVertices.push_back(v2);
+            modelVertices.push_back(v3);
+
+            modelIndices.push_back(0);
+            modelIndices.push_back(1);
+            modelIndices.push_back(2);
+
+            return model;
+        }
     private:
         Assimp::Importer m_importer;
     };
