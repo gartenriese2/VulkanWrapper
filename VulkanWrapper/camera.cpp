@@ -221,7 +221,7 @@ namespace vw::util
 
         m_pos += v.x * glm::cross(m_dir, m_up);
         m_pos += v.y * m_up;
-        m_pos -= v.z * m_dir;
+        m_pos += v.z * m_dir;
 
         m_modified = true;
     }
