@@ -4,8 +4,8 @@
 
 namespace bmvk
 {
-    Buffer::Buffer(const vk::Device & device, const vk::DeviceSize size, const vk::BufferUsageFlags usage)
-        : m_buffer{ device.createBufferUnique({ {}, size, usage }) }
+    Buffer::Buffer(const vk::Device & device, const vk::DeviceSize size, const vk::BufferUsageFlags usage, const vk::SharingMode sharingMode)
+        : m_buffer{ device.createBufferUnique({ {}, size, usage, sharingMode }) }
     {
     }
 

@@ -38,7 +38,7 @@ namespace bmvk
         m_queue.waitIdle();
     }
 
-    void Demo::createBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags properties, vk::UniqueBuffer & buffer, vk::UniqueDeviceMemory & bufferMemory)
+    void Demo::createBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags properties, vk::UniqueBuffer & buffer, vk::UniqueDeviceMemory & bufferMemory) const
     {
         vk::BufferCreateInfo bufferInfo{ {}, size, usage };
         buffer = static_cast<vk::Device>(m_device).createBufferUnique(bufferInfo);

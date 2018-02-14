@@ -38,11 +38,6 @@ namespace bmvk
         vk::UniqueDeviceMemory m_depthImageMemory;
         vk::UniqueImageView m_depthImageView;
 
-        /*vk::UniqueBuffer m_vertexBuffer;
-        vk::UniqueBuffer m_indexBuffer;
-        vk::UniqueDeviceMemory m_combinedBufferMemory;
-        vk::DeviceSize m_combinedBufferOffset;*/
-
         vk::UniqueBuffer m_uniformBuffer;
         vk::UniqueDeviceMemory m_uniformBufferMemory;
 
@@ -62,10 +57,7 @@ namespace bmvk
         void createFramebuffers();
         void createVertexBuffer(vw::util::Model & model) const;
         void createIndexBuffer(vw::util::Model & model) const;
-        void createBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags properties, vk::UniqueBuffer & buffer, vk::UniqueDeviceMemory & bufferMemory) const;
         void loadModel(std::string_view file);
-        void loadModelWithAssimp();
-        void loadModel();
         void createCombinedBuffer();
         void createUniformBuffer();
         void createDescriptorPool();

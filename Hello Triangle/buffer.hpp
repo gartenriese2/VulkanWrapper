@@ -10,7 +10,7 @@ namespace bmvk
     class Buffer
     {
     public:
-        Buffer(const vk::Device & device, const vk::DeviceSize size, const vk::BufferUsageFlags usage);
+        Buffer(const vk::Device & device, const vk::DeviceSize size, const vk::BufferUsageFlags usage, const vk::SharingMode sharingMode = vk::SharingMode::eExclusive);
         Buffer(const Buffer &) = delete;
         Buffer(Buffer && other) = default;
         Buffer & operator=(const Buffer &) = delete;
