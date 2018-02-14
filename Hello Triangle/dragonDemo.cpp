@@ -22,8 +22,6 @@ namespace bmvk
         createDepthResources();
         createFramebuffers();
         loadModel("../models/stanford_dragon/dragon.obj");
-        createVertexBuffer(m_dragonModel);
-        createIndexBuffer(m_dragonModel);
         //createCombinedBuffer();
         createUniformBuffer();
         createDescriptorPool();
@@ -147,53 +145,13 @@ namespace bmvk
         }
     }
 
-    void DragonDemo::createVertexBuffer(vw::util::Model & model) const
-    {
-        auto & modelVertices{ model.getVertices() };
-        vk::DeviceSize bufferSize = sizeof(modelVertices[0]) * modelVertices.size();
-
-        vk::UniqueBuffer stagingBuffer;
-        vk::UniqueDeviceMemory stagingBufferMemory;
-        createBuffer(bufferSize, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, stagingBuffer, stagingBufferMemory);
-
-        auto * data{ static_cast<vk::Device>(m_device).mapMemory(*stagingBufferMemory, 0, bufferSize,{}) };
-        memcpy(data, modelVertices.data(), static_cast<size_t>(bufferSize));
-        static_cast<vk::Device>(m_device).unmapMemory(*stagingBufferMemory);
-
-        createBuffer(bufferSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal, model.getVertexBuffer(), model.getVertexBufferMemory());
-
-        copyBuffer(stagingBuffer, model.getVertexBuffer(), bufferSize);
-
-        stagingBuffer.reset(nullptr);
-        stagingBufferMemory.reset(nullptr);
-    }
-
-    void DragonDemo::createIndexBuffer(vw::util::Model & model) const
-    {
-        auto & modelIndices{ model.getIndices() };
-        vk::DeviceSize bufferSize = sizeof(modelIndices[0]) * modelIndices.size();
-
-        vk::UniqueBuffer stagingBuffer;
-        vk::UniqueDeviceMemory stagingBufferMemory;
-        createBuffer(bufferSize, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, stagingBuffer, stagingBufferMemory);
-
-        auto * data{ static_cast<vk::Device>(m_device).mapMemory(*stagingBufferMemory, 0, bufferSize,{}) };
-        memcpy(data, modelIndices.data(), static_cast<size_t>(bufferSize));
-        static_cast<vk::Device>(m_device).unmapMemory(*stagingBufferMemory);
-
-        createBuffer(bufferSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal, model.getIndexBuffer(), model.getIndexBufferMemory());
-
-        copyBuffer(stagingBuffer, model.getIndexBuffer(), bufferSize);
-
-        stagingBuffer.reset(nullptr);
-        stagingBufferMemory.reset(nullptr);
-    }
-
     void DragonDemo::loadModel(std::string_view file)
     {
         vw::util::ModelLoader ml;
         m_dragonModel = ml.loadModel(file);
         m_dragonModel.scale(glm::vec3{ 0.1f });
+
+        m_dragonModel.createBuffers(static_cast<vk::Device>(m_device), static_cast<vk::PhysicalDevice>(m_instance.getPhysicalDevice()), m_commandPool, static_cast<vk::Queue>(m_queue));
     }
 
     void DragonDemo::createDepthResources()

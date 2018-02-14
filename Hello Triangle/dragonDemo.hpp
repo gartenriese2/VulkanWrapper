@@ -55,8 +55,6 @@ namespace bmvk
         void createGraphicsPipeline();
         void createDepthResources();
         void createFramebuffers();
-        void createVertexBuffer(vw::util::Model & model) const;
-        void createIndexBuffer(vw::util::Model & model) const;
         void loadModel(std::string_view file);
         void createCombinedBuffer();
         void createUniformBuffer();
