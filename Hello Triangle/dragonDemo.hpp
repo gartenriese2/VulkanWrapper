@@ -3,8 +3,10 @@
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
+#include <glm/gtx/hash.hpp>
 
 #include "imguiBaseDemo.hpp"
+#include <vw/model.hpp>
 
 namespace bmvk
 {
@@ -20,33 +22,11 @@ namespace bmvk
         void run() override;
         void recreateSwapChain() override;
     private:
-        struct Vertex
-        {
-            glm::tvec3<float> pos;
-            glm::tvec3<float> color;
-
-            static vk::VertexInputBindingDescription getBindingDescription()
-            {
-                return { 0, sizeof(Vertex), vk::VertexInputRate::eVertex };
-            }
-
-            static std::array<vk::VertexInputAttributeDescription, 2> getAttributeDescriptions()
-            {
-                std::array<vk::VertexInputAttributeDescription, 2> attributeDescriptions;
-                attributeDescriptions[0] = vk::VertexInputAttributeDescription{ 0, 0, vk::Format::eR32G32B32Sfloat, offsetof(Vertex, pos) };
-                attributeDescriptions[1] = vk::VertexInputAttributeDescription{ 1, 0, vk::Format::eR32G32B32Sfloat, offsetof(Vertex, color) };
-                return attributeDescriptions;
-            }
-        };
-
         struct UniformBufferObject {
             glm::mat4 model;
             glm::mat4 view;
             glm::mat4 proj;
         };
-
-        std::vector<Vertex> m_vertices;
-        std::vector<uint32_t> m_indices;
 
         vk::UniqueRenderPass m_renderPass;
         vk::UniqueDescriptorSetLayout m_descriptorSetLayout;
@@ -58,10 +38,10 @@ namespace bmvk
         vk::UniqueDeviceMemory m_depthImageMemory;
         vk::UniqueImageView m_depthImageView;
 
-        vk::UniqueBuffer m_vertexBuffer;
+        /*vk::UniqueBuffer m_vertexBuffer;
         vk::UniqueBuffer m_indexBuffer;
         vk::UniqueDeviceMemory m_combinedBufferMemory;
-        vk::DeviceSize m_combinedBufferOffset;
+        vk::DeviceSize m_combinedBufferOffset;*/
 
         vk::UniqueBuffer m_uniformBuffer;
         vk::UniqueDeviceMemory m_uniformBufferMemory;
@@ -73,11 +53,17 @@ namespace bmvk
         vk::UniqueSemaphore m_renderFinishedSemaphore;
         vk::UniqueSemaphore m_renderImguiFinishedSemaphore;
 
+        vw::util::Model m_dragonModel;
+
         void createDescriptorSetLayout();
         void createRenderPass();
         void createGraphicsPipeline();
         void createDepthResources();
         void createFramebuffers();
+        void createVertexBuffer(vw::util::Model & model) const;
+        void createIndexBuffer(vw::util::Model & model) const;
+        void createBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags properties, vk::UniqueBuffer & buffer, vk::UniqueDeviceMemory & bufferMemory) const;
+        void loadModel(std::string_view file);
         void loadModelWithAssimp();
         void loadModel();
         void createCombinedBuffer();

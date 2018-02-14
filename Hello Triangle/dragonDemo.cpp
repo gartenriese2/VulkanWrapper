@@ -2,7 +2,7 @@
 
 #include <tinyobjloader/tiny_obj_loader.h>
 #include <imgui/imgui.h>
-#include <glm/gtc/matrix_transform.inl>
+#include <glm/gtc/matrix_transform.hpp>
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
@@ -12,6 +12,8 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <unordered_map>
+#include <vw/modelLoader.hpp>
 
 namespace bmvk
 {
@@ -26,8 +28,11 @@ namespace bmvk
         createGraphicsPipeline();
         createDepthResources();
         createFramebuffers();
-        loadModelWithAssimp();
-        createCombinedBuffer();
+        //loadModelWithAssimp();
+        loadModel("../models/stanford_dragon/dragon.obj");
+        createVertexBuffer(m_dragonModel);
+        createIndexBuffer(m_dragonModel);
+        //createCombinedBuffer();
         createUniformBuffer();
         createDescriptorPool();
         createDescriptorSet();
@@ -122,8 +127,8 @@ namespace bmvk
         const auto fragShaderStageInfo{ fragShader.createPipelineShaderStageCreateInfo(vk::ShaderStageFlagBits::eFragment) };
         vk::PipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageInfo, fragShaderStageInfo };
 
-        auto bindingDescription = Vertex::getBindingDescription();
-        auto attributeDescriptions = Vertex::getAttributeDescriptions();
+        auto bindingDescription = vw::util::Vertex::getBindingDescription();
+        auto attributeDescriptions = vw::util::Vertex::getAttributeDescriptions();
         vk::PipelineVertexInputStateCreateInfo vertexInputInfo{ PipelineVertexInputStateCreateInfo{ bindingDescription, attributeDescriptions } };
         vk::PipelineInputAssemblyStateCreateInfo inputAssembly{ {}, vk::PrimitiveTopology::eTriangleList };
         vk::Viewport viewport;
@@ -150,75 +155,204 @@ namespace bmvk
         }
     }
 
+    void DragonDemo::createVertexBuffer(vw::util::Model & model) const
+    {
+        auto & modelVertices{ model.getVertices() };
+        vk::DeviceSize bufferSize = sizeof(modelVertices[0]) * modelVertices.size();
+
+        vk::UniqueBuffer stagingBuffer;
+        vk::UniqueDeviceMemory stagingBufferMemory;
+        createBuffer(bufferSize, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, stagingBuffer, stagingBufferMemory);
+
+        auto * data{ static_cast<vk::Device>(m_device).mapMemory(*stagingBufferMemory, 0, bufferSize,{}) };
+        memcpy(data, modelVertices.data(), static_cast<size_t>(bufferSize));
+        static_cast<vk::Device>(m_device).unmapMemory(*stagingBufferMemory);
+
+        createBuffer(bufferSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal, model.getVertexBuffer(), model.getVertexBufferMemory());
+
+        copyBuffer(stagingBuffer, model.getVertexBuffer(), bufferSize);
+
+        stagingBuffer.reset(nullptr);
+        stagingBufferMemory.reset(nullptr);
+    }
+
+    void DragonDemo::createIndexBuffer(vw::util::Model & model) const
+    {
+        auto & modelIndices{ model.getIndices() };
+        vk::DeviceSize bufferSize = sizeof(modelIndices[0]) * modelIndices.size();
+
+        vk::UniqueBuffer stagingBuffer;
+        vk::UniqueDeviceMemory stagingBufferMemory;
+        createBuffer(bufferSize, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, stagingBuffer, stagingBufferMemory);
+
+        auto * data{ static_cast<vk::Device>(m_device).mapMemory(*stagingBufferMemory, 0, bufferSize,{}) };
+        memcpy(data, modelIndices.data(), static_cast<size_t>(bufferSize));
+        static_cast<vk::Device>(m_device).unmapMemory(*stagingBufferMemory);
+
+        createBuffer(bufferSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal, model.getIndexBuffer(), model.getIndexBufferMemory());
+
+        copyBuffer(stagingBuffer, model.getIndexBuffer(), bufferSize);
+
+        stagingBuffer.reset(nullptr);
+        stagingBufferMemory.reset(nullptr);
+    }
+
+    void DragonDemo::createBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags properties, vk::UniqueBuffer & buffer, vk::UniqueDeviceMemory & bufferMemory) const
+    {
+        vk::BufferCreateInfo bufferInfo{ {}, size, usage, vk::SharingMode::eExclusive };
+        buffer = static_cast<vk::Device>(m_device).createBufferUnique(bufferInfo);
+
+        const auto memRequirements{ static_cast<vk::Device>(m_device).getBufferMemoryRequirements(*buffer) };
+        vk::MemoryAllocateInfo allocInfo{ memRequirements.size, m_instance.getPhysicalDevice().findMemoryType(memRequirements.memoryTypeBits, properties) };
+        bufferMemory = static_cast<vk::Device>(m_device).allocateMemoryUnique(allocInfo);
+
+        static_cast<vk::Device>(m_device).bindBufferMemory(*buffer, *bufferMemory, 0);
+    }
+
+    void DragonDemo::loadModel(std::string_view file)
+    {
+        vw::util::ModelLoader ml;
+        m_dragonModel = ml.loadModel(file);
+        m_dragonModel.scale(glm::vec3{ 0.1f });
+
+        //m_vertices.clear();
+        //m_indices.clear();
+
+        //Assimp::Importer importer;
+        //const auto * scene = importer.ReadFile(file.data(), aiProcess_Triangulate);
+        //if (!scene)
+        //{
+        //    throw std::runtime_error(importer.GetErrorString());
+        //}
+
+        //std::unordered_map<Vertex, uint32_t> uniqueVertices = {};
+
+        //const auto meshes = scene->mMeshes;
+        //const auto numMeshes = scene->mNumMeshes;
+        //for (uint32_t i = 0; i < numMeshes; ++i)
+        //{
+        //    const auto mesh = meshes[i];
+        //    const auto vertices = mesh->mVertices;
+        //    const auto faces = mesh->mFaces;
+        //    const auto numVertices = mesh->mNumVertices;
+        //    const auto numFaces = mesh->mNumFaces;
+
+        //    for (uint32_t j = 0; j < numFaces; ++j)
+        //    {
+        //        const auto face = faces[j];
+        //        const auto indices = face.mIndices;
+        //        const auto numIndices = face.mNumIndices;
+        //        if (numIndices != 3)
+        //        {
+        //            throw std::runtime_error("no triangles");
+        //        }
+
+        //        const auto a_assimp = vertices[indices[0]];
+        //        const auto a = glm::vec3(a_assimp.x, a_assimp.y, a_assimp.z);
+        //        const auto b_assimp = vertices[indices[1]];
+        //        const auto b = glm::vec3(b_assimp.x, b_assimp.y, b_assimp.z);
+        //        const auto c_assimp = vertices[indices[2]];
+        //        const auto c = glm::vec3(c_assimp.x, c_assimp.y, c_assimp.z);
+        //        const auto n = glm::normalize(glm::cross(c - a, b - a));
+
+        //        for (uint32_t k = 0; k < numIndices; ++k)
+        //        {
+        //            const auto index = indices[k];
+        //            if (index >= numVertices)
+        //            {
+        //                throw std::runtime_error("index too big");
+        //            }
+
+        //            const auto v = vertices[index];
+
+        //            Vertex vertex = {};
+
+        //            vertex.pos = { v.x, v.y, v.z };
+        //            //vertex.texCoord = { 0.f, 1.f };
+        //            vertex.color = { 1.f, 0.f, 0.f };
+        //            //vertex.normal = n;
+
+        //            if (uniqueVertices.count(vertex) == 0)
+        //            {
+        //                uniqueVertices[vertex] = static_cast<uint32_t>(m_vertices.size());
+        //                m_vertices.push_back(vertex);
+        //            }
+
+        //            m_indices.push_back(uniqueVertices[vertex]);
+        //        }
+        //    }
+        //}
+    }
+
     void DragonDemo::loadModelWithAssimp()
     {
-        Assimp::Importer importer;
-        //const auto * scene = importer.ReadFile("../models/stanford_dragon/dragon.obj", aiProcess_Triangulate);
-        const auto * scene = importer.ReadFile("../models/bunny/bun_zipper_res4.ply", aiProcess_Triangulate);
-        if (!scene) {
-            throw std::runtime_error(importer.GetErrorString());
-        }
+        //Assimp::Importer importer;
+        ////const auto * scene = importer.ReadFile("../models/stanford_dragon/dragon.obj", aiProcess_Triangulate);
+        //const auto * scene = importer.ReadFile("../models/bunny/bun_zipper_res4.ply", aiProcess_Triangulate);
+        //if (!scene) {
+        //    throw std::runtime_error(importer.GetErrorString());
+        //}
 
-        const auto meshes = scene->mMeshes;
-        const auto numMeshes = scene->mNumMeshes;
-        for (uint32_t i = 0; i < numMeshes; ++i)
-        {
-            const auto mesh = meshes[i];
-            const auto vertices = mesh->mVertices;
-            const auto faces = mesh->mFaces;
-            const auto numVertices = mesh->mNumVertices;
-            const auto numFaces = mesh->mNumFaces;
+        //const auto meshes = scene->mMeshes;
+        //const auto numMeshes = scene->mNumMeshes;
+        //for (uint32_t i = 0; i < numMeshes; ++i)
+        //{
+        //    const auto mesh = meshes[i];
+        //    const auto vertices = mesh->mVertices;
+        //    const auto faces = mesh->mFaces;
+        //    const auto numVertices = mesh->mNumVertices;
+        //    const auto numFaces = mesh->mNumFaces;
 
-            for (uint32_t j = 15; j < 20; ++j)
-            {
-                const auto face = faces[j];
-                const auto indices = face.mIndices;
-                const auto numIndices = face.mNumIndices;
-                if (numIndices != 3)
-                {
-                    throw std::runtime_error("no triangles");
-                }
+        //    for (uint32_t j = 15; j < 20; ++j)
+        //    {
+        //        const auto face = faces[j];
+        //        const auto indices = face.mIndices;
+        //        const auto numIndices = face.mNumIndices;
+        //        if (numIndices != 3)
+        //        {
+        //            throw std::runtime_error("no triangles");
+        //        }
 
-                for (uint32_t k = 0; k < numIndices; ++k)
-                {
-                    const auto index = indices[k];
-                    if (index >= numVertices)
-                    {
-                        throw std::runtime_error("index too big");
-                    }
+        //        for (uint32_t k = 0; k < numIndices; ++k)
+        //        {
+        //            const auto index = indices[k];
+        //            if (index >= numVertices)
+        //            {
+        //                throw std::runtime_error("index too big");
+        //            }
 
-                    m_indices.push_back(index);
-                }
-            }
+        //            m_indices.push_back(index);
+        //        }
+        //    }
 
-            for (uint32_t j = 0; j < numVertices; ++j)
-            {
-                const auto vertex = vertices[j];
-                Vertex v;
-                v.color = { 1.f, 0.f, 0.f };
-                v.pos = { vertex.x, vertex.y, vertex.z };
-                m_vertices.push_back(v);
-            }
-        }
+        //    for (uint32_t j = 0; j < numVertices; ++j)
+        //    {
+        //        const auto vertex = vertices[j];
+        //        Vertex v;
+        //        v.color = { 1.f, 0.f, 0.f };
+        //        v.pos = { vertex.x, vertex.y, vertex.z };
+        //        m_vertices.push_back(v);
+        //    }
+        //}
 
-        for (uint32_t i = 0; i < m_indices.size(); i += 3)
-        {
-            const auto x1{ m_vertices[m_indices[i]].pos.x };
-            const auto y1{ m_vertices[m_indices[i]].pos.y };
-            const auto z1{ m_vertices[m_indices[i]].pos.z };
-            const auto x2{ m_vertices[m_indices[i + 1]].pos.x };
-            const auto y2{ m_vertices[m_indices[i + 1]].pos.y };
-            const auto z2{ m_vertices[m_indices[i + 1]].pos.z };
-            const auto x3{ m_vertices[m_indices[i + 2]].pos.x };
-            const auto y3{ m_vertices[m_indices[i + 2]].pos.y };
-            const auto z3{ m_vertices[m_indices[i + 2]].pos.z };
-            std::cout << "Face: A(" << x1 << "|" << y1 << "|" << z1 << "), B(" << x2 << "|" << y2 << "|" << z2 << "), C(" << x3 << "|" << y3 << "|" << z3 << ")\n";
-        }
+        //for (uint32_t i = 0; i < m_indices.size(); i += 3)
+        //{
+        //    const auto x1{ m_vertices[m_indices[i]].pos.x };
+        //    const auto y1{ m_vertices[m_indices[i]].pos.y };
+        //    const auto z1{ m_vertices[m_indices[i]].pos.z };
+        //    const auto x2{ m_vertices[m_indices[i + 1]].pos.x };
+        //    const auto y2{ m_vertices[m_indices[i + 1]].pos.y };
+        //    const auto z2{ m_vertices[m_indices[i + 1]].pos.z };
+        //    const auto x3{ m_vertices[m_indices[i + 2]].pos.x };
+        //    const auto y3{ m_vertices[m_indices[i + 2]].pos.y };
+        //    const auto z3{ m_vertices[m_indices[i + 2]].pos.z };
+        //    std::cout << "Face: A(" << x1 << "|" << y1 << "|" << z1 << "), B(" << x2 << "|" << y2 << "|" << z2 << "), C(" << x3 << "|" << y3 << "|" << z3 << ")\n";
+        //}
     }
 
     void DragonDemo::loadModel()
     {
-        tinyobj::attrib_t attrib;
+        /*tinyobj::attrib_t attrib;
         std::vector<tinyobj::shape_t> shapes;
         std::vector<tinyobj::material_t> materials;
         std::string err;
@@ -242,7 +376,7 @@ namespace bmvk
                 m_vertices.emplace_back(vertex);
                 m_indices.push_back(static_cast<uint32_t>(m_indices.size()));
             }
-        }
+        }*/
 
         // Loop over shapes
         //for (size_t s = 0; s < shapes.size(); s++)
@@ -342,7 +476,7 @@ namespace bmvk
 
     void DragonDemo::createCombinedBuffer()
     {
-        const auto vertexBufferSize{ sizeof m_vertices[0] * m_vertices.size() };
+        /*const auto vertexBufferSize{ sizeof m_vertices[0] * m_vertices.size() };
         const auto indexBufferSize{ sizeof m_indices[0] * m_indices.size() };
 
         auto vertexStagingBuffer{ m_bufferFactory.createStagingBuffer(vertexBufferSize) };
@@ -387,7 +521,7 @@ namespace bmvk
         indexStagingBuffer.buffer.copyToBuffer(cmdBuffer, m_indexBuffer, indexBufferSize);
         cmdBuffer.end();
         m_queue.submit(cmdBuffer);
-        m_queue.waitIdle();
+        m_queue.waitIdle();*/
     }
 
     void DragonDemo::createUniformBuffer()
@@ -428,9 +562,9 @@ namespace bmvk
             cmdBuffer.beginRenderPass(m_renderPass, m_swapChainFramebuffers[i], { { 0, 0 }, m_swapchain.getExtent() }, clearValues);
             cmdBuffer.bindPipeline(m_graphicsPipeline);
             cmdBuffer.bindDescriptorSet(m_pipelineLayout, m_descriptorSets[0]);
-            cmdBuffer.bindVertexBuffer(m_vertexBuffer);
-            cmdBuffer.bindIndexBuffer(m_indexBuffer, vk::IndexType::eUint32);
-            cmdBuffer.drawIndexed(static_cast<uint32_t>(m_indices.size()));
+            cmdBuffer.bindVertexBuffer(m_dragonModel.getVertexBuffer());
+            cmdBuffer.bindIndexBuffer(m_dragonModel.getIndexBuffer(), vk::IndexType::eUint32);
+            cmdBuffer.drawIndexed(static_cast<uint32_t>(m_dragonModel.getIndices().size()));
             cmdBuffer.endRenderPass();
             cmdBuffer.end();
         }
@@ -445,8 +579,8 @@ namespace bmvk
 
         UniformBufferObject ubo;
         ubo.model = glm::rotate(glm::mat4(), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-        ubo.view = glm::lookAt(glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-        ubo.proj = glm::perspective(glm::radians(45.f), m_swapchain.getExtent().width / static_cast<float>(m_swapchain.getExtent().height), 0.001f, 2.f);
+        ubo.view = glm::lookAt(glm::vec3(5.f, 5.f, 5.f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+        ubo.proj = glm::perspective(glm::radians(45.f), m_swapchain.getExtent().width / static_cast<float>(m_swapchain.getExtent().height), 0.001f, 20.f);
         ubo.proj[1][1] *= -1;
 
         m_device.copyToMemory(m_uniformBufferMemory, ubo);
