@@ -34,12 +34,12 @@ namespace bmvk
         vk::UniquePipeline m_graphicsPipeline;
         std::vector<vk::UniqueFramebuffer> m_swapChainFramebuffers;
 
-        vk::UniqueImage m_depthImage;
         vk::UniqueDeviceMemory m_depthImageMemory;
+        vk::UniqueImage m_depthImage;
         vk::UniqueImageView m_depthImageView;
 
-        vk::UniqueBuffer m_uniformBuffer;
         vk::UniqueDeviceMemory m_uniformBufferMemory;
+        vk::UniqueBuffer m_uniformBuffer;
 
         vk::UniqueDescriptorPool m_descriptorPool;
         std::vector<vk::UniqueDescriptorSet> m_descriptorSets;
@@ -56,7 +56,6 @@ namespace bmvk
         void createDepthResources();
         void createFramebuffers();
         void loadModel(std::string_view file);
-        void createCombinedBuffer();
         void createUniformBuffer();
         void createDescriptorPool();
         void createDescriptorSet();

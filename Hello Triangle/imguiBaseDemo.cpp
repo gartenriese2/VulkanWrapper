@@ -341,6 +341,8 @@ namespace bmvk
         cmdBuffer.end();
         m_queue.submit(cmdBuffer);
         m_device.waitIdle();
+
+        uploadBuffer.reset(nullptr);
     }
 
     void ImguiBaseDemo::imguiRenderDrawLists(ImDrawData * draw_data)

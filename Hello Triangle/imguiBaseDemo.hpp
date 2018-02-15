@@ -34,15 +34,15 @@ namespace bmvk
         vk::UniquePipelineLayout m_pipelineLayoutImgui;
         vk::UniquePipeline m_graphicsPipelineImgui;
         std::vector<vk::UniqueFramebuffer> m_swapChainFramebuffers;
-        vk::UniqueBuffer m_vertexBufferImgui;
         vk::UniqueDeviceMemory m_vertexBufferMemoryImgui;
-        vk::UniqueBuffer m_indexBufferImgui;
+        vk::UniqueBuffer m_vertexBufferImgui;
         vk::UniqueDeviceMemory m_indexBufferMemoryImgui;
+        vk::UniqueBuffer m_indexBufferImgui;
         vk::UniqueDescriptorPool m_descriptorPoolImgui;
         std::vector<vk::UniqueDescriptorSet> m_descriptorSetsImgui;
         std::unique_ptr<CommandBuffer> m_commandBufferImguiPtr;
-        vk::UniqueImage m_imguiFontImage;
         vk::UniqueDeviceMemory m_imguiFontMemory;
+        vk::UniqueImage m_imguiFontImage;
         vk::UniqueImageView m_imguiFontImageView;
         size_t m_bufferMemoryAlignmentImgui = 256;
         size_t m_vertexBufferSize;

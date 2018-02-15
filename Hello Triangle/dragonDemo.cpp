@@ -6,7 +6,6 @@
 #include <vw/modelLoader.hpp>
 
 #include "shader.hpp"
-#include "bufferFactory.hpp"
 
 namespace bmvk
 {
@@ -22,7 +21,6 @@ namespace bmvk
         createDepthResources();
         createFramebuffers();
         loadModel("../models/stanford_dragon/dragon.obj");
-        //createCombinedBuffer();
         createUniformBuffer();
         createDescriptorPool();
         createDescriptorSet();
@@ -75,8 +73,8 @@ namespace bmvk
 
         m_commandBuffers.clear();
         m_depthImageView.reset(nullptr);
-        m_depthImageMemory.reset(nullptr);
         m_depthImage.reset(nullptr);
+        m_depthImageMemory.reset(nullptr);
         m_graphicsPipeline.reset(nullptr);
         m_pipelineLayout.reset(nullptr);
         m_renderPass.reset(nullptr);
@@ -166,56 +164,6 @@ namespace bmvk
         cmdBuffer.end();
         m_queue.submit(cmdBuffer);
         m_queue.waitIdle();
-    }
-
-    void DragonDemo::createCombinedBuffer()
-    {
-        /*const auto vertexBufferSize{ sizeof m_vertices[0] * m_vertices.size() };
-        const auto indexBufferSize{ sizeof m_indices[0] * m_indices.size() };
-
-        auto vertexStagingBuffer{ m_bufferFactory.createStagingBuffer(vertexBufferSize) };
-        vertexStagingBuffer.fill(m_vertices.data(), vertexBufferSize);
-        auto indexStagingBuffer{ m_bufferFactory.createStagingBuffer(indexBufferSize) };
-        indexStagingBuffer.fill(m_indices.data(), indexBufferSize);
-
-        const auto vertexBufferUsageFlags{ vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer };
-        const auto indexBufferUsageFlags{ vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer };
-        const auto bufferMemoryPropertyFlags{ vk::MemoryPropertyFlagBits::eDeviceLocal };
-
-        vk::BufferCreateInfo vertexBufferInfo{ {}, vertexBufferSize, vertexBufferUsageFlags };
-        m_vertexBuffer = static_cast<vk::Device>(m_device).createBufferUnique(vertexBufferInfo);
-
-        vk::BufferCreateInfo indexBufferInfo{ {}, indexBufferSize, indexBufferUsageFlags };
-        m_indexBuffer = static_cast<vk::Device>(m_device).createBufferUnique(indexBufferInfo);
-
-        const auto vertexMemRequirements{ static_cast<vk::Device>(m_device).getBufferMemoryRequirements(*m_vertexBuffer) };
-        const auto indexMemRequirements{ static_cast<vk::Device>(m_device).getBufferMemoryRequirements(*m_indexBuffer) };
-        const auto vertexMemoryType{ m_instance.getPhysicalDevice().findMemoryType(vertexMemRequirements.memoryTypeBits, bufferMemoryPropertyFlags) };
-        const auto indexMemoryType{ m_instance.getPhysicalDevice().findMemoryType(indexMemRequirements.memoryTypeBits, bufferMemoryPropertyFlags) };
-        if (vertexMemoryType == indexMemoryType)
-        {
-            auto alignment = vertexMemRequirements.alignment;
-            auto n = vertexBufferSize / alignment;
-            auto m = vertexBufferSize % alignment;
-            m_combinedBufferOffset = (n + m == 0 ? 0 : 1) * alignment;
-            vk::MemoryAllocateInfo allocInfo{ vertexMemRequirements.size + indexMemRequirements.size, vertexMemoryType };
-            m_combinedBufferMemory = static_cast<vk::Device>(m_device).allocateMemoryUnique(allocInfo);
-        }
-        else
-        {
-            throw std::runtime_error("memory can't be combined!");
-        }
-
-        static_cast<vk::Device>(m_device).bindBufferMemory(*m_vertexBuffer, *m_combinedBufferMemory, 0);
-        static_cast<vk::Device>(m_device).bindBufferMemory(*m_indexBuffer, *m_combinedBufferMemory, m_combinedBufferOffset);
-
-        auto cmdBuffer{ m_device.allocateCommandBuffer(m_commandPool) };
-        cmdBuffer.begin(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
-        vertexStagingBuffer.buffer.copyToBuffer(cmdBuffer, m_vertexBuffer, vertexBufferSize);
-        indexStagingBuffer.buffer.copyToBuffer(cmdBuffer, m_indexBuffer, indexBufferSize);
-        cmdBuffer.end();
-        m_queue.submit(cmdBuffer);
-        m_queue.waitIdle();*/
     }
 
     void DragonDemo::createUniformBuffer()

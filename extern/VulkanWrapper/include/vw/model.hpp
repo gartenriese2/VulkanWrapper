@@ -25,12 +25,8 @@ namespace vw::util
         auto & getIndices() noexcept { return m_indices; }
         const auto & getVertexBuffer() const noexcept { return m_vertexBuffer; }
         auto & getVertexBuffer() noexcept { return m_vertexBuffer; }
-        const auto & getVertexBufferMemory() const noexcept { return m_vertexBufferMemory; }
-        auto & getVertexBufferMemory() noexcept { return m_vertexBufferMemory; }
         const auto & getIndexBuffer() const noexcept { return m_indexBuffer; }
         auto & getIndexBuffer() noexcept { return m_indexBuffer; }
-        const auto & getIndexBufferMemory() const noexcept { return m_indexBufferMemory; }
-        auto & getIndexBufferMemory() noexcept { return m_indexBufferMemory; }
 
         void translate(const glm::vec3 & translate);
         void scale(const glm::vec3 & scale);
@@ -47,9 +43,8 @@ namespace vw::util
         std::vector<Vertex> m_vertices;
         std::vector<uint32_t> m_indices;
         vk::UniqueBuffer m_vertexBuffer;
-        vk::UniqueDeviceMemory m_vertexBufferMemory;
         vk::UniqueBuffer m_indexBuffer;
-        vk::UniqueDeviceMemory m_indexBufferMemory;
+        vk::UniqueDeviceMemory m_combinedBufferMemory;
     };
 
     static_assert(std::is_move_constructible_v<Model>);
