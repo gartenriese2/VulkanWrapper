@@ -16,10 +16,8 @@ namespace vw::util
         Model loadModel(std::string_view file)
         {
             Model model;
-            auto & modelVertices{ model.getVertices() };
-            auto & modelIndices{ model.getIndices() };
-            modelVertices.clear();
-            modelIndices.clear();
+            model.getVertices().clear();
+            model.getIndices().clear();
 
             const auto * scene = m_importer.ReadFile(file.data(), aiProcess_Triangulate);
             if (!scene)
@@ -76,11 +74,11 @@ namespace vw::util
 
                         if (uniqueVertices.count(vertex) == 0)
                         {
-                            uniqueVertices[vertex] = static_cast<uint32_t>(modelVertices.size());
-                            modelVertices.push_back(vertex);
+                            uniqueVertices[vertex] = static_cast<uint32_t>(model.getVertices().size());
+                            model.getVertices().push_back(vertex);
                         }
 
-                        modelIndices.push_back(uniqueVertices[vertex]);
+                        model.getIndices().push_back(uniqueVertices[vertex]);
                     }
                 }
             }
