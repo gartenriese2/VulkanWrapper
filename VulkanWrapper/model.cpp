@@ -6,11 +6,6 @@
 
 namespace vw::util
 {
-    Model::~Model()
-    {
-        reset();
-    }
-
     void Model::translate(const glm::vec3 & translate)
     {
         m_modelMatrix = glm::translate(m_modelMatrix, translate);
@@ -31,6 +26,7 @@ namespace vw::util
         const auto vertexBufferSize{ sizeof(m_vertices[0]) * m_vertices.size() };
         const auto indexBufferSize{ sizeof(m_indices[0]) * m_indices.size() };
 
+        // Create & fill staging buffers & memories
         vk::UniqueBuffer vertexStagingBuffer;
         vk::UniqueDeviceMemory vertexStagingBufferMemory;
         createBuffer(device, physicalDevice, vertexBufferSize, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, vertexStagingBuffer, vertexStagingBufferMemory);
@@ -47,34 +43,18 @@ namespace vw::util
         memcpy(indexData, m_indices.data(), static_cast<size_t>(indexBufferSize));
         device.unmapMemory(*indexStagingBufferMemory);
 
-        const auto vertexBufferUsageFlags{ vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer };
-        const auto indexBufferUsageFlags{ vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer };
-        const auto bufferMemoryPropertyFlags{ vk::MemoryPropertyFlagBits::eDeviceLocal };
+        // Get size & offset
+        const auto vb = device.createBufferUnique({ {}, vertexBufferSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer });
+        const auto ib = device.createBufferUnique({ {}, indexBufferSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer });
+        const auto vMemReq{ device.getBufferMemoryRequirements(*vb) };
+        const auto iMemReq{ device.getBufferMemoryRequirements(*vb) };
+        const auto bufSize{ vMemReq.size + iMemReq.size };
+        m_offset = vMemReq.size;
 
-        vk::BufferCreateInfo vertexBufferInfo{ {}, vertexBufferSize, vertexBufferUsageFlags };
-        m_vertexBuffer = device.createBufferUnique(vertexBufferInfo);
+        // Create buffer & memory
+        createBuffer(device, physicalDevice, bufSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eIndexBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal, m_buffer, m_bufferMemory);
 
-        vk::BufferCreateInfo indexBufferInfo{ {}, indexBufferSize, indexBufferUsageFlags };
-        m_indexBuffer = device.createBufferUnique(indexBufferInfo);
-
-        const auto vertexMemRequirements{ device.getBufferMemoryRequirements(*m_vertexBuffer) };
-        const auto indexMemRequirements{ device.getBufferMemoryRequirements(*m_indexBuffer) };
-        const auto vertexMemoryType{ findMemoryType(physicalDevice, vertexMemRequirements.memoryTypeBits, bufferMemoryPropertyFlags) };
-        const auto indexMemoryType{ findMemoryType(physicalDevice, indexMemRequirements.memoryTypeBits, bufferMemoryPropertyFlags) };
-
-        if (vertexMemoryType == indexMemoryType)
-        {
-            vk::MemoryAllocateInfo allocInfo{ vertexMemRequirements.size + indexMemRequirements.size, vertexMemoryType };
-            m_combinedBufferMemory = device.allocateMemoryUnique(allocInfo);
-        }
-        else
-        {
-            throw std::runtime_error("memory can't be combined!");
-        }
-
-        device.bindBufferMemory(*m_vertexBuffer, *m_combinedBufferMemory, 0);
-        device.bindBufferMemory(*m_indexBuffer, *m_combinedBufferMemory, vertexMemRequirements.size);
-
+        // Copy staging buffers into buffer
         auto vec = device.allocateCommandBuffersUnique({ *commandPool, vk::CommandBufferLevel::ePrimary, 1 });
         if (vec.size() != 1)
         {
@@ -82,14 +62,15 @@ namespace vw::util
         }
         auto cmdBuffer{ std::move(vec[0]) };
         cmdBuffer->begin({ vk::CommandBufferUsageFlagBits::eOneTimeSubmit });
-        cmdBuffer->copyBuffer(*vertexStagingBuffer, *m_vertexBuffer, { { 0, 0, vertexBufferSize } });
-        cmdBuffer->copyBuffer(*indexStagingBuffer, *m_indexBuffer, { { 0, 0, indexBufferSize } });
+        cmdBuffer->copyBuffer(*vertexStagingBuffer, *m_buffer, { { 0, 0, vertexBufferSize } });
+        cmdBuffer->copyBuffer(*indexStagingBuffer, *m_buffer, { { 0, m_offset, indexBufferSize } });
         cmdBuffer->end();
         vk::CommandBuffer commandBuffers[] = { *cmdBuffer };
         const vk::SubmitInfo info(0, nullptr, nullptr, 1, commandBuffers, 0, nullptr);
         queue.submit(info, nullptr);
         queue.waitIdle();
 
+        // Destroy staging buffers before staging memories
         vertexStagingBuffer.reset(nullptr);
         indexStagingBuffer.reset(nullptr);
     }
@@ -103,15 +84,14 @@ namespace vw::util
     void Model::draw(const vk::UniqueCommandBuffer & commandBuffer) const
     {
         vk::DeviceSize offsets = 0;
-        commandBuffer->bindVertexBuffers(0, *m_vertexBuffer, offsets);
-        commandBuffer->bindIndexBuffer(*m_indexBuffer, 0, vk::IndexType::eUint32);
+        commandBuffer->bindVertexBuffers(0, *m_buffer, offsets);
+        commandBuffer->bindIndexBuffer(*m_buffer, m_offset, vk::IndexType::eUint32);
         commandBuffer->drawIndexed(static_cast<uint32_t>(m_indices.size()), 1, 0, 0, 0);
     }
 
     void Model::reset()
     {
-        m_indexBuffer.reset(nullptr);
-        m_vertexBuffer.reset(nullptr);
-        m_combinedBufferMemory.reset(nullptr);
+        m_buffer.reset(nullptr);
+        m_bufferMemory.reset(nullptr);
     }
 }
