@@ -204,9 +204,8 @@ namespace bmvk
             cmdBuffer.beginRenderPass(m_renderPass, m_swapChainFramebuffers[i], { { 0, 0 }, m_swapchain.getExtent() }, clearValues);
             cmdBuffer.bindPipeline(m_graphicsPipeline);
             cmdBuffer.bindDescriptorSet(m_pipelineLayout, m_descriptorSets[0]);
-            cmdBuffer.bindVertexBuffer(m_dragonModel.getVertexBuffer());
-            cmdBuffer.bindIndexBuffer(m_dragonModel.getIndexBuffer(), vk::IndexType::eUint32);
-            cmdBuffer.drawIndexed(static_cast<uint32_t>(m_dragonModel.getIndices().size()));
+            const auto & cb_vk{ reinterpret_cast<const vk::UniqueCommandBuffer &>(cmdBuffer) };
+            m_dragonModel.draw(cb_vk);
             cmdBuffer.endRenderPass();
             cmdBuffer.end();
         }
