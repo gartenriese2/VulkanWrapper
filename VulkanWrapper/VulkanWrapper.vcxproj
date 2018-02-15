@@ -22,11 +22,13 @@
     <ClInclude Include="camera.hpp" />
     <ClInclude Include="model.hpp" />
     <ClInclude Include="modelLoader.hpp" />
+    <ClInclude Include="util.hpp" />
     <ClInclude Include="vertex.hpp" />
     <ClInclude Include="window.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="camera.cpp" />
+    <ClCompile Include="model.cpp" />
     <ClCompile Include="window.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
