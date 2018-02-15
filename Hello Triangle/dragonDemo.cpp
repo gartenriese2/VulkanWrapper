@@ -9,18 +9,24 @@
 
 namespace bmvk
 {
+    const std::string K_MODEL_PATH{ "../models/stanford_dragon/dragon.obj" };
+    const std::string K_VERTEX_SHADER_PATH{ "../shaders/blinnphong.vert.spv" };
+    const std::string K_FRAGMENT_SHADER_PATH{ "../shaders/blinnphong.frag.spv" };
+
     DragonDemo::DragonDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height)
         : ImguiBaseDemo{ enableValidationLayers, width, height, "Dragon Demo", true },
         m_imageAvailableSemaphore{ m_device.createSemaphore() },
         m_renderFinishedSemaphore{ m_device.createSemaphore() },
         m_renderImguiFinishedSemaphore{ m_device.createSemaphore() }
     {
+        setupCamera();
+
         createDescriptorSetLayout();
         createRenderPass();
         createGraphicsPipeline();
         createDepthResources();
         createFramebuffers();
-        loadModel("../models/stanford_dragon/dragon.obj");
+        loadModel(K_MODEL_PATH);
         createUniformBuffer();
         createDescriptorPool();
         createDescriptorSet();
@@ -88,6 +94,17 @@ namespace bmvk
         createCommandBuffers();
     }
 
+    void DragonDemo::setupCamera()
+    {
+        const glm::vec3 pos{ 0.f, 0.f, 5.f };
+        const glm::vec3 dir{ 0.f, 0.f, -1.f };
+        const glm::vec3 up{ 0.f, 1.f, 0.f };
+        const auto extent{ m_swapchain.getExtent() };
+        m_camera = vw::util::Camera(pos, dir, up, 45.f, extent.width / static_cast<float>(extent.height), 0.01f, std::numeric_limits<float>::infinity());
+        m_camera.rotate(glm::radians(180.f), glm::vec3{ 0.f, 1.f, 0.f });
+        m_camera.translateLocal(glm::vec3{ 0.f, 0.f, -10.f });
+    }
+    
     void DragonDemo::createDescriptorSetLayout()
     {
         vk::DescriptorSetLayoutBinding uboLayoutBinding{ 0, vk::DescriptorType::eUniformBuffer, 1, vk::ShaderStageFlagBits::eVertex };
@@ -109,8 +126,10 @@ namespace bmvk
 
     void DragonDemo::createGraphicsPipeline()
     {
-        const Shader vertShader{ "../shaders/dragon.vert.spv", m_device };
-        const Shader fragShader{ "../shaders/dragon.frag.spv", m_device };
+        /*const Shader vertShader{ "../shaders/dragon.vert.spv", m_device };
+        const Shader fragShader{ "../shaders/dragon.frag.spv", m_device };*/
+        const Shader vertShader{ K_VERTEX_SHADER_PATH, m_device };
+        const Shader fragShader{ K_FRAGMENT_SHADER_PATH, m_device };
         const auto vertShaderStageInfo{ vertShader.createPipelineShaderStageCreateInfo(vk::ShaderStageFlagBits::eVertex) };
         const auto fragShaderStageInfo{ fragShader.createPipelineShaderStageCreateInfo(vk::ShaderStageFlagBits::eFragment) };
         vk::PipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageInfo, fragShaderStageInfo };
@@ -127,7 +146,8 @@ namespace bmvk
         vk::PipelineDepthStencilStateCreateInfo depthStencil{ {}, true, true, vk::CompareOp::eLess, false, false };
         vk::PipelineColorBlendAttachmentState colorBlendAttachment{ false, vk::BlendFactor::eSrcAlpha, vk::BlendFactor::eOneMinusSrcAlpha, vk::BlendOp::eAdd, vk::BlendFactor::eOne, vk::BlendFactor::eZero, vk::BlendOp::eAdd, vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA };
         vk::PipelineColorBlendStateCreateInfo colorBlending{ {}, false, vk::LogicOp::eCopy, 1, &colorBlendAttachment };
-        m_pipelineLayout = m_device.createPipelineLayout({ *m_descriptorSetLayout });
+        vk::PushConstantRange pushConstant{ vk::ShaderStageFlagBits::eVertex, 0, sizeof glm::mat4 };
+        m_pipelineLayout = m_device.createPipelineLayout({ *m_descriptorSetLayout }, { pushConstant });
 
         vk::GraphicsPipelineCreateInfo pipelineInfo({}, 2, shaderStages, &vertexInputInfo, &inputAssembly, nullptr, &viewportState, &rasterizer, &multisampling, &depthStencil, &colorBlending, nullptr, *m_pipelineLayout, *m_renderPass, 0, nullptr, -1);
         m_graphicsPipeline = static_cast<vk::Device>(m_device).createGraphicsPipelineUnique(nullptr, pipelineInfo);
@@ -205,6 +225,7 @@ namespace bmvk
             cmdBuffer.bindPipeline(m_graphicsPipeline);
             cmdBuffer.bindDescriptorSet(m_pipelineLayout, m_descriptorSets[0]);
             const auto & cb_vk{ reinterpret_cast<const vk::UniqueCommandBuffer &>(cmdBuffer) };
+            m_dragonModel.pushConstants(cb_vk, m_pipelineLayout);
             m_dragonModel.draw(cb_vk);
             cmdBuffer.endRenderPass();
             cmdBuffer.end();
@@ -219,9 +240,12 @@ namespace bmvk
         auto time = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - startTime).count() / 1000.f;
 
         UniformBufferObject ubo;
-        ubo.model = glm::rotate(glm::mat4(), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-        ubo.view = glm::lookAt(glm::vec3(5.f, 5.f, 5.f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-        ubo.proj = glm::perspective(glm::radians(45.f), m_swapchain.getExtent().width / static_cast<float>(m_swapchain.getExtent().height), 0.001f, 20.f);
+        //ubo.model = glm::rotate(glm::mat4(), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+        m_dragonModel.rotate(glm::vec3(0.0f, 0.0f, 1.0f), time * glm::radians(90.0f));
+        /*ubo.view = glm::lookAt(glm::vec3(5.f, 5.f, 5.f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+        ubo.proj = glm::perspective(glm::radians(45.f), m_swapchain.getExtent().width / static_cast<float>(m_swapchain.getExtent().height), 0.001f, 20.f);*/
+        ubo.view = m_camera.getViewMatrix();
+        ubo.proj = m_camera.getProjMatrix();
         ubo.proj[1][1] *= -1;
 
         m_device.copyToMemory(m_uniformBufferMemory, ubo);
