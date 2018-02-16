@@ -110,6 +110,10 @@
       <AdditionalDependencies>vulkan-1.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)extern\Vulkan-1.0.57.0\lib64;$(SolutionDir)extern\GLFW-3.2.1\lib64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy "$(ProjectDir)*.hpp" "$(SolutionDir)extern\VulkanWrapper\include\vw" /Y /I /R
+xcopy "$(SolutionDir)x64\$(Configuration)\VulkanWrapper.*" "$(SolutionDir)extern\VulkanWrapper\lib64$(Configuration)" /Y /I /R /F</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -138,6 +142,10 @@
       <AdditionalDependencies>vulkan-1.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)extern\Vulkan-1.0.57.0\lib64;$(SolutionDir)extern\GLFW-3.2.1\lib64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy "$(ProjectDir)*.hpp" "$(SolutionDir)extern\VulkanWrapper\include\vw" /Y /I /R
+xcopy "$(SolutionDir)x64\$(Configuration)\VulkanWrapper.*" "$(SolutionDir)extern\VulkanWrapper\lib64$(Configuration)" /Y /I /R /F</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
