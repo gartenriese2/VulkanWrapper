@@ -606,6 +606,16 @@ namespace bmvk
             m_camera.translateLocal({ 0.5f, 0.f, 0.f });
         }
 
+        if (key == GLFW_KEY_R && (action == GLFW_PRESS || action == GLFW_REPEAT))
+        {
+            m_camera.translateLocal({ 0.f, 0.5f, 0.f });
+        }
+
+        if (key == GLFW_KEY_F && (action == GLFW_PRESS || action == GLFW_REPEAT))
+        {
+            m_camera.translateLocal({ 0.f, -0.5f, 0.f });
+        }
+
         if (key == GLFW_KEY_Q && (action == GLFW_PRESS || action == GLFW_REPEAT))
         {
             m_camera.rotate(glm::radians(1.f), glm::vec3{ 0.f, 1.f, 0.f });

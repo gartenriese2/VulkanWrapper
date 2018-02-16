@@ -23,6 +23,7 @@
     <ClCompile Include="bufferFactory.cpp" />
     <ClCompile Include="combinedBufferDemo.cpp" />
     <ClCompile Include="commandbuffer.cpp" />
+    <ClCompile Include="coordinatesDemo.cpp" />
     <ClCompile Include="debugReport.cpp" />
     <ClCompile Include="demo.cpp" />
     <ClCompile Include="depthBufferDemo.cpp" />
@@ -55,6 +56,7 @@
     <ClInclude Include="bufferFactory.hpp" />
     <ClInclude Include="combinedBufferDemo.hpp" />
     <ClInclude Include="commandbuffer.hpp" />
+    <ClInclude Include="coordinatesDemo.hpp" />
     <ClInclude Include="debugReport.hpp" />
     <ClInclude Include="demo.hpp" />
     <ClInclude Include="depthBufferDemo.hpp" />
