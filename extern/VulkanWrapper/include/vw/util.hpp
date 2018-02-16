@@ -44,4 +44,15 @@ namespace vw::util
         queue.submit(info, nullptr);
         queue.waitIdle();
     }
+
+    static void copyBuffer(const vk::UniqueCommandBuffer & commandBuffer, const vk::Queue & queue, vk::UniqueBuffer & srcBuffer, vk::UniqueBuffer & dstBuffer, vk::DeviceSize size)
+    {
+        commandBuffer->begin({ vk::CommandBufferUsageFlagBits::eOneTimeSubmit });
+        commandBuffer->copyBuffer(*srcBuffer, *dstBuffer, { { 0, 0, size } });
+        commandBuffer->end();
+        vk::CommandBuffer commandBuffers[] = { *commandBuffer };
+        const vk::SubmitInfo info{ 0, nullptr, nullptr, 1, commandBuffers };
+        queue.submit(info, nullptr);
+        queue.waitIdle();
+    }
 }

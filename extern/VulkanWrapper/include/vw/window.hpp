@@ -5,7 +5,6 @@
 #include <GLFW/glfw3.h>
 
 #include <type_traits>
-#include <cstdint>
 #include <string_view>
 #include <memory>
 #include <vector>
@@ -26,9 +25,15 @@ namespace vw::util
         void setShouldClose(const bool shouldClose) const;
         void pollEvents() const;
         std::tuple<int32_t, int32_t> getSize() const;
+        std::tuple<int32_t, int32_t> getFramebufferSize() const;
+        bool isFocused() const;
+        std::tuple<double, double> getCursorPos() const;
+        int32_t getMouseButtonState(const int32_t button) const;
+        void setInputMode(const int32_t mode, const int32_t value) const;
         void setWindowUserPointer(void * pointer) const;
         void setWindowSizeCallback(GLFWwindowsizefun fun) const;
         void setKeyCallback(GLFWkeyfun fun) const;
+        void setScrollCallback(GLFWscrollfun fun) const;
         void setMouseButtonCallback(GLFWmousebuttonfun fun) const;
         void setCursorPosCallback(GLFWcursorposfun fun) const;
         std::vector<std::string> getRequiredExtensions() const;

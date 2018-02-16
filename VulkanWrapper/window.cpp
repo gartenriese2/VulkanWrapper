@@ -10,6 +10,11 @@ namespace vw::util
     constexpr int32_t k_maxWidth{ 2560 };
     constexpr int32_t k_maxHeight{ 1440 };
 
+    void errorFun(int code, const char * description)
+    {
+        throw std::runtime_error("A GLFW error occured (code: " + std::to_string(code) + ", description: " + description + ")");
+    }
+
     Window::Window(const uint32_t width, const uint32_t height, std::string_view name)
     {
         if (glfwInit() == GLFW_FALSE)
@@ -24,10 +29,13 @@ namespace vw::util
         {
             throw std::runtime_error("glfwCreateWindow failed!");
         }
+
+        glfwSetErrorCallback(errorFun);
     }
 
     Window::~Window()
     {
+        m_window.reset(nullptr);
         glfwTerminate();
     }
 
@@ -53,6 +61,35 @@ namespace vw::util
         return std::make_tuple(width, height);
     }
 
+    std::tuple<int32_t, int32_t> Window::getFramebufferSize() const
+    {
+        int width, height;
+        glfwGetFramebufferSize(m_window.get(), &width, &height);
+        return std::make_tuple(width, height);
+    }
+
+    bool Window::isFocused() const
+    {
+        return glfwGetWindowAttrib(m_window.get(), GLFW_FOCUSED);
+    }
+
+    std::tuple<double, double> Window::getCursorPos() const
+    {
+        double x, y;
+        glfwGetCursorPos(m_window.get(), &x, &y);
+        return std::make_tuple(x, y);
+    }
+
+    int32_t Window::getMouseButtonState(const int32_t button) const
+    {
+        return glfwGetMouseButton(m_window.get(), button);
+    }
+
+    void Window::setInputMode(const int32_t mode, const int32_t value) const
+    {
+        glfwSetInputMode(m_window.get(), mode, value);
+    }
+
     void Window::setWindowUserPointer(void * pointer) const
     {
         glfwSetWindowUserPointer(m_window.get(), pointer);
@@ -66,6 +103,11 @@ namespace vw::util
     void Window::setKeyCallback(GLFWkeyfun fun) const
     {
         glfwSetKeyCallback(m_window.get(), fun);
+    }
+
+    void Window::setScrollCallback(GLFWscrollfun fun) const
+    {
+        glfwSetScrollCallback(m_window.get(), fun);
     }
 
     void Window::setMouseButtonCallback(GLFWmousebuttonfun fun) const
