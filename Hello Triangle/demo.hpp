@@ -25,6 +25,8 @@ namespace bmvk
         virtual ~Demo() {}
 
         virtual void run() {}
+
+        virtual void keyCallback(int key, int scancode, int action, int mods) {}
     protected:
         vw::util::Camera m_camera;
         vw::util::Window m_window;

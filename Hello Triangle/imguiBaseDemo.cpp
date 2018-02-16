@@ -1,5 +1,7 @@
 #include "imguiBaseDemo.hpp"
 
+#include <iostream>
+
 #include <imgui/imgui.h>
 
 #include "shader.hpp"
@@ -35,6 +37,7 @@ namespace bmvk
     {
         auto app = reinterpret_cast<ImguiBaseDemo *>(glfwGetWindowUserPointer(window));
         app->imguiKeyCallback(window, key, scancode, action, mods);
+        app->keyCallback(key, scancode, action, mods);
     }
 
     static uint32_t getImguiMemoryType(vk::PhysicalDevice gpu, vk::MemoryPropertyFlags properties, uint32_t type_bits)
@@ -579,5 +582,53 @@ namespace bmvk
         io.KeyShift = io.KeysDown[GLFW_KEY_LEFT_SHIFT] || io.KeysDown[GLFW_KEY_RIGHT_SHIFT];
         io.KeyAlt = io.KeysDown[GLFW_KEY_LEFT_ALT] || io.KeysDown[GLFW_KEY_RIGHT_ALT];
         io.KeySuper = io.KeysDown[GLFW_KEY_LEFT_SUPER] || io.KeysDown[GLFW_KEY_RIGHT_SUPER];
+    }
+
+    void ImguiBaseDemo::keyCallback(int key, int scancode, int action, int mods)
+    {
+        if (key == GLFW_KEY_W && (action == GLFW_PRESS || action == GLFW_REPEAT))
+        {
+            m_camera.translateLocal({ 0.f, 0.f, 0.5f });
+        }
+
+        if (key == GLFW_KEY_S && (action == GLFW_PRESS || action == GLFW_REPEAT))
+        {
+            m_camera.translateLocal({ 0.f, 0.f, -0.5f });
+        }
+
+        if (key == GLFW_KEY_A && (action == GLFW_PRESS || action == GLFW_REPEAT))
+        {
+            m_camera.translateLocal({ -0.5f, 0.f, 0.f });
+        }
+
+        if (key == GLFW_KEY_D && (action == GLFW_PRESS || action == GLFW_REPEAT))
+        {
+            m_camera.translateLocal({ 0.5f, 0.f, 0.f });
+        }
+
+        if (key == GLFW_KEY_Q && (action == GLFW_PRESS || action == GLFW_REPEAT))
+        {
+            m_camera.rotate(glm::radians(1.f), glm::vec3{ 0.f, 1.f, 0.f });
+        }
+
+        if (key == GLFW_KEY_E && (action == GLFW_PRESS || action == GLFW_REPEAT))
+        {
+            m_camera.rotate(-glm::radians(1.f), glm::vec3{ 0.f, 1.f, 0.f });
+        }
+
+        if (key == GLFW_KEY_P && (action == GLFW_PRESS || action == GLFW_REPEAT))
+        {
+            const auto & pos{ m_camera.getPos() };
+            const auto & dir{ m_camera.getDir() };
+            const auto & up{ m_camera.getUp() };
+            std::cout << "Pos: (" << pos.x << '|' << pos.y << '|' << pos.z << ")\n";
+            std::cout << "Dir: (" << dir.x << '|' << dir.y << '|' << dir.z << ")\n";
+            std::cout << "Up: (" << up.x << '|' << up.y << '|' << up.z << ")\n";
+        }
+
+        if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+        {
+            m_window.setShouldClose(true);
+        }
     }
 }

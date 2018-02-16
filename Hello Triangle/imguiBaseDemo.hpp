@@ -23,6 +23,7 @@ namespace bmvk
         void imguiMouseButtonCallback(GLFWwindow * window, int button, int action, int mods);
         void imguiScrollCallback(GLFWwindow * window, double xoffset, double yoffset);
         void imguiKeyCallback(GLFWwindow * window, int key, int scancode, int action, int mods) const;
+        void keyCallback(int key, int scancode, int action, int mods) override;
     protected:
         Swapchain m_swapchain;
 
