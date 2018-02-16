@@ -18,6 +18,8 @@ namespace vw::util
         Model(Model && other) = default;
         Model & operator=(Model && other) = default;
 
+        const auto & getModelMatrix() const noexcept { return m_modelMatrix; }
+
         const auto & getVertices() const noexcept { return m_vertices; }
         auto & getVertices() noexcept { return m_vertices; }
         const auto & getIndices() const noexcept { return m_indices; }

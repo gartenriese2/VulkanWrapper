@@ -10,7 +10,7 @@
 namespace bmvk
 {
     const std::string K_MODEL_PATH{ "../models/stanford_dragon/dragon.obj" };
-    const std::string K_VERTEX_SHADER_PATH{ "../shaders/blinnphong.vert.spv" };
+    const std::string K_VERTEX_SHADER_PATH{ "../shaders/blinnphong2.vert.spv" };
     const std::string K_FRAGMENT_SHADER_PATH{ "../shaders/blinnphong.frag.spv" };
 
     DragonDemo::DragonDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height)
@@ -144,8 +144,7 @@ namespace bmvk
         vk::PipelineDepthStencilStateCreateInfo depthStencil{ {}, true, true, vk::CompareOp::eLess, false, false };
         vk::PipelineColorBlendAttachmentState colorBlendAttachment{ false, vk::BlendFactor::eSrcAlpha, vk::BlendFactor::eOneMinusSrcAlpha, vk::BlendOp::eAdd, vk::BlendFactor::eOne, vk::BlendFactor::eZero, vk::BlendOp::eAdd, vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA };
         vk::PipelineColorBlendStateCreateInfo colorBlending{ {}, false, vk::LogicOp::eCopy, 1, &colorBlendAttachment };
-        vk::PushConstantRange pushConstant{ vk::ShaderStageFlagBits::eVertex, 0, sizeof glm::mat4 };
-        m_pipelineLayout = m_device.createPipelineLayout({ *m_descriptorSetLayout }, { pushConstant });
+        m_pipelineLayout = m_device.createPipelineLayout({ *m_descriptorSetLayout });
 
         vk::GraphicsPipelineCreateInfo pipelineInfo({}, 2, shaderStages, &vertexInputInfo, &inputAssembly, nullptr, &viewportState, &rasterizer, &multisampling, &depthStencil, &colorBlending, nullptr, *m_pipelineLayout, *m_renderPass, 0, nullptr, -1);
         m_graphicsPipeline = static_cast<vk::Device>(m_device).createGraphicsPipelineUnique(nullptr, pipelineInfo);
@@ -223,7 +222,6 @@ namespace bmvk
             cmdBuffer.bindPipeline(m_graphicsPipeline);
             cmdBuffer.bindDescriptorSet(m_pipelineLayout, m_descriptorSets[0]);
             const auto & cb_vk{ reinterpret_cast<const vk::UniqueCommandBuffer &>(cmdBuffer) };
-            m_dragonModel.pushConstants(cb_vk, m_pipelineLayout);
             m_dragonModel.draw(cb_vk);
             cmdBuffer.endRenderPass();
             cmdBuffer.end();
@@ -236,12 +234,11 @@ namespace bmvk
 
         auto currentTime = std::chrono::high_resolution_clock::now();
         auto time = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - startTime).count() / 1000.f;
+        startTime = currentTime;
 
         UniformBufferObject ubo;
-        //ubo.model = glm::rotate(glm::mat4(), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
         m_dragonModel.rotate(glm::vec3(0.0f, 0.0f, 1.0f), time * glm::radians(90.0f));
-        /*ubo.view = glm::lookAt(glm::vec3(5.f, 5.f, 5.f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-        ubo.proj = glm::perspective(glm::radians(45.f), m_swapchain.getExtent().width / static_cast<float>(m_swapchain.getExtent().height), 0.001f, 20.f);*/
+        ubo.model = m_dragonModel.getModelMatrix();
         ubo.view = m_camera.getViewMatrix();
         ubo.proj = m_camera.getProjMatrix();
         ubo.proj[1][1] *= -1;
