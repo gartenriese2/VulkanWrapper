@@ -27,6 +27,7 @@ namespace bmvk
             glm::mat4 model;
             glm::mat4 view;
             glm::mat4 proj;
+            glm::mat4 normal;
         };
 
         vk::UniqueRenderPass m_renderPass;

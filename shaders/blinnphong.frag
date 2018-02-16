@@ -17,27 +17,28 @@ const vec3 specColor = vec3(1.0, 1.0, 1.0);
 const float shininess = 16.0;
 const float screenGamma = 2.2;
 
-void main() {
-	vec3 normal = normalize(fragNormal);
-  	vec3 lightDir = normalize(lightPos - vertPos);
+void main()
+{
+    vec3 normal = -normalize(fragNormal);
+    vec3 lightDir = normalize(lightPos - vertPos);
 
-  	float lambertian = max(dot(lightDir,normal), 0.0);
-  	float specular = 0.0;
+    float lambertian = max(dot(lightDir,normal), 0.0);
+    float specular = 0.0;
 
-  	if(lambertian > 0.0) {
-		vec3 viewDir = normalize(-vertPos);
+    if(lambertian > 0.0)
+    {
+        vec3 viewDir = normalize(-vertPos);
 
-		// this is blinn phong
-    	vec3 halfDir = normalize(lightDir + viewDir);
-    	float specAngle = max(dot(halfDir, normal), 0.0);
-    	specular = pow(specAngle, shininess);
-  	}
+        // this is blinn phong
+        vec3 halfDir = normalize(lightDir + viewDir);
+        float specAngle = max(dot(halfDir, normal), 0.0);
+        specular = pow(specAngle, shininess);
+    }
 
-  	vec3 colorLinear = ambientColor +
+    vec3 colorLinear = ambientColor +
                        lambertian * diffuseColor +
                        specular * specColor;
     vec3 colorGammaCorrected = pow(colorLinear, vec3(1.0/screenGamma));
 
-    //outColor = texture(texSampler, fragTexCoord);
     outColor = vec4(colorGammaCorrected, 1.0);
 }

@@ -3,6 +3,7 @@
 #include <tinyobjloader/tiny_obj_loader.h>
 #include <imgui/imgui.h>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/matrix_inverse.hpp>
 #include <vw/modelLoader.hpp>
 
 #include "shader.hpp"
@@ -101,8 +102,6 @@ namespace bmvk
         const glm::vec3 up{ 0.f, 1.f, 0.f };
         const auto extent{ m_swapchain.getExtent() };
         m_camera = vw::util::Camera(pos, dir, up, 45.f, extent.width / static_cast<float>(extent.height), 0.01f, std::numeric_limits<float>::infinity());
-        m_camera.rotate(glm::radians(180.f), glm::vec3{ 0.f, 1.f, 0.f });
-        m_camera.translateLocal(glm::vec3{ 0.f, 0.f, -10.f });
     }
     
     void DragonDemo::createDescriptorSetLayout()
@@ -232,16 +231,18 @@ namespace bmvk
     {
         static auto startTime = std::chrono::high_resolution_clock::now();
 
-        auto currentTime = std::chrono::high_resolution_clock::now();
-        auto time = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - startTime).count() / 1000.f;
+        const auto currentTime = std::chrono::high_resolution_clock::now();
+        const double time = std::chrono::duration_cast<std::chrono::nanoseconds>(currentTime - startTime).count() / 1000000000.0;
         startTime = currentTime;
 
         UniformBufferObject ubo;
-        m_dragonModel.rotate(glm::vec3(0.0f, 0.0f, 1.0f), time * glm::radians(90.0f));
+        const auto radians{ static_cast<float>(time) * glm::radians(90.0f) };
+        m_dragonModel.rotate(glm::vec3(0.f, 1.f, 0.f), radians);
         ubo.model = m_dragonModel.getModelMatrix();
         ubo.view = m_camera.getViewMatrix();
         ubo.proj = m_camera.getProjMatrix();
         ubo.proj[1][1] *= -1;
+        ubo.normal = glm::inverseTranspose(ubo.view * ubo.model);
 
         m_device.copyToMemory(m_uniformBufferMemory, ubo);
     }
