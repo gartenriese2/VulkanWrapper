@@ -16,6 +16,7 @@ namespace bmvk
 
         auto app = reinterpret_cast<ImguiBaseDemo *>(glfwGetWindowUserPointer(window));
         app->recreateSwapChain();
+        app->setCameraRatio();
     }
 
     static void onMouseButton(GLFWwindow * window, int button, int action, int mods)
@@ -105,6 +106,12 @@ namespace bmvk
         createRenderPass();
         createGraphicsPipeline();
         createFramebuffers();
+    }
+
+    void ImguiBaseDemo::setCameraRatio()
+    {
+        const auto extent{ m_swapchain.getExtent() };
+        m_camera.setRatio(extent.width / static_cast<float>(extent.height));
     }
 
     void ImguiBaseDemo::createDescriptorSetLayout()

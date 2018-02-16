@@ -18,6 +18,7 @@ namespace bmvk
         ~ImguiBaseDemo() {}
 
         virtual void recreateSwapChain();
+        void setCameraRatio();
 
         void imguiMouseButtonCallback(GLFWwindow * window, int button, int action, int mods);
         void imguiScrollCallback(GLFWwindow * window, double xoffset, double yoffset);
