@@ -52,7 +52,7 @@ namespace bmvk
 
     ImguiBaseDemo::ImguiBaseDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height, std::string name, const bool onlyWarningsAndAbove)
       : Demo{ enableValidationLayers, width, height, name, onlyWarningsAndAbove },
-        m_swapchain{ m_instance.getPhysicalDevice(), m_instance.getSurface(), m_window, m_device },
+        m_swapchain{ m_instance.getPhysicalDevice(), m_instance.getSurface(), m_window.getSize(), m_device },
         m_fontSampler{ m_device.createSampler(false, -1000.f, 1000.f) }
     {
         m_window.setWindowUserPointer(this);
@@ -65,9 +65,9 @@ namespace bmvk
         createDescriptorPool();
         createDescriptorSet();
 
-        glfwSetMouseButtonCallback(m_window.getPointer().get(), onMouseButton);
-        glfwSetScrollCallback(m_window.getPointer().get(), onScroll);
-        glfwSetKeyCallback(m_window.getPointer().get(), onKey);
+        m_window.setMouseButtonCallback(onMouseButton);
+        m_window.setScrollCallback(onScroll);
+        m_window.setKeyCallback(onKey);
 
         uploadFonts();
 
@@ -100,7 +100,7 @@ namespace bmvk
         m_pipelineLayoutImgui.reset(nullptr);
         m_renderPassImgui.reset(nullptr);
 
-        m_swapchain.recreate(m_instance.getPhysicalDevice(), m_instance.getSurface(), m_window, m_device);
+        m_swapchain.recreate(m_instance.getPhysicalDevice(), m_instance.getSurface(), m_window.getSize(), m_device);
 
         createRenderPass();
         createGraphicsPipeline();
@@ -497,14 +497,13 @@ namespace bmvk
 
     void ImguiBaseDemo::imguiNewFrame()
     {
-        const auto & windowPtr{ m_window.getPointer() };
         auto & io{ ImGui::GetIO() };
 
         // Setup display size (every frame to accommodate for window resizing)
         int w, h;
         int display_w, display_h;
-        glfwGetWindowSize(windowPtr.get(), &w, &h);
-        glfwGetFramebufferSize(windowPtr.get(), &display_w, &display_h);
+        std::tie(w, h) = m_window.getSize();
+        std::tie(display_w, display_h) = m_window.getFramebufferSize();
         io.DisplaySize = ImVec2(static_cast<float>(w), static_cast<float>(h));
         io.DisplayFramebufferScale = ImVec2(w > 0 ? static_cast<float>(display_w) / w : 0, h > 0 ? static_cast<float>(display_h) / h : 0);
 
@@ -515,10 +514,10 @@ namespace bmvk
 
         // Setup inputs
         // (we already got mouse wheel, keyboard keys & characters from glfw callbacks polled in glfwPollEvents())
-        if (glfwGetWindowAttrib(windowPtr.get(), GLFW_FOCUSED))
+        if (m_window.isFocused())
         {
             double mouse_x, mouse_y;
-            glfwGetCursorPos(windowPtr.get(), &mouse_x, &mouse_y);
+            std::tie(mouse_x, mouse_y) = m_window.getCursorPos();
             io.MousePos = ImVec2(static_cast<float>(mouse_x), static_cast<float>(mouse_y));   // Mouse position in screen coordinates (set to -1,-1 if no mouse / on another screen, etc.)
         }
         else
@@ -528,7 +527,7 @@ namespace bmvk
 
         for (auto i = 0; i < 3; i++)
         {
-            io.MouseDown[i] = m_imguiMousePressed[i] || glfwGetMouseButton(windowPtr.get(), i) != 0;    // If a mouse press event came, always pass it as "mouse held this frame", so we don't miss click-release events that are shorter than 1 frame.
+            io.MouseDown[i] = m_imguiMousePressed[i] || m_window.getMouseButtonState(i) != 0;    // If a mouse press event came, always pass it as "mouse held this frame", so we don't miss click-release events that are shorter than 1 frame.
             m_imguiMousePressed[i] = false;
         }
 
@@ -536,7 +535,7 @@ namespace bmvk
         m_imguiMouseWheel = 0.0f;
 
         // Hide OS mouse cursor if ImGui is drawing it
-        glfwSetInputMode(windowPtr.get(), GLFW_CURSOR, io.MouseDrawCursor ? GLFW_CURSOR_HIDDEN : GLFW_CURSOR_NORMAL);
+        m_window.setInputMode(GLFW_CURSOR, io.MouseDrawCursor ? GLFW_CURSOR_HIDDEN : GLFW_CURSOR_NORMAL);
 
         // Start the frame
         ImGui::NewFrame();

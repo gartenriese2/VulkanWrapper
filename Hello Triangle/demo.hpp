@@ -4,7 +4,9 @@
 #include <type_traits>
 #include <vulkan/vulkan.hpp>
 
-#include "window.hpp"
+#include <vw/camera.hpp>
+#include <vw/window.hpp>
+
 #include "instance.hpp"
 #include "device.hpp"
 #include "queue.hpp"
@@ -24,7 +26,8 @@ namespace bmvk
 
         virtual void run() {}
     protected:
-        Window m_window;
+        vw::util::Camera m_camera;
+        vw::util::Window m_window;
         Instance m_instance;
         Device m_device;
         Queue m_queue;

@@ -60,7 +60,7 @@ namespace bmvk
         m_graphicsPipeline.reset(nullptr);
         m_pipelineLayout.reset(nullptr);
         m_renderPass.reset(nullptr);
-        m_swapchain.recreate(m_instance.getPhysicalDevice(), m_instance.getSurface(), m_window, m_device);
+        m_swapchain.recreate(m_instance.getPhysicalDevice(), m_instance.getSurface(), m_window.getSize(), m_device);
         createRenderPass();
         createGraphicsPipeline();
         createFramebuffers();

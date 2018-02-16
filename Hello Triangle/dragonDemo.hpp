@@ -6,7 +6,6 @@
 #include <glm/gtx/hash.hpp>
 
 #include <vw/model.hpp>
-#include <vw/camera.hpp>
 
 #include "imguiBaseDemo.hpp"
 
@@ -25,12 +24,9 @@ namespace bmvk
         void recreateSwapChain() override;
     private:
         struct UniformBufferObject {
-            //glm::mat4 model;
             glm::mat4 view;
             glm::mat4 proj;
         };
-
-        vw::util::Camera m_camera;
 
         vk::UniqueRenderPass m_renderPass;
         vk::UniqueDescriptorSetLayout m_descriptorSetLayout;

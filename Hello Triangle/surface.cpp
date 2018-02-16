@@ -2,7 +2,7 @@
 
 namespace bmvk
 {
-    Surface::Surface(vk::SurfaceKHR surface)
+    Surface::Surface(vk::UniqueSurfaceKHR && surface)
         : m_surface{std::move(surface)}
     {
     }

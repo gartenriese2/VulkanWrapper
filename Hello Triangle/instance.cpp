@@ -2,15 +2,16 @@
 
 #include <iostream>
 
+#include <vw/window.hpp>
+
 #include "vulkan_ext.h"
-#include "window.hpp"
 
 namespace bmvk
 {
     constexpr auto k_standardValidationLayerName = "VK_LAYER_LUNARG_standard_validation";
     constexpr auto k_debugExtensionName = "VK_EXT_debug_report";
 
-    Instance::Instance(const std::string& appName, const uint32_t appVersion, const std::string& engineName, const uint32_t engineVersion, const Window & window, const bool enableValidationLayers, const bool onlyWarningsAndAbove)
+    Instance::Instance(const std::string& appName, const uint32_t appVersion, const std::string& engineName, const uint32_t engineVersion, const vw::util::Window & window, const bool enableValidationLayers, const bool onlyWarningsAndAbove)
     {
         vk::ApplicationInfo appInfo{ appName.c_str(), appVersion, engineName.c_str(), engineVersion, VK_API_VERSION_1_0 };
 
@@ -24,7 +25,7 @@ namespace bmvk
         initializeLayerNames(enableValidationLayers);
 
         InstanceCreateInfo info{ {}, &appInfo, m_layerNames, extensionsAsCstrings };
-        m_instance = vk::createInstance(info);
+        m_instance = vk::createInstanceUnique(info);
 
         vkExtInitInstance(getCInstance());
 
@@ -34,24 +35,13 @@ namespace bmvk
             m_debugReportPtr = std::make_unique<DebugReport>(*this, flags);
         }
         
-        m_surface = window.createSurface(*this);
+        m_surface = Surface(std::move(window.createSurface(m_instance)));
         m_physicalDevice = getSuitablePhysicalDevice(static_cast<vk::SurfaceKHR>(m_surface));
-    }
-
-    Instance::~Instance()
-    {
-        m_instance.destroySurfaceKHR(static_cast<vk::SurfaceKHR>(m_surface));
-        if (m_debugReportPtr != nullptr)
-        {
-            m_debugReportPtr.reset();
-        }
-
-        m_instance.destroy();
     }
 
     PhysicalDevice Instance::getSuitablePhysicalDevice(const vk::SurfaceKHR & surface) const
     {
-        const auto physicalDevices = m_instance.enumeratePhysicalDevices();
+        const auto physicalDevices = m_instance->enumeratePhysicalDevices();
 
         auto foundSuitablePhysicalDevice{ false };
         vk::PhysicalDevice chosenPhysicalDevice;
@@ -78,7 +68,7 @@ namespace bmvk
         return PhysicalDevice(chosenPhysicalDevice, chosenIndex);
     }
 
-    std::vector<std::string> Instance::getExtensions(const bool enableValidationLayers, const Window & window) const
+    std::vector<std::string> Instance::getExtensions(const bool enableValidationLayers, const vw::util::Window & window) const
     {
         const auto availableExtensions{ vk::enumerateInstanceExtensionProperties() };
 

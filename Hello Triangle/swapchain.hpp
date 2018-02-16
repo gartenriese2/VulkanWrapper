@@ -8,12 +8,11 @@ namespace bmvk
     class Device;
     class PhysicalDevice;
     class Surface;
-    class Window;
 
     class Swapchain
     {
     public:
-        Swapchain(const PhysicalDevice & physicalDevice, const Surface & surface, const Window & window, const Device & device);
+        Swapchain(const PhysicalDevice & physicalDevice, const Surface & surface, const std::tuple<int32_t, int32_t> & windowSize, const Device & device);
         Swapchain(const Swapchain &) = delete;
         Swapchain(Swapchain && other) = default;
         Swapchain & operator=(const Swapchain &) = delete;
@@ -26,7 +25,7 @@ namespace bmvk
         const auto & getExtent() const noexcept { return m_extent; }
         const auto & getImageViews() const noexcept { return m_imageViews; }
 
-        void recreate(const PhysicalDevice & physicalDevice, const Surface & surface, const Window & window, const Device & device);
+        void recreate(const PhysicalDevice & physicalDevice, const Surface & surface, const std::tuple<int32_t, int32_t> & windowSize, const Device & device);
 
         vk::PipelineViewportStateCreateInfo getPipelineViewportStateCreateInfo(vk::Viewport & viewport, vk::Rect2D & scissor, const float minDepth = 0.f, const float maxDepth = 1.f) const;
     private:
@@ -39,8 +38,8 @@ namespace bmvk
         uint32_t m_imageCount;
         vk::PresentModeKHR m_presentMode;
 
-        void create(const PhysicalDevice & physicalDevice, const Surface & surface, const Window & window, const Device & device);
-        void createExtent(const Window & window);
+        void create(const PhysicalDevice & physicalDevice, const Surface & surface, const std::tuple<int32_t, int32_t> & windowSize, const Device & device);
+        void createExtent(const std::tuple<int32_t, int32_t> & windowSize);
     };
 
     static_assert(std::is_move_constructible_v<Swapchain>);

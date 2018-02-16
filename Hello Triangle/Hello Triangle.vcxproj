@@ -46,7 +46,6 @@
     <ClCompile Include="uniformbufferDemo.cpp" />
     <ClCompile Include="vertexbufferDemo.cpp" />
     <ClCompile Include="vulkan_ext.c" />
-    <ClCompile Include="window.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="buffer.hpp">
@@ -79,7 +78,6 @@
     <ClInclude Include="vertexbufferDemo.hpp" />
     <ClInclude Include="vulkan_bmvk.hpp" />
     <ClInclude Include="vulkan_ext.h" />
-    <ClInclude Include="window.hpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>

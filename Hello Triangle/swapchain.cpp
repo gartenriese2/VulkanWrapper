@@ -2,16 +2,15 @@
 
 #include "physicalDevice.hpp"
 #include "surface.hpp"
-#include "window.hpp"
 
 namespace bmvk
 {
-    Swapchain::Swapchain(const PhysicalDevice & physicalDevice, const Surface & surface, const Window & window, const Device & device)
+    Swapchain::Swapchain(const PhysicalDevice & physicalDevice, const Surface & surface, const std::tuple<int32_t, int32_t> & windowSize, const Device & device)
     {
-        create(physicalDevice, surface, window, device);
+        create(physicalDevice, surface, windowSize, device);
     }
 
-    void Swapchain::recreate(const PhysicalDevice & physicalDevice, const Surface & surface, const Window & window, const Device & device)
+    void Swapchain::recreate(const PhysicalDevice & physicalDevice, const Surface & surface, const std::tuple<int32_t, int32_t> & windowSize, const Device & device)
     {
         for (auto & imageView : m_imageViews)
         {
@@ -20,7 +19,7 @@ namespace bmvk
 
         m_swapchain.reset(nullptr);
 
-        create(physicalDevice, surface, window, device);
+        create(physicalDevice, surface, windowSize, device);
     }
 
     vk::PipelineViewportStateCreateInfo Swapchain::getPipelineViewportStateCreateInfo(vk::Viewport & viewport, vk::Rect2D & scissor, const float minDepth, const float maxDepth) const
@@ -36,7 +35,7 @@ namespace bmvk
         return { {}, 1, &viewport, 1, &scissor };
     }
 
-    void Swapchain::create(const PhysicalDevice & physicalDevice, const Surface & surface, const Window & window, const Device & device)
+    void Swapchain::create(const PhysicalDevice & physicalDevice, const Surface & surface, const std::tuple<int32_t, int32_t> & windowSize, const Device & device)
     {
         m_capabilities = physicalDevice.getSurfaceCapabilities(static_cast<vk::SurfaceKHR>(surface));
         m_imageCount = PhysicalDevice::chooseImageCount(m_capabilities);
@@ -47,7 +46,7 @@ namespace bmvk
         m_imageFormat = PhysicalDevice::chooseSwapSurfaceFormat(formats);
         m_presentMode = PhysicalDevice::chooseSwapPresentMode(presentModes);
 
-        createExtent(window);
+        createExtent(windowSize);
 
         vk::SwapchainCreateInfoKHR createInfo
         {
@@ -79,10 +78,10 @@ namespace bmvk
         }
     }
 
-    void Swapchain::createExtent(const Window & window)
+    void Swapchain::createExtent(const std::tuple<int32_t, int32_t> & windowSize)
     {
         int width, height;
-        std::tie(width, height) = window.getSize();
+        std::tie(width, height) = windowSize;
         m_extent = PhysicalDevice::chooseSwapExtent(m_capabilities, width, height);
     }
 }

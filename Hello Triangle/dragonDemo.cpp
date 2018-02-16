@@ -126,8 +126,6 @@ namespace bmvk
 
     void DragonDemo::createGraphicsPipeline()
     {
-        /*const Shader vertShader{ "../shaders/dragon.vert.spv", m_device };
-        const Shader fragShader{ "../shaders/dragon.frag.spv", m_device };*/
         const Shader vertShader{ K_VERTEX_SHADER_PATH, m_device };
         const Shader fragShader{ K_FRAGMENT_SHADER_PATH, m_device };
         const auto vertShaderStageInfo{ vertShader.createPipelineShaderStageCreateInfo(vk::ShaderStageFlagBits::eVertex) };
