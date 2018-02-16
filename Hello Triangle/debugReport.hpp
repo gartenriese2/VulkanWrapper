@@ -15,6 +15,12 @@ namespace bmvk
         DebugReport & operator=(const DebugReport &) = delete;
         DebugReport & operator=(DebugReport &&) & = default;
         ~DebugReport() {}
+
+        enum class ReportLevel
+        {
+            Everything,
+            WarningsAndAbove
+        };
     private:
         vk::UniqueDebugReportCallbackEXT m_uniqueCallback;
     };

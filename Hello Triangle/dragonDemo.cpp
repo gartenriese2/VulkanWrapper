@@ -14,7 +14,7 @@ namespace bmvk
     const std::string K_FRAGMENT_SHADER_PATH{ "../shaders/blinnphong.frag.spv" };
 
     DragonDemo::DragonDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height)
-        : ImguiBaseDemo{ enableValidationLayers, width, height, "Dragon Demo", true },
+        : ImguiBaseDemo{ enableValidationLayers, width, height, "Dragon Demo", DebugReport::ReportLevel::WarningsAndAbove },
         m_imageAvailableSemaphore{ m_device.createSemaphore() },
         m_renderFinishedSemaphore{ m_device.createSemaphore() },
         m_renderImguiFinishedSemaphore{ m_device.createSemaphore() }

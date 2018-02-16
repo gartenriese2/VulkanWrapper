@@ -10,7 +10,7 @@ namespace bmvk
     class ImguiBaseDemo : protected Demo
     {
     public:
-        ImguiBaseDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height, std::string name, const bool onlyWarningsAndAbove);
+        ImguiBaseDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height, std::string name, const DebugReport::ReportLevel reportLevel);
         ImguiBaseDemo(const ImguiBaseDemo &) = delete;
         ImguiBaseDemo(ImguiBaseDemo && other) = default;
         ImguiBaseDemo & operator=(const ImguiBaseDemo &) = delete;

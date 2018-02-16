@@ -50,8 +50,8 @@ namespace bmvk
         return 0xffffffff; // Unable to find memoryType
     }
 
-    ImguiBaseDemo::ImguiBaseDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height, std::string name, const bool onlyWarningsAndAbove)
-      : Demo{ enableValidationLayers, width, height, name, onlyWarningsAndAbove },
+    ImguiBaseDemo::ImguiBaseDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height, std::string name, const DebugReport::ReportLevel reportLevel)
+      : Demo{ enableValidationLayers, width, height, name, reportLevel },
         m_swapchain{ m_instance.getPhysicalDevice(), m_instance.getSurface(), m_window.getSize(), m_device },
         m_fontSampler{ m_device.createSampler(false, -1000.f, 1000.f) }
     {

@@ -17,7 +17,7 @@ namespace bmvk
     class Demo
     {
     public:
-        Demo(const bool enableValidationLayers, const uint32_t width, const uint32_t height, std::string name, const bool onlyWarningsAndAbove = false);
+        Demo(const bool enableValidationLayers, const uint32_t width, const uint32_t height, std::string name, const DebugReport::ReportLevel reportLevel);
         Demo(const Demo &) = delete;
         Demo(Demo && other) = default;
         Demo & operator=(const Demo &) = delete;

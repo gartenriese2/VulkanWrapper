@@ -4,9 +4,9 @@
 
 namespace bmvk
 {
-    Demo::Demo(const bool enableValidationLayers, const uint32_t width, const uint32_t height, std::string name, const bool onlyWarningsAndAbove)
+    Demo::Demo(const bool enableValidationLayers, const uint32_t width, const uint32_t height, std::string name, const DebugReport::ReportLevel reportLevel)
       : m_window{width, height, name},
-        m_instance{name, VK_MAKE_VERSION(1, 0, 0), "bmvk", VK_MAKE_VERSION(1, 0, 0), m_window, enableValidationLayers, onlyWarningsAndAbove},
+        m_instance{name, VK_MAKE_VERSION(1, 0, 0), "bmvk", VK_MAKE_VERSION(1, 0, 0), m_window, enableValidationLayers, reportLevel},
         m_device{m_instance.getPhysicalDevice().createLogicalDevice(m_instance.getLayerNames())},
         m_queue{m_device.createQueue()},
         m_commandPool{m_device.createCommandPool()},
