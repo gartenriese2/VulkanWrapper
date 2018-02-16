@@ -33,7 +33,8 @@ namespace bmvk
         vk::UniqueRenderPass m_renderPass;
         vk::UniqueDescriptorSetLayout m_descriptorSetLayout;
         vk::UniquePipelineLayout m_pipelineLayout;
-        vk::UniquePipeline m_graphicsPipeline;
+        vk::UniquePipeline m_colorPipeline;
+        vk::UniquePipeline m_normalPipeline;
         std::vector<vk::UniqueFramebuffer> m_swapChainFramebuffers;
 
         vk::UniqueDeviceMemory m_depthImageMemory;
@@ -56,7 +57,7 @@ namespace bmvk
 
         void createDescriptorSetLayout();
         void createRenderPass();
-        void createGraphicsPipeline();
+        void createPipelines();
         void createDepthResources();
         void createFramebuffers();
         void loadCube();
