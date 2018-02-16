@@ -756,13 +756,14 @@ private:
         vw::util::ModelLoader ml;
         m_dragonModel = ml.loadModel("../models/stanford_dragon/dragon.obj");
         m_dragonModel.scale(glm::vec3{ 0.1f });
+        m_dragonModel.createBuffers(*m_device, m_physicalDevice, m_commandPool, m_graphicsQueue);
 
         m_triangle = ml.loadTriangle();
     }
 
     void createVertexBuffer(vw::util::Model & model) const
     {
-        auto & modelVertices{ model.getVertices() };
+        /*auto & modelVertices{ model.getVertices() };
         vk::DeviceSize bufferSize = sizeof(modelVertices[0]) * modelVertices.size();
 
         vk::UniqueBuffer stagingBuffer;
@@ -778,12 +779,12 @@ private:
         copyBuffer(stagingBuffer, model.getVertexBuffer(), bufferSize);
 
         stagingBuffer.reset(nullptr);
-        stagingBufferMemory.reset(nullptr);
+        stagingBufferMemory.reset(nullptr);*/
     }
 
     void createIndexBuffer(vw::util::Model & model) const
     {
-        auto & modelIndices{ model.getIndices() };
+       /* auto & modelIndices{ model.getIndices() };
         vk::DeviceSize bufferSize = sizeof(modelIndices[0]) * modelIndices.size();
 
         vk::UniqueBuffer stagingBuffer;
@@ -799,7 +800,7 @@ private:
         copyBuffer(stagingBuffer, model.getIndexBuffer(), bufferSize);
 
         stagingBuffer.reset(nullptr);
-        stagingBufferMemory.reset(nullptr);
+        stagingBufferMemory.reset(nullptr);*/
     }
 
     void createUniformBuffer()
@@ -920,8 +921,8 @@ private:
             /*m_cornellModel.pushConstants(m_commandBuffers[i], m_pipelineLayout);
             m_cornellModel.draw(m_commandBuffers[i]);*/
 
-            m_triangle.pushConstants(m_commandBuffers[i], m_pipelineLayout);
-            m_triangle.draw(m_commandBuffers[i]);
+            /*m_triangle.pushConstants(m_commandBuffers[i], m_pipelineLayout);
+            m_triangle.draw(m_commandBuffers[i]);*/
 
             m_commandBuffers[i]->endRenderPass();
 
