@@ -13,6 +13,8 @@ namespace bmvk
     const std::string K_VERTEX_SHADER_PATH{ "../shaders/coordinates.vert.spv" };
     const std::string K_COLOR_FRAGMENT_SHADER_PATH{ "../shaders/coordinates_color.frag.spv" };
     const std::string K_NORMAL_FRAGMENT_SHADER_PATH{ "../shaders/coordinates_normal.frag.spv" };
+    const std::string K_WORLDNORMAL_FRAGMENT_SHADER_PATH{ "../shaders/coordinates_worldNormal.frag.spv" };
+    const std::string K_VIEWPOS_FRAGMENT_SHADER_PATH{ "../shaders/coordinates_viewPos.frag.spv" };
 
     CoordinatesDemo::CoordinatesDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height)
         : ImguiBaseDemo{ enableValidationLayers, width, height, "Coordinates Demo", DebugReport::ReportLevel::WarningsAndAbove },
@@ -129,11 +131,17 @@ namespace bmvk
         const Shader vertShader{ K_VERTEX_SHADER_PATH, m_device };
         const Shader colorFragShader{ K_COLOR_FRAGMENT_SHADER_PATH, m_device };
         const Shader normalFragShader{ K_NORMAL_FRAGMENT_SHADER_PATH, m_device };
+        const Shader worldNormalFragShader{ K_WORLDNORMAL_FRAGMENT_SHADER_PATH, m_device };
+        const Shader viewPosFragShader{ K_VIEWPOS_FRAGMENT_SHADER_PATH, m_device };
         const auto vertShaderStageInfo{ vertShader.createPipelineShaderStageCreateInfo(vk::ShaderStageFlagBits::eVertex) };
         const auto colorFragShaderStageInfo{ colorFragShader.createPipelineShaderStageCreateInfo(vk::ShaderStageFlagBits::eFragment) };
         const auto normalFragShaderStageInfo{ normalFragShader.createPipelineShaderStageCreateInfo(vk::ShaderStageFlagBits::eFragment) };
+        const auto worldNormalFragShaderStageInfo{ worldNormalFragShader.createPipelineShaderStageCreateInfo(vk::ShaderStageFlagBits::eFragment) };
+        const auto viewPosFragShaderStageInfo{ viewPosFragShader.createPipelineShaderStageCreateInfo(vk::ShaderStageFlagBits::eFragment) };
         vk::PipelineShaderStageCreateInfo colorShaderStages[] = { vertShaderStageInfo, colorFragShaderStageInfo };
         vk::PipelineShaderStageCreateInfo normalShaderStages[] = { vertShaderStageInfo, normalFragShaderStageInfo };
+        vk::PipelineShaderStageCreateInfo worldNormalShaderStages[] = { vertShaderStageInfo, worldNormalFragShaderStageInfo };
+        vk::PipelineShaderStageCreateInfo viewPosShaderStages[] = { vertShaderStageInfo, viewPosFragShaderStageInfo };
 
         auto bindingDescription = vw::util::Vertex::getBindingDescription();
         auto attributeDescriptions = vw::util::Vertex::getAttributeDescriptions();
@@ -156,6 +164,12 @@ namespace bmvk
 
         vk::GraphicsPipelineCreateInfo normalPipelineInfo(vk::PipelineCreateFlagBits::eDerivative, 2, normalShaderStages, &vertexInputInfo, &inputAssembly, nullptr, &viewportState, &rasterizer, &multisampling, &depthStencil, &colorBlending, &dynamicState, *m_pipelineLayout, *m_renderPass, 0, *m_colorPipeline, -1);
         m_normalPipeline = static_cast<vk::Device>(m_device).createGraphicsPipelineUnique(nullptr, normalPipelineInfo);
+
+        vk::GraphicsPipelineCreateInfo worldNormalPipelineInfo(vk::PipelineCreateFlagBits::eDerivative, 2, worldNormalShaderStages, &vertexInputInfo, &inputAssembly, nullptr, &viewportState, &rasterizer, &multisampling, &depthStencil, &colorBlending, &dynamicState, *m_pipelineLayout, *m_renderPass, 0, *m_colorPipeline, -1);
+        m_worldNormalPipeline = static_cast<vk::Device>(m_device).createGraphicsPipelineUnique(nullptr, worldNormalPipelineInfo);
+
+        vk::GraphicsPipelineCreateInfo viewPosPipelineInfo(vk::PipelineCreateFlagBits::eDerivative, 2, viewPosShaderStages, &vertexInputInfo, &inputAssembly, nullptr, &viewportState, &rasterizer, &multisampling, &depthStencil, &colorBlending, &dynamicState, *m_pipelineLayout, *m_renderPass, 0, *m_colorPipeline, -1);
+        m_viewPosPipeline = static_cast<vk::Device>(m_device).createGraphicsPipelineUnique(nullptr, viewPosPipelineInfo);
     }
 
     void CoordinatesDemo::createFramebuffers()
@@ -259,7 +273,7 @@ namespace bmvk
             std::vector<vk::ClearValue> clearValues{ vk::ClearColorValue{ std::array<float, 4>{ 0.f, 0.f, 0.f, 1.f } }, vk::ClearDepthStencilValue{ 1.f, 0 } };
             cmdBuffer.beginRenderPass(m_renderPass, m_swapChainFramebuffers[i], { { 0, 0 }, m_swapchain.getExtent() }, clearValues);
             const auto extent{ m_swapchain.getExtent() };
-            vk::Viewport vp{ 0.f, 0.f, extent.width / 2.f, static_cast<float>(extent.height), 0.f, 1.f };
+            vk::Viewport vp{ 0.f, 0.f, extent.width / 2.f, static_cast<float>(extent.height) / 2.f, 0.f, 1.f };
             cmdBuffer.setViewport(vp);
             cmdBuffer.bindPipeline(m_colorPipeline);
             cmdBuffer.bindDescriptorSet(m_pipelineLayout, m_descriptorSets[0]);
@@ -268,6 +282,14 @@ namespace bmvk
             vp.setX(extent.width / 2.f);
             cmdBuffer.setViewport(vp);
             cmdBuffer.bindPipeline(m_normalPipeline);
+            m_cube.draw(cb_vk);
+            vp.setY(extent.height / 2.f);
+            cmdBuffer.setViewport(vp);
+            cmdBuffer.bindPipeline(m_worldNormalPipeline);
+            m_cube.draw(cb_vk);
+            vp.setX(0.f);
+            cmdBuffer.setViewport(vp);
+            cmdBuffer.bindPipeline(m_viewPosPipeline);
             m_cube.draw(cb_vk);
             cmdBuffer.endRenderPass();
             cmdBuffer.end();
@@ -279,7 +301,7 @@ namespace bmvk
         UniformBufferObject ubo;
         ubo.model = m_cube.getModelMatrix();
         const auto extent{ m_swapchain.getExtent() };
-        m_camera.setRatio(extent.width / 2.f / static_cast<float>(extent.height));
+        m_camera.setRatio(extent.width / static_cast<float>(extent.height));
         ubo.view = m_camera.getViewMatrix();
         ubo.proj = m_camera.getProjMatrix();
         ubo.proj[1][1] *= -1;

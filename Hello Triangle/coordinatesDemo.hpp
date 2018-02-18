@@ -35,6 +35,8 @@ namespace bmvk
         vk::UniquePipelineLayout m_pipelineLayout;
         vk::UniquePipeline m_colorPipeline;
         vk::UniquePipeline m_normalPipeline;
+        vk::UniquePipeline m_worldNormalPipeline;
+        vk::UniquePipeline m_viewPosPipeline;
         std::vector<vk::UniqueFramebuffer> m_swapChainFramebuffers;
 
         vk::UniqueDeviceMemory m_depthImageMemory;

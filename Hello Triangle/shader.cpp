@@ -23,7 +23,7 @@ namespace bmvk
 
         if (!file.is_open())
         {
-            throw std::runtime_error("failed to open file!");
+            throw std::runtime_error("failed to open file (" + path.string() + ")!");
         }
 
         auto fileSize = static_cast<size_t>(file.tellg());
