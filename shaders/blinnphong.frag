@@ -19,7 +19,7 @@ const float screenGamma = 2.2;
 
 void main()
 {
-    vec3 normal = -normalize(fragNormal);
+    vec3 normal = normalize(fragNormal);
     vec3 lightDir = normalize(lightPos - vertPos);
 
     float lambertian = max(dot(lightDir,normal), 0.0);
