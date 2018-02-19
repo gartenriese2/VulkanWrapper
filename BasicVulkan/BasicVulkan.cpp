@@ -754,7 +754,7 @@ private:
         m_cornellModel.translate(glm::vec3{ -400.f, 0.f, -60.f });*/
 
         vw::util::ModelLoader ml;
-        m_dragonModel = ml.loadModel("../models/stanford_dragon/dragon.obj");
+        m_dragonModel = ml.loadModel("../models/stanford_dragon/dragon.obj", vw::util::ModelLoader::NormalCreation::AssimpSmoothNormals);
         m_dragonModel.scale(glm::vec3{ 0.1f });
         m_dragonModel.createBuffers(*m_device, m_physicalDevice, m_commandPool, m_graphicsQueue);
 

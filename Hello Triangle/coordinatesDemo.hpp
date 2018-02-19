@@ -54,6 +54,7 @@ namespace bmvk
         vk::UniqueSemaphore m_renderImguiFinishedSemaphore;
 
         vw::util::Model m_cube;
+        vw::util::Model m_dragon;
 
         void setupCamera();
 
@@ -63,6 +64,7 @@ namespace bmvk
         void createDepthResources();
         void createFramebuffers();
         void loadCube();
+        void loadDragon();
         void createUniformBuffer();
         void createDescriptorPool();
         void createDescriptorSet();

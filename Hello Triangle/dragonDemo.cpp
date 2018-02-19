@@ -162,7 +162,7 @@ namespace bmvk
     void DragonDemo::loadModel(std::string_view file)
     {
         vw::util::ModelLoader ml;
-        m_dragonModel = ml.loadModel(file);
+        m_dragonModel = ml.loadModel(file, vw::util::ModelLoader::NormalCreation::AssimpSmoothNormals);
         m_dragonModel.scale(glm::vec3{ 0.1f });
 
         m_dragonModel.createBuffers(static_cast<vk::Device>(m_device), static_cast<vk::PhysicalDevice>(m_instance.getPhysicalDevice()), m_commandPool, static_cast<vk::Queue>(m_queue));

@@ -16,6 +16,8 @@ namespace bmvk
     const std::string K_WORLDNORMAL_FRAGMENT_SHADER_PATH{ "../shaders/coordinates_worldNormal.frag.spv" };
     const std::string K_VIEWPOS_FRAGMENT_SHADER_PATH{ "../shaders/coordinates_viewPos.frag.spv" };
 
+    const std::string K_MODEL_PATH{ "../models/stanford_dragon/dragon.obj" };
+
     CoordinatesDemo::CoordinatesDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height)
         : ImguiBaseDemo{ enableValidationLayers, width, height, "Coordinates Demo", DebugReport::ReportLevel::WarningsAndAbove },
         m_imageAvailableSemaphore{ m_device.createSemaphore() },
@@ -30,6 +32,7 @@ namespace bmvk
         createDepthResources();
         createFramebuffers();
         loadCube();
+        loadDragon();
         createUniformBuffer();
         createDescriptorPool();
         createDescriptorSet();
@@ -222,6 +225,14 @@ namespace bmvk
         m_cube.createBuffers(static_cast<vk::Device>(m_device), static_cast<vk::PhysicalDevice>(m_instance.getPhysicalDevice()), m_commandPool, static_cast<vk::Queue>(m_queue));
     }
 
+    void CoordinatesDemo::loadDragon()
+    {
+        vw::util::ModelLoader ml;
+        m_dragon = ml.loadModel(K_MODEL_PATH, vw::util::ModelLoader::NormalCreation::Explicit);
+
+        m_dragon.createBuffers(static_cast<vk::Device>(m_device), static_cast<vk::PhysicalDevice>(m_instance.getPhysicalDevice()), m_commandPool, static_cast<vk::Queue>(m_queue));
+    }
+
     void CoordinatesDemo::createDepthResources()
     {
         const auto depthFormat{ m_instance.getPhysicalDevice().findDepthFormat() };
@@ -278,19 +289,23 @@ namespace bmvk
             cmdBuffer.bindPipeline(m_colorPipeline);
             cmdBuffer.bindDescriptorSet(m_pipelineLayout, m_descriptorSets[0]);
             const auto & cb_vk{ reinterpret_cast<const vk::UniqueCommandBuffer &>(cmdBuffer) };
-            m_cube.draw(cb_vk);
+            //m_cube.draw(cb_vk);
+            m_dragon.draw(cb_vk);
             vp.setX(extent.width / 2.f);
             cmdBuffer.setViewport(vp);
             cmdBuffer.bindPipeline(m_normalPipeline);
-            m_cube.draw(cb_vk);
+            //m_cube.draw(cb_vk);
+            m_dragon.draw(cb_vk);
             vp.setY(extent.height / 2.f);
             cmdBuffer.setViewport(vp);
             cmdBuffer.bindPipeline(m_worldNormalPipeline);
-            m_cube.draw(cb_vk);
+            //m_cube.draw(cb_vk);
+            m_dragon.draw(cb_vk);
             vp.setX(0.f);
             cmdBuffer.setViewport(vp);
             cmdBuffer.bindPipeline(m_viewPosPipeline);
-            m_cube.draw(cb_vk);
+            //m_cube.draw(cb_vk);
+            m_dragon.draw(cb_vk);
             cmdBuffer.endRenderPass();
             cmdBuffer.end();
         }

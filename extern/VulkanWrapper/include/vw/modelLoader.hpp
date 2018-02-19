@@ -13,13 +13,30 @@ namespace vw::util
     class ModelLoader
     {
     public:
-        Model loadModel(std::string_view file)
+        enum class NormalCreation
+        {
+            AssimpNormals,
+            AssimpSmoothNormals,
+            Explicit
+        };
+
+        Model loadModel(std::string_view file, const NormalCreation normalCreation)
         {
             Model model;
             model.getVertices().clear();
             model.getIndices().clear();
 
-            const auto * scene = m_importer.ReadFile(file.data(), aiProcess_Triangulate);
+            int aiProcessFlags{ aiProcess_Triangulate };
+            if (normalCreation == NormalCreation::AssimpNormals)
+            {
+                aiProcessFlags |= aiProcess_GenNormals;
+            }
+            else if (normalCreation == NormalCreation::AssimpSmoothNormals)
+            {
+                aiProcessFlags |= aiProcess_GenSmoothNormals;
+            }
+
+            const auto * scene = m_importer.ReadFile(file.data(), aiProcessFlags);
             if (!scene)
             {
                 throw std::runtime_error(m_importer.GetErrorString());
@@ -33,6 +50,7 @@ namespace vw::util
             {
                 const auto mesh = meshes[i];
                 const auto vertices = mesh->mVertices;
+                const auto normals = mesh->mNormals;
                 const auto faces = mesh->mFaces;
                 const auto numVertices = mesh->mNumVertices;
                 const auto numFaces = mesh->mNumFaces;
@@ -46,14 +64,18 @@ namespace vw::util
                     {
                         throw std::runtime_error("no triangles");
                     }
-
-                    const auto a_assimp = vertices[indices[0]];
-                    const auto a = glm::vec3(a_assimp.x, a_assimp.y, a_assimp.z);
-                    const auto b_assimp = vertices[indices[1]];
-                    const auto b = glm::vec3(b_assimp.x, b_assimp.y, b_assimp.z);
-                    const auto c_assimp = vertices[indices[2]];
-                    const auto c = glm::vec3(c_assimp.x, c_assimp.y, c_assimp.z);
-                    const auto n = glm::normalize(glm::cross(c - a, b - a));
+                    
+                    glm::vec3 n;
+                    if (normalCreation == NormalCreation::Explicit)
+                    {
+                        const auto a_assimp = vertices[indices[0]];
+                        const auto a = glm::vec3(a_assimp.x, a_assimp.y, a_assimp.z);
+                        const auto b_assimp = vertices[indices[1]];
+                        const auto b = glm::vec3(b_assimp.x, b_assimp.y, b_assimp.z);
+                        const auto c_assimp = vertices[indices[2]];
+                        const auto c = glm::vec3(c_assimp.x, c_assimp.y, c_assimp.z);
+                        n = glm::normalize(glm::cross(b - a, c - a));
+                    }
 
                     for (uint32_t k = 0; k < numIndices; ++k)
                     {
@@ -64,6 +86,11 @@ namespace vw::util
                         }
 
                         const auto v = vertices[index];
+                        if (normalCreation == NormalCreation::AssimpNormals || normalCreation == NormalCreation::AssimpSmoothNormals)
+                        {
+                            const auto aiN{ normals[index] };
+                            n = { aiN.x, aiN.y, aiN.z };
+                        }
 
                         Vertex vertex = {};
 
