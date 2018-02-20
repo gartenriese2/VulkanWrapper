@@ -66,6 +66,8 @@ namespace bmvk
 
             m_window.pollEvents();
 
+            updateNumObjects();
+
             updateUniformBuffer();
             updateDynamicUniformBuffer();
             imguiNewFrame();
@@ -74,9 +76,11 @@ namespace bmvk
             // Tip: if we don't call ImGui::Begin()/ImGui::End() the widgets appears in a window automatically called "Debug"
             {
                 ImGui::SetNextWindowPos(ImVec2(20, 20));
-                ImGui::SetNextWindowSize(ImVec2(400, 50), ImGuiCond_Always);
+                ImGui::SetNextWindowSize(ImVec2(400, 100), ImGuiCond_Always);
                 ImGui::Begin("Performance");
                 ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", m_avgFrameTime / 1000.0, m_avgFps);
+                const char* items[] = { "1", "8", "27", "64", "125", "216", "343", "512", "729", "1000" };
+                ImGui::Combo("Number of cubes", &m_numCubesI, items, static_cast<int>(sizeof(items) / sizeof(*items)));
                 ImGui::End();
             }
 
@@ -256,7 +260,7 @@ namespace bmvk
             m_dynamicAlignment = (m_dynamicAlignment + minUboAlignment - 1) & ~(minUboAlignment - 1);
         }
 
-        const auto bufferSize{ k_objectInstances * m_dynamicAlignment };
+        const auto bufferSize{ k_maxObjectInstances * m_dynamicAlignment };
 
         m_dynamicUniformBufferObject.model = static_cast<glm::mat4 *>(alignedAlloc(bufferSize, m_dynamicAlignment));
         if (m_dynamicUniformBufferObject.model == nullptr)
@@ -268,7 +272,7 @@ namespace bmvk
 
         std::default_random_engine rndEngine(static_cast<unsigned int>(time(nullptr)));
         std::normal_distribution<float> rndDist(-1.0f, 1.0f);
-        for (uint32_t i = 0; i < k_objectInstances; ++i) {
+        for (uint32_t i = 0; i < k_maxObjectInstances; ++i) {
             m_rotations[i] = glm::vec3(rndDist(rndEngine), rndDist(rndEngine), rndDist(rndEngine)) * 2.f * static_cast<float>(M_PI);
             m_rotationSpeeds[i] = glm::vec3(rndDist(rndEngine), rndDist(rndEngine), rndDist(rndEngine));
         }
@@ -312,9 +316,20 @@ namespace bmvk
             cmdBuffer.setViewport(vp);
             cmdBuffer.bindPipeline(m_pipeline);
             const auto & cb_vk{ reinterpret_cast<const vk::UniqueCommandBuffer &>(cmdBuffer) };
-            m_cube.drawInstanced(cb_vk, m_pipelineLayout, m_descriptorSets[0], k_objectInstances, m_dynamicAlignment);
+            m_cube.drawInstanced(cb_vk, m_pipelineLayout, m_descriptorSets[0], m_objectInstances, m_dynamicAlignment);
             cmdBuffer.endRenderPass();
             cmdBuffer.end();
+        }
+    }
+
+    void DynamicUboDemo::updateNumObjects()
+    {
+        const auto oldNum = m_objectInstances;
+        m_objectInstances = std::min(static_cast<int>(k_maxObjectInstances), (m_numCubesI + 1) * (m_numCubesI + 1) * (m_numCubesI + 1));
+        if (oldNum != m_objectInstances)
+        {
+            m_commandBuffers.clear();
+            createCommandBuffers();
         }
     }
 
@@ -334,13 +349,14 @@ namespace bmvk
     {
         // Update at max. 60 fps
         m_animationTimer += static_cast<float>(m_currentFrameTime);
-        if (m_animationTimer <= 1.0f / 60.0f) {
+        if (m_animationTimer <= 1.0f / 60.0f)
+        {
             return;
         }
 
         // Dynamic ubo with per-object model matrices indexed by offsets in the command buffer
-        uint32_t dim = static_cast<uint32_t>(pow(k_objectInstances, 1.0f / 3.0f));
-        glm::vec3 offset(5.0f);
+        const auto dim = static_cast<uint32_t>(pow(m_objectInstances, 1.0f / 3.0f));
+        const glm::vec3 offset(5.0f);
 
         for (uint32_t x = 0; x < dim; ++x)
         {
@@ -362,14 +378,13 @@ namespace bmvk
                     *modelMat = glm::rotate(*modelMat, m_rotations[index].x, glm::vec3(1.0f, 1.0f, 0.0f));
                     *modelMat = glm::rotate(*modelMat, m_rotations[index].y, glm::vec3(0.0f, 1.0f, 0.0f));
                     *modelMat = glm::rotate(*modelMat, m_rotations[index].z, glm::vec3(0.0f, 0.0f, 1.0f));
-                    //*modelMat = glm::mat4(1.f);
                 }
             }
         }
 
         m_animationTimer = 0.0f;
 
-        const auto bufSize{ k_objectInstances * m_dynamicAlignment };
+        const auto bufSize{ k_maxObjectInstances * m_dynamicAlignment };
         auto data{ m_device.mapMemory(m_dynamicUniformBufferMemory, bufSize) };
         memcpy(data, m_dynamicUniformBufferObject.model, bufSize);
         vk::MappedMemoryRange mmr{ *m_dynamicUniformBufferMemory, 0, bufSize };

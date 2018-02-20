@@ -28,7 +28,7 @@ out gl_PerVertex
 
 void main() 
 {
-	outColor = abs(uboInstance.model[1].xyz / 2.0);
+	outColor = inColor;
 	mat4 modelView = uboView.view * uboInstance.model;
-	gl_Position = uboView.proj * uboView.view * vec4(inPosition.xyz, 1.0);
+	gl_Position = uboView.proj * modelView * vec4(inPosition.xyz, 1.0);
 }

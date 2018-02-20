@@ -24,9 +24,13 @@ namespace bmvk
         void run() override;
         void recreateSwapChain() override;
     private:
-        static const uint32_t k_objectInstances = 27;
-        glm::vec3 m_rotations[k_objectInstances];
-        glm::vec3 m_rotationSpeeds[k_objectInstances];
+        static const uint32_t k_maxObjectInstances = 1000;
+
+        glm::vec3 m_rotations[k_maxObjectInstances];
+        glm::vec3 m_rotationSpeeds[k_maxObjectInstances];
+
+        uint32_t m_objectInstances = 27;
+        int m_numCubesI = 2;
 
         struct UniformBufferObject {
             glm::mat4 view;
@@ -79,6 +83,7 @@ namespace bmvk
         void createDescriptorSet();
         void createCommandBuffers();
 
+        void updateNumObjects();
         void updateUniformBuffer();
         void updateDynamicUniformBuffer();
 
