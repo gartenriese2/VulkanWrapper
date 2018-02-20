@@ -24,7 +24,7 @@ namespace bmvk
         void run() override;
         void recreateSwapChain() override;
     private:
-        static const uint32_t k_objectInstances = 1;
+        static const uint32_t k_objectInstances = 27;
         glm::vec3 m_rotations[k_objectInstances];
         glm::vec3 m_rotationSpeeds[k_objectInstances];
 

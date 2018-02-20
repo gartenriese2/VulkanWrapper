@@ -120,7 +120,7 @@ namespace bmvk
 
     void DynamicUboDemo::setupCamera()
     {
-        const glm::vec3 pos{ 0.f, 0.f, 5.f };
+        const glm::vec3 pos{ 0.f, 0.f, 25.f };
         const glm::vec3 dir{ 0.f, 0.f, -1.f };
         const glm::vec3 up{ 0.f, 1.f, 0.f };
         const auto extent{ m_swapchain.getExtent() };
@@ -369,9 +369,7 @@ namespace bmvk
 
         m_animationTimer = 0.0f;
 
-        //std::cout << "sizeof m_dynamicUniformBufferObject: " << sizeof(m_dynamicUniformBufferObject) << '\n';
         const auto bufSize{ k_objectInstances * m_dynamicAlignment };
-        //std::cout << "k_objectInstances * m_dynamicAlignment: " << bufSize << '\n';
         auto data{ m_device.mapMemory(m_dynamicUniformBufferMemory, bufSize) };
         memcpy(data, m_dynamicUniformBufferObject.model, bufSize);
         vk::MappedMemoryRange mmr{ *m_dynamicUniformBufferMemory, 0, bufSize };
