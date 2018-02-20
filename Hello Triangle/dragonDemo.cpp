@@ -131,8 +131,8 @@ namespace bmvk
         const auto fragShaderStageInfo{ fragShader.createPipelineShaderStageCreateInfo(vk::ShaderStageFlagBits::eFragment) };
         vk::PipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageInfo, fragShaderStageInfo };
 
-        auto bindingDescription = vw::util::Vertex::getBindingDescription();
-        auto attributeDescriptions = vw::util::Vertex::getAttributeDescriptions();
+        auto bindingDescription = vw::scene::Vertex::getBindingDescription();
+        auto attributeDescriptions = vw::scene::Vertex::getAttributeDescriptions();
         vk::PipelineVertexInputStateCreateInfo vertexInputInfo{ PipelineVertexInputStateCreateInfo{ bindingDescription, attributeDescriptions } };
         vk::PipelineInputAssemblyStateCreateInfo inputAssembly{ {}, vk::PrimitiveTopology::eTriangleList };
         vk::Viewport viewport;
@@ -161,8 +161,8 @@ namespace bmvk
 
     void DragonDemo::loadModel(std::string_view file)
     {
-        vw::util::ModelLoader ml;
-        m_dragonModel = ml.loadModel(file, vw::util::ModelLoader::NormalCreation::AssimpSmoothNormals);
+        vw::scene::ModelLoader ml;
+        m_dragonModel = ml.loadModel(file, vw::scene::ModelLoader::NormalCreation::AssimpSmoothNormals);
         m_dragonModel.scale(glm::vec3{ 0.1f });
 
         m_dragonModel.createBuffers(static_cast<vk::Device>(m_device), static_cast<vk::PhysicalDevice>(m_instance.getPhysicalDevice()), m_commandPool, static_cast<vk::Queue>(m_queue));

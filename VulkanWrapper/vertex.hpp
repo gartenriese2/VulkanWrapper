@@ -8,7 +8,7 @@
 
 #include <type_traits>
 
-namespace vw::util
+namespace vw::scene
 {
     struct Vertex
     {
@@ -50,9 +50,9 @@ namespace vw::util
 
 namespace std
 {
-    template<> struct hash<vw::util::Vertex>
+    template<> struct hash<vw::scene::Vertex>
     {
-        size_t operator()(vw::util::Vertex const & vertex) const
+        size_t operator()(vw::scene::Vertex const & vertex) const
         {
             return ((hash<glm::vec3>()(vertex.pos) ^ (hash<glm::vec3>()(vertex.color) << 1)) >> 1) ^ (hash<glm::vec2>()(vertex.texCoord) << 1) ^ hash<glm::vec3>()(vertex.normal);
         }

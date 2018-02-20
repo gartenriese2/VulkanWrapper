@@ -8,7 +8,7 @@
 
 #include "model.hpp"
 
-namespace vw::util
+namespace vw::scene
 {
     class ModelLoader
     {

@@ -9,7 +9,7 @@
 
 #include "vertex.hpp"
 
-namespace vw::util
+namespace vw::scene
 {
     class Model
     {

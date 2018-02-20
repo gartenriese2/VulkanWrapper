@@ -4,7 +4,7 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
-namespace vw::util
+namespace vw::scene
 {
     void Model::translate(const glm::vec3 & translate)
     {
@@ -29,7 +29,7 @@ namespace vw::util
         // Create & fill staging buffers & memories
         vk::UniqueBuffer vertexStagingBuffer;
         vk::UniqueDeviceMemory vertexStagingBufferMemory;
-        createBuffer(device, physicalDevice, vertexBufferSize, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, vertexStagingBuffer, vertexStagingBufferMemory);
+        util::createBuffer(device, physicalDevice, vertexBufferSize, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, vertexStagingBuffer, vertexStagingBufferMemory);
 
         auto * vertexData{ device.mapMemory(*vertexStagingBufferMemory, 0, vertexBufferSize, {}) };
         memcpy(vertexData, m_vertices.data(), static_cast<size_t>(vertexBufferSize));
@@ -37,7 +37,7 @@ namespace vw::util
 
         vk::UniqueBuffer indexStagingBuffer;
         vk::UniqueDeviceMemory indexStagingBufferMemory;
-        createBuffer(device, physicalDevice, indexBufferSize, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, indexStagingBuffer, indexStagingBufferMemory);
+        util::createBuffer(device, physicalDevice, indexBufferSize, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, indexStagingBuffer, indexStagingBufferMemory);
 
         auto * indexData{ device.mapMemory(*indexStagingBufferMemory, 0, indexBufferSize, {}) };
         memcpy(indexData, m_indices.data(), static_cast<size_t>(indexBufferSize));
@@ -52,7 +52,7 @@ namespace vw::util
         m_offset = vMemReq.size;
 
         // Create buffer & memory
-        createBuffer(device, physicalDevice, bufSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eIndexBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal, m_buffer, m_bufferMemory);
+        util::createBuffer(device, physicalDevice, bufSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eIndexBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal, m_buffer, m_bufferMemory);
 
         // Copy staging buffers into buffer
         auto vec = device.allocateCommandBuffersUnique({ *commandPool, vk::CommandBufferLevel::ePrimary, 1 });

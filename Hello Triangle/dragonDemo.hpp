@@ -50,7 +50,7 @@ namespace bmvk
         vk::UniqueSemaphore m_renderFinishedSemaphore;
         vk::UniqueSemaphore m_renderImguiFinishedSemaphore;
 
-        vw::util::Model m_dragonModel;
+        vw::scene::Model m_dragonModel;
 
         void setupCamera();
 
