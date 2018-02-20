@@ -23,6 +23,7 @@ namespace bmvk
 
         const auto & getImageFormat() const noexcept { return m_imageFormat; }
         const auto & getExtent() const noexcept { return m_extent; }
+        auto getRatio() const { return m_extent.width / static_cast<float>(m_extent.height); }
         const auto & getImageViews() const noexcept { return m_imageViews; }
 
         void recreate(const PhysicalDevice & physicalDevice, const Surface & surface, const std::tuple<int32_t, int32_t> & windowSize, const Device & device);

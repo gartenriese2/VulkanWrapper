@@ -340,7 +340,7 @@ namespace bmvk
         UniformBufferObject ubo;
         ubo.model = glm::rotate(glm::mat4(), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
         ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-        ubo.proj = glm::perspective(glm::radians(45.f), m_swapchain.getExtent().width / static_cast<float>(m_swapchain.getExtent().height), 0.1f, 10.f);
+        ubo.proj = glm::perspective(glm::radians(45.f), m_swapchain.getRatio(), 0.1f, 10.f);
         ubo.proj[1][1] *= -1;
 
         m_device.copyToMemory(m_uniformBufferMemory, ubo);

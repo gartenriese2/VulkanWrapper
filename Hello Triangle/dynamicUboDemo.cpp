@@ -127,8 +127,7 @@ namespace bmvk
         const glm::vec3 pos{ 0.f, 0.f, 25.f };
         const glm::vec3 dir{ 0.f, 0.f, -1.f };
         const glm::vec3 up{ 0.f, 1.f, 0.f };
-        const auto extent{ m_swapchain.getExtent() };
-        m_camera = vw::util::Camera(pos, dir, up, 45.f, extent.width / static_cast<float>(extent.height), 0.01f, std::numeric_limits<float>::infinity());
+        m_camera = vw::util::Camera(pos, dir, up, 45.f, m_swapchain.getRatio(), 0.01f, std::numeric_limits<float>::infinity());
     }
 
     void DynamicUboDemo::createDescriptorSetLayout()
