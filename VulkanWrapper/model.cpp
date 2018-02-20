@@ -89,6 +89,20 @@ namespace vw::util
         commandBuffer->drawIndexed(static_cast<uint32_t>(m_indices.size()), 1, 0, 0, 0);
     }
 
+    void Model::drawInstanced(const vk::UniqueCommandBuffer & commandBuffer, const vk::UniquePipelineLayout & pipelineLayout, const vk::UniqueDescriptorSet & desciptorSet, const uint32_t num, const size_t dynamicAlignment) const
+    {
+        vk::DeviceSize offsets = 0;
+        commandBuffer->bindVertexBuffers(0, *m_buffer, offsets);
+        commandBuffer->bindIndexBuffer(*m_buffer, m_offset, vk::IndexType::eUint32);
+
+        for (uint32_t i = 0; i < num; ++i)
+        {
+            auto dynamicOffset = i * static_cast<uint32_t>(dynamicAlignment);
+            commandBuffer->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, *pipelineLayout, 0, *desciptorSet, dynamicOffset);
+            commandBuffer->drawIndexed(static_cast<uint32_t>(m_indices.size()), 1, 0, 0, 0);
+        }
+    }
+
     void Model::reset()
     {
         m_buffer.reset(nullptr);

@@ -32,6 +32,7 @@ namespace vw::util
         void createBuffers(const vk::Device & device, const vk::PhysicalDevice & physicalDevice, const vk::UniqueCommandPool & commandPool, const vk::Queue & queue);
         void pushConstants(const vk::UniqueCommandBuffer & commandBuffer, const vk::UniquePipelineLayout & pipelineLayout) const;
         void draw(const vk::UniqueCommandBuffer & commandBuffer) const;
+        void drawInstanced(const vk::UniqueCommandBuffer & commandBuffer, const vk::UniquePipelineLayout & pipelineLayout, const vk::UniqueDescriptorSet & desciptorSet, const uint32_t num, const size_t dynamicAlignment) const;
 
         void reset();
     private:

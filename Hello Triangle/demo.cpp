@@ -118,6 +118,7 @@ namespace bmvk
     void Demo::timing(const bool print)
     {
         const auto microseconds = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - m_timepoint);
+        m_currentFrameTime = microseconds.count() / 1000000.0;
         m_elapsedTime += microseconds;
         ++m_timepointCount;
         if (m_elapsedTime.count() > 1e6)

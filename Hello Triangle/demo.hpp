@@ -36,6 +36,7 @@ namespace bmvk
         vk::UniqueCommandPool m_commandPool;
         BufferFactory m_bufferFactory;
 
+        double m_currentFrameTime = 0.0;
         double m_avgFrameTime = 0.0;
         double m_avgFps = 0.0;
 
