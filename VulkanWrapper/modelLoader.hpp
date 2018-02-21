@@ -10,6 +10,7 @@
 
 namespace vw::scene
 {
+    template<VertexDescription VD>
     class ModelLoader
     {
     public:
@@ -20,9 +21,21 @@ namespace vw::scene
             Explicit
         };
 
-        Model loadModel(std::string_view file, const NormalCreation normalCreation)
+        template <VertexDescription vd = VD>
+        auto createVertex(const glm::vec3 & v, const glm::vec3 & n, const glm::vec3 & c, const glm::vec2 & t, typename std::enable_if_t<vd == VertexDescription::PositionNormalColorTexture> * = nullptr) const
         {
-            Model model;
+            return Vertex<VD>{ v, n, c, t };
+        }
+
+        template <VertexDescription vd = VD>
+        auto createVertex(const glm::vec3 & v, const glm::vec3 & n, const glm::vec3 & c, const glm::vec2 & t, typename std::enable_if_t<vd == VertexDescription::PositionNormalColor> * = nullptr) const
+        {
+            return Vertex<VD>{ v, n, c };
+        }
+
+        Model<VD> loadModel(std::string_view file, const NormalCreation normalCreation)
+        {
+            Model<VD> model;
             model.getVertices().clear();
             model.getIndices().clear();
 
@@ -42,7 +55,7 @@ namespace vw::scene
                 throw std::runtime_error(m_importer.GetErrorString());
             }
 
-            std::unordered_map<Vertex, uint32_t> uniqueVertices = {};
+            std::unordered_map<Vertex<VD>, uint32_t> uniqueVertices = {};
 
             const auto meshes = scene->mMeshes;
             const auto numMeshes = scene->mNumMeshes;
@@ -92,12 +105,7 @@ namespace vw::scene
                             n = { aiN.x, aiN.y, aiN.z };
                         }
 
-                        Vertex vertex = {};
-
-                        vertex.pos = { v.x, v.y, v.z };
-                        vertex.texCoord = { 0.f, 1.f };
-                        vertex.color = { 1.f, 0.f, 0.f };
-                        vertex.normal = n;
+                        const auto vertex{ createVertex<VD>({ v.x, v.y, v.z }, n, { 1.f, 0.f, 0.f }, { 0.f, 1.f }) };
 
                         if (uniqueVertices.count(vertex) == 0)
                         {
@@ -113,25 +121,25 @@ namespace vw::scene
             return model;
         }
 
-        Model loadTriangle() const
+        Model<VD> loadTriangle() const
         {
-            Model model;
+            Model<VD> model;
             auto & modelVertices{ model.getVertices() };
             auto & modelIndices{ model.getIndices() };
             modelVertices.clear();
             modelIndices.clear();
 
-            Vertex v1;
+            Vertex<VD> v1;
             v1.pos = { -1.f, -1.f, 0.f };
             v1.texCoord = { 0.f, 1.f };
             v1.color = { 1.f, 0.f, 0.f };
             v1.normal = { 0.f, 0.f, 1.f };
-            Vertex v2;
+            Vertex<VD> v2;
             v2.pos = { 1.f, -1.f, 0.f };
             v2.texCoord = { 0.f, 1.f };
             v2.color = { 0.f, 1.f, 0.f };
             v2.normal = { 0.f, 0.f, 1.f };
-            Vertex v3;
+            Vertex<VD> v3;
             v3.pos = { 0.f, 1.f, 0.f };
             v3.texCoord = { 0.f, 1.f };
             v3.color = { 0.f, 0.f, 1.f };
@@ -151,8 +159,13 @@ namespace vw::scene
         Assimp::Importer m_importer;
     };
 
-    static_assert(std::is_move_constructible_v<ModelLoader>);
-    static_assert(std::is_copy_constructible_v<ModelLoader>);
-    static_assert(std::is_nothrow_move_assignable_v<ModelLoader>);
-    static_assert(std::is_nothrow_copy_assignable_v<ModelLoader>);
+    static_assert(std::is_move_constructible_v<ModelLoader<VertexDescription::PositionNormalColorTexture>>);
+    static_assert(std::is_copy_constructible_v<ModelLoader<VertexDescription::PositionNormalColorTexture>>);
+    static_assert(std::is_nothrow_move_assignable_v<ModelLoader<VertexDescription::PositionNormalColorTexture>>);
+    static_assert(std::is_nothrow_copy_assignable_v<ModelLoader<VertexDescription::PositionNormalColorTexture>>);
+
+    static_assert(std::is_move_constructible_v<ModelLoader<VertexDescription::PositionNormalColor>>);
+    static_assert(std::is_copy_constructible_v<ModelLoader<VertexDescription::PositionNormalColor>>);
+    static_assert(std::is_nothrow_move_assignable_v<ModelLoader<VertexDescription::PositionNormalColor>>);
+    static_assert(std::is_nothrow_copy_assignable_v<ModelLoader<VertexDescription::PositionNormalColor>>);
 }

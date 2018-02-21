@@ -6,22 +6,26 @@
 
 namespace vw::scene
 {
-    void Model::translate(const glm::vec3 & translate)
+    template<VertexDescription VD>
+    void Model<VD>::translate(const glm::vec3 & translate)
     {
         m_modelMatrix = glm::translate(m_modelMatrix, translate);
     }
 
-    void Model::scale(const glm::vec3 & scale)
+    template<VertexDescription VD>
+    void Model<VD>::scale(const glm::vec3 & scale)
     {
         m_modelMatrix = glm::scale(m_modelMatrix, scale);
     }
 
-    void Model::rotate(const glm::vec3 & axis, const float radians)
+    template<VertexDescription VD>
+    void Model<VD>::rotate(const glm::vec3 & axis, const float radians)
     {
         m_modelMatrix = glm::rotate(m_modelMatrix, radians, axis);
     }
 
-    void Model::createBuffers(const vk::Device & device, const vk::PhysicalDevice & physicalDevice, const vk::UniqueCommandPool & commandPool, const vk::Queue & queue)
+    template<VertexDescription VD>
+    void Model<VD>::createBuffers(const vk::Device & device, const vk::PhysicalDevice & physicalDevice, const vk::UniqueCommandPool & commandPool, const vk::Queue & queue)
     {
         const auto vertexBufferSize{ sizeof(m_vertices[0]) * m_vertices.size() };
         const auto indexBufferSize{ sizeof(m_indices[0]) * m_indices.size() };
@@ -75,13 +79,15 @@ namespace vw::scene
         indexStagingBuffer.reset(nullptr);
     }
 
-    void Model::pushConstants(const vk::UniqueCommandBuffer & commandBuffer, const vk::UniquePipelineLayout & pipelineLayout) const
+    template<VertexDescription VD>
+    void Model<VD>::pushConstants(const vk::UniqueCommandBuffer & commandBuffer, const vk::UniquePipelineLayout & pipelineLayout) const
     {
         std::array<glm::mat4, 1> pushConstants = { m_modelMatrix };
         commandBuffer->pushConstants(*pipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, sizeof(pushConstants), pushConstants.data());
     }
 
-    void Model::draw(const vk::UniqueCommandBuffer & commandBuffer) const
+    template<VertexDescription VD>
+    void Model<VD>::draw(const vk::UniqueCommandBuffer & commandBuffer) const
     {
         vk::DeviceSize offsets = 0;
         commandBuffer->bindVertexBuffers(0, *m_buffer, offsets);
@@ -89,7 +95,8 @@ namespace vw::scene
         commandBuffer->drawIndexed(static_cast<uint32_t>(m_indices.size()), 1, 0, 0, 0);
     }
 
-    void Model::drawInstanced(const vk::UniqueCommandBuffer & commandBuffer, const vk::UniquePipelineLayout & pipelineLayout, const vk::UniqueDescriptorSet & desciptorSet, const uint32_t num, const size_t dynamicAlignment) const
+    template<VertexDescription VD>
+    void Model<VD>::drawInstanced(const vk::UniqueCommandBuffer & commandBuffer, const vk::UniquePipelineLayout & pipelineLayout, const vk::UniqueDescriptorSet & desciptorSet, const uint32_t num, const size_t dynamicAlignment) const
     {
         vk::DeviceSize offsets = 0;
         commandBuffer->bindVertexBuffers(0, *m_buffer, offsets);
@@ -103,9 +110,13 @@ namespace vw::scene
         }
     }
 
-    void Model::reset()
+    template<VertexDescription VD>
+    void Model<VD>::reset()
     {
         m_buffer.reset(nullptr);
         m_bufferMemory.reset(nullptr);
     }
+
+    template class Model<VertexDescription::PositionNormalColorTexture>;
+    template class Model<VertexDescription::PositionNormalColor>;
 }

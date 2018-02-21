@@ -67,7 +67,7 @@ namespace bmvk
         vk::UniqueSemaphore m_renderFinishedSemaphore;
         vk::UniqueSemaphore m_renderImguiFinishedSemaphore;
 
-        vw::scene::Model m_cube;
+        vw::scene::Model<vw::scene::VertexDescription::PositionNormalColorTexture> m_cube;
 
         void setupCamera();
 

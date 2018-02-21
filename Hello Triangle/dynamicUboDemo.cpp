@@ -158,8 +158,8 @@ namespace bmvk
         const auto fragShaderStageInfo{ fragShader.createPipelineShaderStageCreateInfo(vk::ShaderStageFlagBits::eFragment) };
         vk::PipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageInfo, fragShaderStageInfo };
 
-        auto bindingDescription = vw::scene::Vertex::getBindingDescription();
-        auto attributeDescriptions = vw::scene::Vertex::getAttributeDescriptions();
+        auto bindingDescription = vw::scene::Vertex<vw::scene::VertexDescription::PositionNormalColorTexture>::getBindingDescription();
+        auto attributeDescriptions = vw::scene::Vertex<vw::scene::VertexDescription::PositionNormalColorTexture>::getAttributeDescriptions();
         vk::PipelineVertexInputStateCreateInfo vertexInputInfo{ PipelineVertexInputStateCreateInfo{ bindingDescription, attributeDescriptions } };
         vk::PipelineInputAssemblyStateCreateInfo inputAssembly{ {}, vk::PrimitiveTopology::eTriangleList };
         vk::Viewport viewport;
@@ -192,12 +192,12 @@ namespace bmvk
     {
         const auto posToCol = [](const glm::vec3 & pos) { return glm::vec3(std::max(0.f, pos.x), std::max(0.f, pos.y), std::max(0.f, pos.z)); };
 
-        const auto createSide = [&posToCol](vw::scene::Model & model, const glm::vec3 & n, const glm::vec3 & a, const glm::vec3 & b, const glm::vec3 & c, const glm::vec3 & d, const int i)
+        const auto createSide = [&posToCol](vw::scene::Model<vw::scene::VertexDescription::PositionNormalColorTexture> & model, const glm::vec3 & n, const glm::vec3 & a, const glm::vec3 & b, const glm::vec3 & c, const glm::vec3 & d, const int i)
         {
-            model.getVertices().push_back(vw::scene::Vertex{ a, n, posToCol(a),{} });
-            model.getVertices().push_back(vw::scene::Vertex{ b, n, posToCol(b),{} });
-            model.getVertices().push_back(vw::scene::Vertex{ c, n, posToCol(c),{} });
-            model.getVertices().push_back(vw::scene::Vertex{ d, n, posToCol(d),{} });
+            model.getVertices().push_back(vw::scene::Vertex<vw::scene::VertexDescription::PositionNormalColorTexture>{ a, n, posToCol(a),{} });
+            model.getVertices().push_back(vw::scene::Vertex<vw::scene::VertexDescription::PositionNormalColorTexture>{ b, n, posToCol(b),{} });
+            model.getVertices().push_back(vw::scene::Vertex<vw::scene::VertexDescription::PositionNormalColorTexture>{ c, n, posToCol(c),{} });
+            model.getVertices().push_back(vw::scene::Vertex<vw::scene::VertexDescription::PositionNormalColorTexture>{ d, n, posToCol(d),{} });
 
             model.getIndices().push_back(i);
             model.getIndices().push_back(i + 1);

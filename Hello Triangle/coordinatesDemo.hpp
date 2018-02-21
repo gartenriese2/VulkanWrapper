@@ -11,6 +11,8 @@
 
 namespace bmvk
 {
+    const vw::scene::VertexDescription VD = vw::scene::VertexDescription::PositionNormalColor;
+
     class CoordinatesDemo : ImguiBaseDemo
     {
     public:
@@ -53,8 +55,8 @@ namespace bmvk
         vk::UniqueSemaphore m_renderFinishedSemaphore;
         vk::UniqueSemaphore m_renderImguiFinishedSemaphore;
 
-        vw::scene::Model m_cube;
-        vw::scene::Model m_dragon;
+        vw::scene::Model<VD> m_cube;
+        vw::scene::Model<VD> m_dragon;
 
         void setupCamera();
 

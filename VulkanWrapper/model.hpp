@@ -11,6 +11,7 @@
 
 namespace vw::scene
 {
+    template<VertexDescription VD>
     class Model
     {
     public:
@@ -38,15 +39,20 @@ namespace vw::scene
     private:
         glm::mat4 m_modelMatrix;
 
-        std::vector<Vertex> m_vertices;
+        std::vector<Vertex<VD>> m_vertices;
         std::vector<uint32_t> m_indices;
         vk::UniqueDeviceMemory m_bufferMemory;
         vk::UniqueBuffer m_buffer;
         vk::DeviceSize m_offset = 0;
     };
 
-    static_assert(std::is_move_constructible_v<Model>);
-    static_assert(!std::is_copy_constructible_v<Model>);
-    static_assert(std::is_move_assignable_v<Model>);
-    static_assert(!std::is_copy_assignable_v<Model>);
+    static_assert(std::is_move_constructible_v<Model<VertexDescription::PositionNormalColorTexture>>);
+    static_assert(!std::is_copy_constructible_v<Model<VertexDescription::PositionNormalColorTexture>>);
+    static_assert(std::is_move_assignable_v<Model<VertexDescription::PositionNormalColorTexture>>);
+    static_assert(!std::is_copy_assignable_v<Model<VertexDescription::PositionNormalColorTexture>>);
+
+    static_assert(std::is_move_constructible_v<Model<VertexDescription::PositionNormalColor>>);
+    static_assert(!std::is_copy_constructible_v<Model<VertexDescription::PositionNormalColor>>);
+    static_assert(std::is_move_assignable_v<Model<VertexDescription::PositionNormalColor>>);
+    static_assert(!std::is_copy_assignable_v<Model<VertexDescription::PositionNormalColor>>);
 }

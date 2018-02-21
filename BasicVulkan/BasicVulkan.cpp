@@ -122,9 +122,9 @@ private:
     vk::UniqueImageView m_textureImageView;
     vk::UniqueSampler m_textureSampler;
 
-    vw::scene::Model m_dragonModel;
+    vw::scene::Model<vw::scene::VertexDescription::PositionNormalColorTexture> m_dragonModel;
     //Model m_cornellModel;
-    vw::scene::Model m_triangle;
+    vw::scene::Model<vw::scene::VertexDescription::PositionNormalColorTexture> m_triangle;
 
     vk::UniqueBuffer m_uniformBuffer;
     vk::UniqueDeviceMemory m_uniformBufferMemory;
@@ -521,8 +521,8 @@ private:
 
         vk::PipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageInfo, fragShaderStageInfo };
 
-        auto bindingDescription = vw::scene::Vertex::getBindingDescription();
-        auto attributeDescriptions = vw::scene::Vertex::getAttributeDescriptions();
+        auto bindingDescription = vw::scene::Vertex<vw::scene::VertexDescription::PositionNormalColorTexture>::getBindingDescription();
+        auto attributeDescriptions = vw::scene::Vertex<vw::scene::VertexDescription::PositionNormalColorTexture>::getAttributeDescriptions();
         vk::PipelineVertexInputStateCreateInfo vertexInputInfo{ {}, 1, &bindingDescription, static_cast<uint32_t>(attributeDescriptions.size()), attributeDescriptions.data() };
 
         vk::PipelineInputAssemblyStateCreateInfo inputAssembly{ {}, vk::PrimitiveTopology::eTriangleList, false };
@@ -753,15 +753,15 @@ private:
         m_cornellModel.scale(glm::vec3{ 0.1f });
         m_cornellModel.translate(glm::vec3{ -400.f, 0.f, -60.f });*/
 
-        vw::scene::ModelLoader ml;
-        m_dragonModel = ml.loadModel("../models/stanford_dragon/dragon.obj", vw::scene::ModelLoader::NormalCreation::AssimpSmoothNormals);
+        vw::scene::ModelLoader<vw::scene::VertexDescription::PositionNormalColorTexture> ml;
+        m_dragonModel = ml.loadModel("../models/stanford_dragon/dragon.obj", vw::scene::ModelLoader<vw::scene::VertexDescription::PositionNormalColorTexture>::NormalCreation::AssimpSmoothNormals);
         m_dragonModel.scale(glm::vec3{ 0.1f });
         m_dragonModel.createBuffers(*m_device, m_physicalDevice, m_commandPool, m_graphicsQueue);
 
         m_triangle = ml.loadTriangle();
     }
 
-    void createVertexBuffer(vw::scene::Model & model) const
+    void createVertexBuffer(vw::scene::Model<vw::scene::VertexDescription::PositionNormalColorTexture> & model) const
     {
         /*auto & modelVertices{ model.getVertices() };
         vk::DeviceSize bufferSize = sizeof(modelVertices[0]) * modelVertices.size();
@@ -782,7 +782,7 @@ private:
         stagingBufferMemory.reset(nullptr);*/
     }
 
-    void createIndexBuffer(vw::scene::Model & model) const
+    void createIndexBuffer(vw::scene::Model<vw::scene::VertexDescription::PositionNormalColorTexture> & model) const
     {
        /* auto & modelIndices{ model.getIndices() };
         vk::DeviceSize bufferSize = sizeof(modelIndices[0]) * modelIndices.size();
