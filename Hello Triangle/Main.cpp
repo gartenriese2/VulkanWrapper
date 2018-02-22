@@ -12,8 +12,9 @@
 //#include "depthBufferDemo.hpp"
 //#include "objectDemo.hpp"
 //#include "dragonDemo.hpp"
-#include "coordinatesDemo.hpp"
+//#include "coordinatesDemo.hpp"
 #include "dynamicUboDemo.hpp"
+#include "modelGroupDemo.hpp"
 
 const int WIDTH = 800;
 const int HEIGHT = 600;
@@ -39,8 +40,9 @@ int main()
         //bmvk::DepthBufferDemo app(enableValidationLayers, WIDTH, HEIGHT);
         //bmvk::ObjectDemo app(enableValidationLayers, WIDTH, HEIGHT);
         //bmvk::DragonDemo app(enableValidationLayers, WIDTH, HEIGHT);
-        bmvk::CoordinatesDemo app(enableValidationLayers, WIDTH, HEIGHT);
+        //bmvk::CoordinatesDemo app(enableValidationLayers, WIDTH, HEIGHT);
         //bmvk::DynamicUboDemo app(enableValidationLayers, WIDTH, HEIGHT);
+        bmvk::ModelGroupDemo app(enableValidationLayers, WIDTH, HEIGHT);
         app.run();
     }
     catch (const std::runtime_error & e)

@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClInclude Include="camera.hpp" />
     <ClInclude Include="model.hpp" />
+    <ClInclude Include="modelGroup.hpp" />
     <ClInclude Include="modelLoader.hpp" />
     <ClInclude Include="util.hpp" />
     <ClInclude Include="vertex.hpp" />

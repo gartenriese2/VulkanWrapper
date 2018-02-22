@@ -96,11 +96,6 @@ namespace std
 {
     template<vw::scene::VertexDescription VD> struct hash<vw::scene::Vertex<VD>>
     {
-        /*size_t operator()(vw::scene::Vertex<VD> const & vertex) const
-        {
-            return ((hash<glm::vec3>()(vertex.pos) ^ (hash<glm::vec3>()(vertex.color) << 1)) >> 1) ^ (hash<glm::vec2>()(vertex.texCoord) << 1) ^ hash<glm::vec3>()(vertex.normal);
-        }*/
-
         template <vw::scene::VertexDescription vd = VD>
         size_t operator()(vw::scene::Vertex<VD> const & vertex, typename std::enable_if_t<vd == vw::scene::VertexDescription::PositionNormalColorTexture> * = nullptr) const
         {

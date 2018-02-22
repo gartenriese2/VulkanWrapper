@@ -35,6 +35,7 @@
     <ClCompile Include="indexbufferDemo.cpp" />
     <ClCompile Include="instance.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="modelGroupDemo.cpp" />
     <ClCompile Include="objectDemo.cpp" />
     <ClCompile Include="physicalDevice.cpp" />
     <ClCompile Include="queue.cpp" />
@@ -68,6 +69,7 @@
     <ClInclude Include="imguiDemo.hpp" />
     <ClInclude Include="indexbufferDemo.hpp" />
     <ClInclude Include="instance.hpp" />
+    <ClInclude Include="modelGroupDemo.hpp" />
     <ClInclude Include="objectDemo.hpp" />
     <ClInclude Include="physicalDevice.hpp" />
     <ClInclude Include="queue.hpp" />
