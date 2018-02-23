@@ -35,7 +35,7 @@ namespace bmvk
 
         const auto & getLayerNames() noexcept { return m_layerNames; }
 
-        PhysicalDevice getSuitablePhysicalDevice(const vk::SurfaceKHR & surface) const;
+        PhysicalDevice getSuitablePhysicalDevice(const vk::UniqueSurfaceKHR & surface) const;
     private:
         vk::UniqueInstance m_instance;
         std::unique_ptr<DebugReport> m_debugReportPtr;

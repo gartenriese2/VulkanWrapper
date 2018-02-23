@@ -50,7 +50,7 @@ namespace vw::scene
             return vk::DescriptorBufferInfo{ *m_dynamicUniformBuffer, 0, sizeof(DynamicUniformBufferObject) };
         }
 
-        void createBuffers(const vk::Device & device, const vk::PhysicalDevice & physicalDevice, const vk::UniqueCommandPool & commandPool, const vk::Queue & queue)
+        void createBuffers(const vk::UniqueDevice & device, const vk::PhysicalDevice & physicalDevice, const vk::UniqueCommandPool & commandPool, const vk::Queue & queue)
         {
             const auto vertexBufferSize{ sizeof(m_vertices[0]) * m_vertices.size() };
             const auto indexBufferSize{ sizeof(m_indices[0]) * m_indices.size() };
@@ -60,23 +60,23 @@ namespace vw::scene
             vk::UniqueDeviceMemory vertexStagingBufferMemory;
             util::createBuffer(device, physicalDevice, vertexBufferSize, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, vertexStagingBuffer, vertexStagingBufferMemory);
 
-            auto * vertexData{ device.mapMemory(*vertexStagingBufferMemory, 0, vertexBufferSize,{}) };
+            auto * vertexData{ device->mapMemory(*vertexStagingBufferMemory, 0, vertexBufferSize,{}) };
             memcpy(vertexData, m_vertices.data(), static_cast<size_t>(vertexBufferSize));
-            device.unmapMemory(*vertexStagingBufferMemory);
+            device->unmapMemory(*vertexStagingBufferMemory);
 
             vk::UniqueBuffer indexStagingBuffer;
             vk::UniqueDeviceMemory indexStagingBufferMemory;
             util::createBuffer(device, physicalDevice, indexBufferSize, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, indexStagingBuffer, indexStagingBufferMemory);
 
-            auto * indexData{ device.mapMemory(*indexStagingBufferMemory, 0, indexBufferSize,{}) };
+            auto * indexData{ device->mapMemory(*indexStagingBufferMemory, 0, indexBufferSize,{}) };
             memcpy(indexData, m_indices.data(), static_cast<size_t>(indexBufferSize));
-            device.unmapMemory(*indexStagingBufferMemory);
+            device->unmapMemory(*indexStagingBufferMemory);
 
             // Get size & offset
-            const auto vb = device.createBufferUnique({ {}, vertexBufferSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer });
-            const auto ib = device.createBufferUnique({ {}, indexBufferSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer });
-            const auto vMemReq{ device.getBufferMemoryRequirements(*vb) };
-            const auto iMemReq{ device.getBufferMemoryRequirements(*vb) };
+            const auto vb = device->createBufferUnique({ {}, vertexBufferSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer });
+            const auto ib = device->createBufferUnique({ {}, indexBufferSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer });
+            const auto vMemReq{ device->getBufferMemoryRequirements(*vb) };
+            const auto iMemReq{ device->getBufferMemoryRequirements(*vb) };
             const auto bufSize{ vMemReq.size + iMemReq.size };
             m_offset = vMemReq.size;
 
@@ -84,7 +84,7 @@ namespace vw::scene
             util::createBuffer(device, physicalDevice, bufSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eIndexBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal, m_buffer, m_bufferMemory);
 
             // Copy staging buffers into buffer
-            auto vec = device.allocateCommandBuffersUnique({ *commandPool, vk::CommandBufferLevel::ePrimary, 1 });
+            auto vec = device->allocateCommandBuffersUnique({ *commandPool, vk::CommandBufferLevel::ePrimary, 1 });
             if (vec.size() != 1)
             {
                 throw std::runtime_error("allocating single command buffer failed, created " + std::to_string(vec.size()) + " command buffers instead.");
@@ -122,14 +122,14 @@ namespace vw::scene
             }
         }
 
-        void flush(const vk::Device & device)
+        void flush(const vk::UniqueDevice & device)
         {
             const auto bufSize{ m_maxNumInstances * m_dynamicAlignment };
-            auto data{ device.mapMemory(*m_dynamicUniformBufferMemory, 0, bufSize, {}) };
+            auto data{ device->mapMemory(*m_dynamicUniformBufferMemory, 0, bufSize, {}) };
             memcpy(data, m_dynamicUniformBufferObject.model, bufSize);
             vk::MappedMemoryRange mmr{ *m_dynamicUniformBufferMemory, 0, bufSize };
-            device.flushMappedMemoryRanges(mmr);
-            device.unmapMemory(*m_dynamicUniformBufferMemory);
+            device->flushMappedMemoryRanges(mmr);
+            device->unmapMemory(*m_dynamicUniformBufferMemory);
         }
 
         void setModelMatrix(const uint32_t idx, const glm::mat4 & modelMatrix)

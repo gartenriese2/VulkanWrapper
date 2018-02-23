@@ -80,14 +80,14 @@ namespace bmvk
         vk::SubpassDescription subpass{ {}, vk::PipelineBindPoint::eGraphics, 0, nullptr, 1, &colorAttachmentRef };
         vk::SubpassDependency dependency{ VK_SUBPASS_EXTERNAL, 0, vk::PipelineStageFlagBits::eColorAttachmentOutput, vk::PipelineStageFlagBits::eColorAttachmentOutput, {}, vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite };
         RenderPassCreateInfo renderPassInfo{ {}, colorAttachment, subpass, dependency };
-        m_renderPass = static_cast<vk::Device>(m_device).createRenderPassUnique(renderPassInfo);
+        m_renderPass = reinterpret_cast<const vk::UniqueDevice &>(m_device)->createRenderPassUnique(renderPassInfo);
     }
 
     void UniformbufferDemo::createDescriptorSetLayout()
     {
         vk::DescriptorSetLayoutBinding uboLayoutBinding{ 0, vk::DescriptorType::eUniformBuffer, 1, vk::ShaderStageFlagBits::eVertex };
         vk::DescriptorSetLayoutCreateInfo layoutInfo{ {}, 1, &uboLayoutBinding };
-        m_descriptorSetLayout = static_cast<vk::Device>(m_device).createDescriptorSetLayoutUnique(layoutInfo);
+        m_descriptorSetLayout = reinterpret_cast<const vk::UniqueDevice &>(m_device)->createDescriptorSetLayoutUnique(layoutInfo);
     }
 
     void UniformbufferDemo::createGraphicsPipeline()
@@ -111,10 +111,10 @@ namespace bmvk
         vk::PipelineColorBlendStateCreateInfo colorBlending{ {}, false, vk::LogicOp::eCopy, 1, &colorBlendAttachment };
         auto descriptorSetLayout{ *m_descriptorSetLayout };
         vk::PipelineLayoutCreateInfo pipelineLayoutInfo{ {}, 1, &descriptorSetLayout };
-        m_pipelineLayout = static_cast<vk::Device>(m_device).createPipelineLayoutUnique(pipelineLayoutInfo);
+        m_pipelineLayout = reinterpret_cast<const vk::UniqueDevice &>(m_device)->createPipelineLayoutUnique(pipelineLayoutInfo);
 
         vk::GraphicsPipelineCreateInfo pipelineInfo{ {}, 2, shaderStages, &vertexInputInfo, &inputAssembly, nullptr, &viewportState, &rasterizer, &multisampling, nullptr, &colorBlending, nullptr, *m_pipelineLayout, *m_renderPass, 0, nullptr, -1 };
-        m_graphicsPipeline = static_cast<vk::Device>(m_device).createGraphicsPipelineUnique(nullptr, pipelineInfo);
+        m_graphicsPipeline = reinterpret_cast<const vk::UniqueDevice &>(m_device)->createGraphicsPipelineUnique(nullptr, pipelineInfo);
     }
 
     void UniformbufferDemo::createFramebuffers()
@@ -137,9 +137,9 @@ namespace bmvk
         vk::UniqueDeviceMemory stagingBufferMemory;
         createBuffer(bufferSize, stagingBufferUsageFlags, stagingBufferMemoryPropertyFlags, stagingBuffer, stagingBufferMemory);
 
-        auto data{ static_cast<vk::Device>(m_device).mapMemory(*stagingBufferMemory, 0, bufferSize) };
+        auto data{ reinterpret_cast<const vk::UniqueDevice &>(m_device)->mapMemory(*stagingBufferMemory, 0, bufferSize) };
         memcpy(data, vertices.data(), static_cast<size_t>(bufferSize));
-        static_cast<vk::Device>(m_device).unmapMemory(*stagingBufferMemory);
+        reinterpret_cast<const vk::UniqueDevice &>(m_device)->unmapMemory(*stagingBufferMemory);
 
         const auto vertexBufferUsageFlags{ vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer };
         const auto vertexBufferMemoryPropertyFlags{ vk::MemoryPropertyFlagBits::eDeviceLocal };
@@ -158,9 +158,9 @@ namespace bmvk
         vk::UniqueDeviceMemory stagingBufferMemory;
         createBuffer(bufferSize, stagingBufferUsageFlags, stagingBufferMemoryPropertyFlags, stagingBuffer, stagingBufferMemory);
 
-        auto data{ static_cast<vk::Device>(m_device).mapMemory(*stagingBufferMemory, 0, bufferSize) };
+        auto data{ reinterpret_cast<const vk::UniqueDevice &>(m_device)->mapMemory(*stagingBufferMemory, 0, bufferSize) };
         memcpy(data, indices.data(), static_cast<size_t>(bufferSize));
-        static_cast<vk::Device>(m_device).unmapMemory(*stagingBufferMemory);
+        reinterpret_cast<const vk::UniqueDevice &>(m_device)->unmapMemory(*stagingBufferMemory);
 
         const auto indexBufferUsageFlags{ vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer };
         const auto indexBufferMemoryPropertyFlags{ vk::MemoryPropertyFlagBits::eDeviceLocal };
@@ -187,7 +187,7 @@ namespace bmvk
     {
         vk::DescriptorSetLayout layouts[] = { *m_descriptorSetLayout };
         vk::DescriptorSetAllocateInfo allocInfo{ *m_descriptorPool, 1, layouts };
-        m_descriptorSets = static_cast<vk::Device>(m_device).allocateDescriptorSetsUnique(allocInfo);
+        m_descriptorSets = reinterpret_cast<const vk::UniqueDevice &>(m_device)->allocateDescriptorSetsUnique(allocInfo);
 
         vk::DescriptorBufferInfo bufferInfo{ *m_uniformBuffer, 0, sizeof(UniformBufferObject) };
         WriteDescriptorSet descriptorWrite{ m_descriptorSets[0], 0, 0, 1, vk::DescriptorType::eUniformBuffer, nullptr, &bufferInfo };

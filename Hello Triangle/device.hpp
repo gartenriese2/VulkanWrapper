@@ -13,14 +13,14 @@ namespace bmvk
     class Device
     {
     public:
-        explicit Device(vk::Device && device, const uint32_t queueFamilyIndex);
+        explicit Device(vk::UniqueDevice && device, const uint32_t queueFamilyIndex);
         Device(const Device &) = delete;
         Device(Device && other) = default;
         Device & operator=(const Device &) = delete;
         Device & operator=(Device && other) = default;
-        ~Device();
+        ~Device() {}
 
-        explicit operator const vk::Device &() const noexcept { return m_device; }
+        explicit operator const vk::UniqueDevice &() const noexcept { return m_device; }
 
         Queue createQueue() const;
         vk::UniqueImageView createImageView(vk::ImageViewCreateInfo info) const;
@@ -35,7 +35,7 @@ namespace bmvk
         vk::UniqueDescriptorSetLayout createDescriptorSetLayout(const std::vector<vk::DescriptorSetLayoutBinding> & bindings) const;
         vk::UniquePipelineLayout createPipelineLayout(const std::vector<vk::DescriptorSetLayout> & setLayouts, const std::vector<vk::PushConstantRange> & pushConstantRanges = {}) const;
 
-        void waitIdle() const { m_device.waitIdle(); }
+        void waitIdle() const { m_device->waitIdle(); }
         void * mapMemory(const vk::UniqueDeviceMemory & memory, const vk::DeviceSize size, const vk::DeviceSize offset = 0, const vk::MemoryMapFlags flags = {}) const;
         void unmapMemory(const vk::UniqueDeviceMemory & memory) const;
         template <class T>
@@ -45,7 +45,7 @@ namespace bmvk
         void updateDescriptorSet(vk::WriteDescriptorSet set) const;
         void updateDescriptorSets(vk::ArrayProxy<const vk::WriteDescriptorSet> sets) const;
     private:
-        vk::Device m_device;
+        vk::UniqueDevice m_device;
         uint32_t m_queueFamilyIndex;
     };
 

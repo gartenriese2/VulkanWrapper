@@ -37,11 +37,11 @@ namespace bmvk
 
     void Swapchain::create(const PhysicalDevice & physicalDevice, const Surface & surface, const std::tuple<int32_t, int32_t> & windowSize, const Device & device)
     {
-        m_capabilities = physicalDevice.getSurfaceCapabilities(static_cast<vk::SurfaceKHR>(surface));
+        m_capabilities = physicalDevice.getSurfaceCapabilities(reinterpret_cast<const vk::UniqueSurfaceKHR &>(surface));
         m_imageCount = PhysicalDevice::chooseImageCount(m_capabilities);
 
-        const auto formats{ physicalDevice.getSurfaceFormats(static_cast<vk::SurfaceKHR>(surface)) };
-        const auto presentModes{ physicalDevice.getPresentModes(static_cast<vk::SurfaceKHR>(surface)) };
+        const auto formats{ physicalDevice.getSurfaceFormats(reinterpret_cast<const vk::UniqueSurfaceKHR &>(surface)) };
+        const auto presentModes{ physicalDevice.getPresentModes(reinterpret_cast<const vk::UniqueSurfaceKHR &>(surface)) };
 
         m_imageFormat = PhysicalDevice::chooseSwapSurfaceFormat(formats);
         m_presentMode = PhysicalDevice::chooseSwapPresentMode(presentModes);
@@ -51,7 +51,7 @@ namespace bmvk
         vk::SwapchainCreateInfoKHR createInfo
         {
             vk::SwapchainCreateFlagsKHR(),
-            static_cast<vk::SurfaceKHR>(surface),
+            *reinterpret_cast<const vk::UniqueSurfaceKHR &>(surface),
             m_imageCount,
             m_imageFormat.format,
             m_imageFormat.colorSpace,
@@ -68,8 +68,8 @@ namespace bmvk
             nullptr
         };
 
-        m_swapchain = static_cast<vk::Device>(device).createSwapchainKHRUnique(createInfo);
-        m_images = static_cast<vk::Device>(device).getSwapchainImagesKHR(*m_swapchain);
+        m_swapchain = reinterpret_cast<const vk::UniqueDevice &>(device)->createSwapchainKHRUnique(createInfo);
+        m_images = reinterpret_cast<const vk::UniqueDevice &>(device)->getSwapchainImagesKHR(*m_swapchain);
         m_imageViews.resize(m_images.size());
         for (size_t i = 0; i < m_images.size(); i++)
         {

@@ -31,7 +31,7 @@ namespace vw::scene
 
         static vk::VertexInputBindingDescription getBindingDescription()
         {
-            return { 0, sizeof Vertex<VertexDescription::PositionNormalColorTexture>, vk::VertexInputRate::eVertex };
+            return { 0, sizeof (Vertex<VertexDescription::PositionNormalColorTexture>), vk::VertexInputRate::eVertex };
         }
 
         static auto getAttributeDescriptions()
@@ -66,7 +66,7 @@ namespace vw::scene
 
         static vk::VertexInputBindingDescription getBindingDescription()
         {
-            return { 0, sizeof Vertex<VertexDescription::PositionNormalColor>, vk::VertexInputRate::eVertex };
+            return { 0, sizeof (Vertex<VertexDescription::PositionNormalColor>), vk::VertexInputRate::eVertex };
         }
 
         static auto getAttributeDescriptions()

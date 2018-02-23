@@ -4,19 +4,19 @@
 
 namespace bmvk
 {
-    Buffer::Buffer(const vk::Device & device, const vk::DeviceSize size, const vk::BufferUsageFlags usage, const vk::SharingMode sharingMode)
-        : m_buffer{ device.createBufferUnique({ {}, size, usage, sharingMode }) }
+    Buffer::Buffer(const vk::UniqueDevice & device, const vk::DeviceSize size, const vk::BufferUsageFlags usage, const vk::SharingMode sharingMode)
+        : m_buffer{ device->createBufferUnique({ {}, size, usage, sharingMode }) }
     {
     }
 
-    vk::MemoryRequirements Buffer::getMemoryRequirements(const vk::Device & device) const
+    vk::MemoryRequirements Buffer::getMemoryRequirements(const vk::UniqueDevice & device) const
     {
-        return device.getBufferMemoryRequirements(*m_buffer);
+        return device->getBufferMemoryRequirements(*m_buffer);
     }
 
-    void Buffer::bindToMemory(const vk::Device & device, const vk::UniqueDeviceMemory & memory, const vk::DeviceSize offset) const
+    void Buffer::bindToMemory(const vk::UniqueDevice & device, const vk::UniqueDeviceMemory & memory, const vk::DeviceSize offset) const
     {
-        device.bindBufferMemory(*m_buffer, *memory, offset);
+        device->bindBufferMemory(*m_buffer, *memory, offset);
     }
 
     void Buffer::copyToImage(CommandBuffer & cmdBuffer, vk::UniqueImage & image, uint32_t width, uint32_t height) const

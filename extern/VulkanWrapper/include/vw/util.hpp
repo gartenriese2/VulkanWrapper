@@ -18,16 +18,16 @@ namespace vw::util
         throw std::runtime_error("failed to find suitable memory type!");
     }
 
-    static void createBuffer(const vk::Device & device, const vk::PhysicalDevice & physicalDevice, vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags properties, vk::UniqueBuffer & buffer, vk::UniqueDeviceMemory & bufferMemory)
+    static void createBuffer(const vk::UniqueDevice & device, const vk::PhysicalDevice & physicalDevice, vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags properties, vk::UniqueBuffer & buffer, vk::UniqueDeviceMemory & bufferMemory)
     {
         vk::BufferCreateInfo bufferInfo{ {}, size, usage };
-        buffer = device.createBufferUnique(bufferInfo);
+        buffer = device->createBufferUnique(bufferInfo);
 
-        const auto memRequirements{ device.getBufferMemoryRequirements(*buffer) };
+        const auto memRequirements{ device->getBufferMemoryRequirements(*buffer) };
         vk::MemoryAllocateInfo allocInfo{ memRequirements.size, findMemoryType(physicalDevice, memRequirements.memoryTypeBits, properties) };
-        bufferMemory = device.allocateMemoryUnique(allocInfo);
+        bufferMemory = device->allocateMemoryUnique(allocInfo);
 
-        device.bindBufferMemory(*buffer, *bufferMemory, 0);
+        device->bindBufferMemory(*buffer, *bufferMemory, 0);
     }
 
     static void copyBuffer(const vk::Device & device, const vk::UniqueCommandPool & commandPool, const vk::Queue & queue, vk::UniqueBuffer & srcBuffer, vk::UniqueBuffer & dstBuffer, vk::DeviceSize size)

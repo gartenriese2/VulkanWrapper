@@ -126,7 +126,7 @@ namespace bmvk
         vk::SubpassDependency dependency{ VK_SUBPASS_EXTERNAL, 0, vk::PipelineStageFlagBits::eColorAttachmentOutput, vk::PipelineStageFlagBits::eColorAttachmentOutput,{}, vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite };
         std::vector<vk::AttachmentDescription> vec{ colorAttachment, depthAttachment };
         RenderPassCreateInfo renderPassInfo{ {}, vec, subpass, dependency };
-        m_renderPass = static_cast<vk::Device>(m_device).createRenderPassUnique(renderPassInfo);
+        m_renderPass = reinterpret_cast<const vk::UniqueDevice &>(m_device)->createRenderPassUnique(renderPassInfo);
     }
 
     void CoordinatesDemo::createPipelines()
@@ -163,16 +163,16 @@ namespace bmvk
         m_pipelineLayout = m_device.createPipelineLayout({ *m_descriptorSetLayout });
 
         vk::GraphicsPipelineCreateInfo colorPipelineInfo(vk::PipelineCreateFlagBits::eAllowDerivatives, 2, colorShaderStages, &vertexInputInfo, &inputAssembly, nullptr, &viewportState, &rasterizer, &multisampling, &depthStencil, &colorBlending, &dynamicState, *m_pipelineLayout, *m_renderPass, 0, nullptr, -1);
-        m_colorPipeline = static_cast<vk::Device>(m_device).createGraphicsPipelineUnique(nullptr, colorPipelineInfo);
+        m_colorPipeline = reinterpret_cast<const vk::UniqueDevice &>(m_device)->createGraphicsPipelineUnique(nullptr, colorPipelineInfo);
 
         vk::GraphicsPipelineCreateInfo normalPipelineInfo(vk::PipelineCreateFlagBits::eDerivative, 2, normalShaderStages, &vertexInputInfo, &inputAssembly, nullptr, &viewportState, &rasterizer, &multisampling, &depthStencil, &colorBlending, &dynamicState, *m_pipelineLayout, *m_renderPass, 0, *m_colorPipeline, -1);
-        m_normalPipeline = static_cast<vk::Device>(m_device).createGraphicsPipelineUnique(nullptr, normalPipelineInfo);
+        m_normalPipeline = reinterpret_cast<const vk::UniqueDevice &>(m_device)->createGraphicsPipelineUnique(nullptr, normalPipelineInfo);
 
         vk::GraphicsPipelineCreateInfo worldNormalPipelineInfo(vk::PipelineCreateFlagBits::eDerivative, 2, worldNormalShaderStages, &vertexInputInfo, &inputAssembly, nullptr, &viewportState, &rasterizer, &multisampling, &depthStencil, &colorBlending, &dynamicState, *m_pipelineLayout, *m_renderPass, 0, *m_colorPipeline, -1);
-        m_worldNormalPipeline = static_cast<vk::Device>(m_device).createGraphicsPipelineUnique(nullptr, worldNormalPipelineInfo);
+        m_worldNormalPipeline = reinterpret_cast<const vk::UniqueDevice &>(m_device)->createGraphicsPipelineUnique(nullptr, worldNormalPipelineInfo);
 
         vk::GraphicsPipelineCreateInfo viewPosPipelineInfo(vk::PipelineCreateFlagBits::eDerivative, 2, viewPosShaderStages, &vertexInputInfo, &inputAssembly, nullptr, &viewportState, &rasterizer, &multisampling, &depthStencil, &colorBlending, &dynamicState, *m_pipelineLayout, *m_renderPass, 0, *m_colorPipeline, -1);
-        m_viewPosPipeline = static_cast<vk::Device>(m_device).createGraphicsPipelineUnique(nullptr, viewPosPipelineInfo);
+        m_viewPosPipeline = reinterpret_cast<const vk::UniqueDevice &>(m_device)->createGraphicsPipelineUnique(nullptr, viewPosPipelineInfo);
     }
 
     void CoordinatesDemo::createFramebuffers()
@@ -222,7 +222,7 @@ namespace bmvk
         // down
         createSide(m_cube, { 0.f, -1.f, 0.f }, { -1.f, -1.f, -1.f }, { 1.f, -1.f, -1.f }, { 1.f, -1.f, 1.f }, { -1.f, -1.f, 1.f }, 20);
 
-        m_cube.createBuffers(static_cast<vk::Device>(m_device), static_cast<vk::PhysicalDevice>(m_instance.getPhysicalDevice()), m_commandPool, static_cast<vk::Queue>(m_queue));
+        m_cube.createBuffers(reinterpret_cast<const vk::UniqueDevice &>(m_device), static_cast<vk::PhysicalDevice>(m_instance.getPhysicalDevice()), m_commandPool, static_cast<vk::Queue>(m_queue));
     }
 
     void CoordinatesDemo::loadDragon()
@@ -230,7 +230,7 @@ namespace bmvk
         vw::scene::ModelLoader<VD> ml;
         m_dragon = ml.loadModel(K_MODEL_PATH, vw::scene::ModelLoader<VD>::NormalCreation::Explicit);
 
-        m_dragon.createBuffers(static_cast<vk::Device>(m_device), static_cast<vk::PhysicalDevice>(m_instance.getPhysicalDevice()), m_commandPool, static_cast<vk::Queue>(m_queue));
+        m_dragon.createBuffers(reinterpret_cast<const vk::UniqueDevice &>(m_device), static_cast<vk::PhysicalDevice>(m_instance.getPhysicalDevice()), m_commandPool, static_cast<vk::Queue>(m_queue));
     }
 
     void CoordinatesDemo::createDepthResources()
@@ -266,7 +266,7 @@ namespace bmvk
     {
         vk::DescriptorSetLayout layouts[] = { *m_descriptorSetLayout };
         vk::DescriptorSetAllocateInfo allocInfo{ *m_descriptorPool, 1, layouts };
-        m_descriptorSets = static_cast<vk::Device>(m_device).allocateDescriptorSetsUnique(allocInfo);
+        m_descriptorSets = reinterpret_cast<const vk::UniqueDevice &>(m_device)->allocateDescriptorSetsUnique(allocInfo);
 
         vk::DescriptorBufferInfo bufferInfo{ *m_uniformBuffer, 0, sizeof(UniformBufferObject) };
         WriteDescriptorSet descriptorWrite{ m_descriptorSets[0], 0, 0, 1, vk::DescriptorType::eUniformBuffer, nullptr, &bufferInfo };

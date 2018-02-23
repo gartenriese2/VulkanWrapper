@@ -123,7 +123,7 @@ namespace bmvk
         vk::Sampler samplers[1] = { *sampler };
         vk::DescriptorSetLayoutBinding imageLayoutBinding{ 0, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment, samplers };
         vk::DescriptorSetLayoutCreateInfo layoutInfoImgui{ {}, 1, &imageLayoutBinding };
-        m_descriptorSetLayoutImgui = static_cast<vk::Device>(m_device).createDescriptorSetLayoutUnique(layoutInfoImgui);
+        m_descriptorSetLayoutImgui = reinterpret_cast<const vk::UniqueDevice &>(m_device)->createDescriptorSetLayoutUnique(layoutInfoImgui);
     }
 
     void ImguiBaseDemo::createRenderPass()
@@ -133,7 +133,7 @@ namespace bmvk
         vk::SubpassDescription subpass{ {}, vk::PipelineBindPoint::eGraphics, 0, nullptr, 1, &colorAttachmentRef };
         vk::SubpassDependency dependency{ VK_SUBPASS_EXTERNAL, 0, vk::PipelineStageFlagBits::eColorAttachmentOutput, vk::PipelineStageFlagBits::eColorAttachmentOutput,{}, vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite };
         RenderPassCreateInfo renderPassInfoImgui{ {}, colorAttachmentImgui, subpass, dependency };
-        m_renderPassImgui = static_cast<vk::Device>(m_device).createRenderPassUnique(renderPassInfoImgui);
+        m_renderPassImgui = reinterpret_cast<const vk::UniqueDevice &>(m_device)->createRenderPassUnique(renderPassInfoImgui);
     }
 
     void ImguiBaseDemo::createGraphicsPipeline()
@@ -183,7 +183,7 @@ namespace bmvk
             0x0000002d,0x0000002c,0x000100fd,0x00010038
         };
         vk::ShaderModuleCreateInfo vertModuleInfo{ {}, sizeof glslShaderVertSpv, static_cast<uint32_t*>(glslShaderVertSpv) };
-        auto vertModule = static_cast<vk::Device>(m_device).createShaderModuleUnique(vertModuleInfo);
+        auto vertModule = reinterpret_cast<const vk::UniqueDevice &>(m_device)->createShaderModuleUnique(vertModuleInfo);
         vk::PipelineShaderStageCreateInfo vertShaderStageInfoImgui{ {}, vk::ShaderStageFlagBits::eVertex, *vertModule, "main" };
 
         static uint32_t glslShaderFragSpv[] =
@@ -215,7 +215,7 @@ namespace bmvk
             0x00010038
         };
         vk::ShaderModuleCreateInfo fragModuleInfo{ {}, sizeof glslShaderFragSpv, static_cast<uint32_t*>(glslShaderFragSpv) };
-        auto fragModule = static_cast<vk::Device>(m_device).createShaderModuleUnique(fragModuleInfo);
+        auto fragModule = reinterpret_cast<const vk::UniqueDevice &>(m_device)->createShaderModuleUnique(fragModuleInfo);
         vk::PipelineShaderStageCreateInfo fragShaderStageInfoImgui{ {}, vk::ShaderStageFlagBits::eFragment, *fragModule, "main" };
 
         vk::PipelineShaderStageCreateInfo shaderStagesImgui[] = { vertShaderStageInfoImgui, fragShaderStageInfoImgui };
@@ -243,7 +243,7 @@ namespace bmvk
         m_pipelineLayoutImgui = m_device.createPipelineLayout({ *m_descriptorSetLayoutImgui }, { pushConstantRange });
 
         vk::GraphicsPipelineCreateInfo pipelineInfoImgui{ {}, 2, shaderStagesImgui, &vertexInputInfoImgui, &inputAssemblyImgui, nullptr, &viewportStateImgui, &rasterizerImgui, &multisamplingImgui, &depthStencilState, &colorBlendingImgui, &dynamicState, *m_pipelineLayoutImgui, *m_renderPassImgui, 0, nullptr, -1 };
-        m_graphicsPipelineImgui = static_cast<vk::Device>(m_device).createGraphicsPipelineUnique(nullptr, pipelineInfoImgui);
+        m_graphicsPipelineImgui = reinterpret_cast<const vk::UniqueDevice &>(m_device)->createGraphicsPipelineUnique(nullptr, pipelineInfoImgui);
     }
 
     void ImguiBaseDemo::createFramebuffers()
@@ -279,7 +279,7 @@ namespace bmvk
     {
         vk::DescriptorSetLayout layoutsImgui[] = { *m_descriptorSetLayoutImgui };
         vk::DescriptorSetAllocateInfo allocInfoImgui{ *m_descriptorPoolImgui, 1, layoutsImgui };
-        m_descriptorSetsImgui = static_cast<vk::Device>(m_device).allocateDescriptorSetsUnique(allocInfoImgui);
+        m_descriptorSetsImgui = reinterpret_cast<const vk::UniqueDevice &>(m_device)->allocateDescriptorSetsUnique(allocInfoImgui);
     }
 
     void ImguiBaseDemo::uploadFonts()
@@ -296,42 +296,42 @@ namespace bmvk
 
         // Create the Image:
         vk::ImageCreateInfo imageInfo{ {}, vk::ImageType::e2D, vk::Format::eR8G8B8A8Unorm, vk::Extent3D(width, height, 1), 1, 1, vk::SampleCountFlagBits::e1, vk::ImageTiling::eOptimal, vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eTransferDst };
-        m_imguiFontImage = static_cast<vk::Device>(m_device).createImageUnique(imageInfo);
+        m_imguiFontImage = reinterpret_cast<const vk::UniqueDevice &>(m_device)->createImageUnique(imageInfo);
 
-        const auto imageReq{ static_cast<vk::Device>(m_device).getImageMemoryRequirements(*m_imguiFontImage) };
+        const auto imageReq{ reinterpret_cast<const vk::UniqueDevice &>(m_device)->getImageMemoryRequirements(*m_imguiFontImage) };
         const auto imageMemoryTypeIndex{ getImguiMemoryType(static_cast<vk::PhysicalDevice>(m_instance.getPhysicalDevice()), vk::MemoryPropertyFlagBits::eDeviceLocal, imageReq.memoryTypeBits) };
         vk::MemoryAllocateInfo imageMemoryAllocInfo{ imageReq.size, imageMemoryTypeIndex };
-        m_imguiFontMemory = static_cast<vk::Device>(m_device).allocateMemoryUnique(imageMemoryAllocInfo);
+        m_imguiFontMemory = reinterpret_cast<const vk::UniqueDevice &>(m_device)->allocateMemoryUnique(imageMemoryAllocInfo);
 
-        static_cast<vk::Device>(m_device).bindImageMemory(*m_imguiFontImage, *m_imguiFontMemory, 0);
+        reinterpret_cast<const vk::UniqueDevice &>(m_device)->bindImageMemory(*m_imguiFontImage, *m_imguiFontMemory, 0);
 
         // Create the Image View:
         vk::ImageViewCreateInfo imageViewInfo{ {}, *m_imguiFontImage, vk::ImageViewType::e2D, vk::Format::eR8G8B8A8Unorm,{}, vk::ImageSubresourceRange{ vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1 } };
-        m_imguiFontImageView = static_cast<vk::Device>(m_device).createImageViewUnique(imageViewInfo);
+        m_imguiFontImageView = reinterpret_cast<const vk::UniqueDevice &>(m_device)->createImageViewUnique(imageViewInfo);
 
         // Update the Descriptor Set:
         auto & sampler{ reinterpret_cast<vk::UniqueSampler &>(m_fontSampler) };
         vk::DescriptorImageInfo descImage[1] = { { *sampler, *m_imguiFontImageView, vk::ImageLayout::eShaderReadOnlyOptimal } };
         vk::WriteDescriptorSet writeDesc(*m_descriptorSetsImgui[0], 0, 0, 1, vk::DescriptorType::eCombinedImageSampler, descImage);
-        static_cast<vk::Device>(m_device).updateDescriptorSets(writeDesc, nullptr);
+        reinterpret_cast<const vk::UniqueDevice &>(m_device)->updateDescriptorSets(writeDesc, nullptr);
 
         // Create the Upload Buffer:
         vk::BufferCreateInfo bufferInfo{ {}, upload_size, vk::BufferUsageFlagBits::eTransferSrc };
-        auto uploadBuffer{ static_cast<vk::Device>(m_device).createBufferUnique(bufferInfo) };
+        auto uploadBuffer{ reinterpret_cast<const vk::UniqueDevice &>(m_device)->createBufferUnique(bufferInfo) };
 
-        const auto bufferReq{ static_cast<vk::Device>(m_device).getBufferMemoryRequirements(*uploadBuffer) };
+        const auto bufferReq{ reinterpret_cast<const vk::UniqueDevice &>(m_device)->getBufferMemoryRequirements(*uploadBuffer) };
         m_bufferMemoryAlignmentImgui = m_bufferMemoryAlignmentImgui > bufferReq.alignment ? m_bufferMemoryAlignmentImgui : bufferReq.alignment;
         const auto bufferMemoryTypeIndex{ getImguiMemoryType(static_cast<vk::PhysicalDevice>(m_instance.getPhysicalDevice()), vk::MemoryPropertyFlagBits::eHostVisible, bufferReq.memoryTypeBits) };
         vk::MemoryAllocateInfo bufferMemoryAllocInfo{ bufferReq.size, bufferMemoryTypeIndex };
-        auto uploadBufferMemory{ static_cast<vk::Device>(m_device).allocateMemoryUnique(bufferMemoryAllocInfo) };
+        auto uploadBufferMemory{ reinterpret_cast<const vk::UniqueDevice &>(m_device)->allocateMemoryUnique(bufferMemoryAllocInfo) };
 
-        static_cast<vk::Device>(m_device).bindBufferMemory(*uploadBuffer, *uploadBufferMemory, 0);
+        reinterpret_cast<const vk::UniqueDevice &>(m_device)->bindBufferMemory(*uploadBuffer, *uploadBufferMemory, 0);
 
         // Upload to Buffer:
         auto * map{ m_device.mapMemory(uploadBufferMemory, upload_size) };
         memcpy(map, pixels, upload_size);
         vk::MappedMemoryRange flushRange{ *uploadBufferMemory, 0, upload_size };
-        static_cast<vk::Device>(m_device).flushMappedMemoryRanges(flushRange);
+        reinterpret_cast<const vk::UniqueDevice &>(m_device)->flushMappedMemoryRanges(flushRange);
         m_device.unmapMemory(uploadBufferMemory);
 
         // Copy to Image:
@@ -380,15 +380,15 @@ namespace bmvk
 
             const auto vertexBufferSize{ ((vertexSize - 1) / m_bufferMemoryAlignmentImgui + 1) * m_bufferMemoryAlignmentImgui };
             vk::BufferCreateInfo bufferInfo{ {}, vertexBufferSize, vk::BufferUsageFlagBits::eVertexBuffer };
-            m_vertexBufferImgui = static_cast<vk::Device>(m_device).createBufferUnique(bufferInfo);
+            m_vertexBufferImgui = reinterpret_cast<const vk::UniqueDevice &>(m_device)->createBufferUnique(bufferInfo);
 
-            const auto req{ static_cast<vk::Device>(m_device).getBufferMemoryRequirements(*m_vertexBufferImgui) };
+            const auto req{ reinterpret_cast<const vk::UniqueDevice &>(m_device)->getBufferMemoryRequirements(*m_vertexBufferImgui) };
             m_bufferMemoryAlignmentImgui = m_bufferMemoryAlignmentImgui > req.alignment ? m_bufferMemoryAlignmentImgui : req.alignment;
 
             vk::MemoryAllocateInfo allocInfo{ req.size, getImguiMemoryType(static_cast<vk::PhysicalDevice>(m_instance.getPhysicalDevice()), vk::MemoryPropertyFlagBits::eHostVisible, req.memoryTypeBits) };
-            m_vertexBufferMemoryImgui = static_cast<vk::Device>(m_device).allocateMemoryUnique(allocInfo);
+            m_vertexBufferMemoryImgui = reinterpret_cast<const vk::UniqueDevice &>(m_device)->allocateMemoryUnique(allocInfo);
 
-            static_cast<vk::Device>(m_device).bindBufferMemory(*m_vertexBufferImgui, *m_vertexBufferMemoryImgui, 0);
+            reinterpret_cast<const vk::UniqueDevice &>(m_device)->bindBufferMemory(*m_vertexBufferImgui, *m_vertexBufferMemoryImgui, 0);
 
             m_vertexBufferSize = vertexBufferSize;
         }
@@ -409,15 +409,15 @@ namespace bmvk
 
             const auto indexBufferSize{ ((indexSize - 1) / m_bufferMemoryAlignmentImgui + 1) * m_bufferMemoryAlignmentImgui };
             vk::BufferCreateInfo bufferInfo{ {}, indexBufferSize, vk::BufferUsageFlagBits::eIndexBuffer };
-            m_indexBufferImgui = static_cast<vk::Device>(m_device).createBufferUnique(bufferInfo);
+            m_indexBufferImgui = reinterpret_cast<const vk::UniqueDevice &>(m_device)->createBufferUnique(bufferInfo);
 
-            const auto req{ static_cast<vk::Device>(m_device).getBufferMemoryRequirements(*m_indexBufferImgui) };
+            const auto req{ reinterpret_cast<const vk::UniqueDevice &>(m_device)->getBufferMemoryRequirements(*m_indexBufferImgui) };
             m_bufferMemoryAlignmentImgui = m_bufferMemoryAlignmentImgui > req.alignment ? m_bufferMemoryAlignmentImgui : req.alignment;
 
             vk::MemoryAllocateInfo allocInfo{ req.size, getImguiMemoryType(static_cast<vk::PhysicalDevice>(m_instance.getPhysicalDevice()), vk::MemoryPropertyFlagBits::eHostVisible, req.memoryTypeBits) };
-            m_indexBufferMemoryImgui = static_cast<vk::Device>(m_device).allocateMemoryUnique(allocInfo);
+            m_indexBufferMemoryImgui = reinterpret_cast<const vk::UniqueDevice &>(m_device)->allocateMemoryUnique(allocInfo);
 
-            static_cast<vk::Device>(m_device).bindBufferMemory(*m_indexBufferImgui, *m_indexBufferMemoryImgui, 0);
+            reinterpret_cast<const vk::UniqueDevice &>(m_device)->bindBufferMemory(*m_indexBufferImgui, *m_indexBufferMemoryImgui, 0);
 
             m_indexBufferSize = indexBufferSize;
         }
@@ -440,7 +440,7 @@ namespace bmvk
             { *m_vertexBufferMemoryImgui, 0, VK_WHOLE_SIZE },
             { *m_indexBufferMemoryImgui, 0, VK_WHOLE_SIZE },
         };
-        static_cast<vk::Device>(m_device).flushMappedMemoryRanges(ranges);
+        reinterpret_cast<const vk::UniqueDevice &>(m_device)->flushMappedMemoryRanges(ranges);
 
         m_device.unmapMemory(m_vertexBufferMemoryImgui);
         m_device.unmapMemory(m_indexBufferMemoryImgui);

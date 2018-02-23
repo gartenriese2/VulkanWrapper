@@ -131,7 +131,7 @@ namespace bmvk
         vk::SubpassDependency dependency{ VK_SUBPASS_EXTERNAL, 0, vk::PipelineStageFlagBits::eColorAttachmentOutput, vk::PipelineStageFlagBits::eColorAttachmentOutput,{}, vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite };
         std::vector<vk::AttachmentDescription> vec{ colorAttachment, depthAttachment };
         RenderPassCreateInfo renderPassInfo{ {}, vec, subpass, dependency };
-        m_renderPass = static_cast<vk::Device>(m_device).createRenderPassUnique(renderPassInfo);
+        m_renderPass = reinterpret_cast<const vk::UniqueDevice &>(m_device)->createRenderPassUnique(renderPassInfo);
     }
 
     void ModelGroupDemo::createPipelines()
@@ -159,7 +159,7 @@ namespace bmvk
         m_pipelineLayout = m_device.createPipelineLayout({ *m_descriptorSetLayout });
 
         vk::GraphicsPipelineCreateInfo colorPipelineInfo({}, 2, shaderStages, &vertexInputInfo, &inputAssembly, nullptr, &viewportState, &rasterizer, &multisampling, &depthStencil, &colorBlending, &dynamicState, *m_pipelineLayout, *m_renderPass, 0, nullptr, -1);
-        m_pipeline = static_cast<vk::Device>(m_device).createGraphicsPipelineUnique(nullptr, colorPipelineInfo);
+        m_pipeline = reinterpret_cast<const vk::UniqueDevice &>(m_device)->createGraphicsPipelineUnique(nullptr, colorPipelineInfo);
     }
 
     void ModelGroupDemo::createFramebuffers()
@@ -214,7 +214,7 @@ namespace bmvk
 
         m_modelGroup.setVertices(vertices);
         m_modelGroup.setIndices(indices);
-        m_modelGroup.createBuffers(static_cast<vk::Device>(m_device), static_cast<vk::PhysicalDevice>(m_instance.getPhysicalDevice()), m_commandPool, static_cast<vk::Queue>(m_queue));
+        m_modelGroup.createBuffers(reinterpret_cast<const vk::UniqueDevice &>(m_device), static_cast<vk::PhysicalDevice>(m_instance.getPhysicalDevice()), m_commandPool, static_cast<vk::Queue>(m_queue));
     }
 
     void ModelGroupDemo::createDepthResources()
@@ -261,7 +261,7 @@ namespace bmvk
     {
         vk::DescriptorSetLayout layouts[] = { *m_descriptorSetLayout };
         vk::DescriptorSetAllocateInfo allocInfo{ *m_descriptorPool, 1, layouts };
-        m_descriptorSets = static_cast<vk::Device>(m_device).allocateDescriptorSetsUnique(allocInfo);
+        m_descriptorSets = reinterpret_cast<const vk::UniqueDevice &>(m_device)->allocateDescriptorSetsUnique(allocInfo);
 
         vk::DescriptorBufferInfo bufferInfo{ *m_uniformBuffer, 0, sizeof(UniformBufferObject) };
         WriteDescriptorSet descriptorWrite{ m_descriptorSets[0], 0, 0, 1, vk::DescriptorType::eUniformBuffer, nullptr, &bufferInfo };
@@ -355,7 +355,7 @@ namespace bmvk
 
         m_animationTimer = 0.0f;
 
-        m_modelGroup.flush(static_cast<vk::Device>(m_device));
+        m_modelGroup.flush(reinterpret_cast<const vk::UniqueDevice &>(m_device));
     }
 
     void ModelGroupDemo::drawFrame()

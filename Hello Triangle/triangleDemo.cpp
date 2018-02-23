@@ -73,7 +73,7 @@ namespace bmvk
         vk::SubpassDescription subpass{ {}, vk::PipelineBindPoint::eGraphics, 0, nullptr, 1, &colorAttachmentRef };
         vk::SubpassDependency dependency{ VK_SUBPASS_EXTERNAL, 0, vk::PipelineStageFlagBits::eColorAttachmentOutput, vk::PipelineStageFlagBits::eColorAttachmentOutput, {}, vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite };
         vk::RenderPassCreateInfo renderPassInfo{ {}, 1, &colorAttachment, 1, &subpass, 1, &dependency };
-        m_renderPass = static_cast<vk::Device>(m_device).createRenderPassUnique(renderPassInfo);
+        m_renderPass = reinterpret_cast<const vk::UniqueDevice &>(m_device)->createRenderPassUnique(renderPassInfo);
     }
 
     void TriangleDemo::createGraphicsPipeline()
@@ -94,10 +94,10 @@ namespace bmvk
         vk::PipelineColorBlendAttachmentState colorBlendAttachment{ false, vk::BlendFactor::eSrcAlpha, vk::BlendFactor::eOneMinusSrcAlpha, vk::BlendOp::eAdd, vk::BlendFactor::eOne, vk::BlendFactor::eZero, vk::BlendOp::eAdd, vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA };
         vk::PipelineColorBlendStateCreateInfo colorBlending{ {}, false, vk::LogicOp::eCopy, 1, &colorBlendAttachment };
         vk::PipelineLayoutCreateInfo pipelineLayoutInfo;
-        m_pipelineLayout = static_cast<vk::Device>(m_device).createPipelineLayoutUnique(pipelineLayoutInfo);
+        m_pipelineLayout = reinterpret_cast<const vk::UniqueDevice &>(m_device)->createPipelineLayoutUnique(pipelineLayoutInfo);
 
         vk::GraphicsPipelineCreateInfo pipelineInfo{ {}, 2, shaderStages, &vertexInputInfo, &inputAssembly, nullptr, &viewportState, &rasterizer, &multisampling, nullptr, &colorBlending, nullptr, *m_pipelineLayout, *m_renderPass, 0, nullptr, -1 };
-        m_graphicsPipeline = static_cast<vk::Device>(m_device).createGraphicsPipelineUnique(nullptr, pipelineInfo);
+        m_graphicsPipeline = reinterpret_cast<const vk::UniqueDevice &>(m_device)->createGraphicsPipelineUnique(nullptr, pipelineInfo);
     }
 
     void TriangleDemo::createFramebuffers()
@@ -107,7 +107,7 @@ namespace bmvk
         {
             vk::ImageView attachments[]{ *m_swapchain.getImageViews()[i] };
             vk::FramebufferCreateInfo framebufferInfo{ {}, *m_renderPass, 1, attachments, m_swapchain.getExtent().width, m_swapchain.getExtent().height, 1 };
-            m_swapChainFramebuffers[i] = static_cast<vk::Device>(m_device).createFramebufferUnique(framebufferInfo);
+            m_swapChainFramebuffers[i] = reinterpret_cast<const vk::UniqueDevice &>(m_device)->createFramebufferUnique(framebufferInfo);
         }
     }
 
@@ -115,7 +115,7 @@ namespace bmvk
     {
         m_commandBuffers.resize(m_swapChainFramebuffers.size());
         CommandBufferAllocateInfo allocInfo{ m_commandPool, vk::CommandBufferLevel::ePrimary, static_cast<uint32_t>(m_commandBuffers.size()) };
-        m_commandBuffers = static_cast<vk::Device>(m_device).allocateCommandBuffersUnique(allocInfo);
+        m_commandBuffers = reinterpret_cast<const vk::UniqueDevice &>(m_device)->allocateCommandBuffersUnique(allocInfo);
         for (size_t i = 0; i < m_commandBuffers.size(); ++i)
         {
             vk::CommandBufferBeginInfo beginInfo{ vk::CommandBufferUsageFlagBits::eSimultaneousUse };
@@ -138,7 +138,7 @@ namespace bmvk
         uint32_t imageIndex;
         try
         {
-            static_cast<vk::Device>(m_device).acquireNextImageKHR(static_cast<vk::SwapchainKHR>(m_swapchain), std::numeric_limits<uint64_t>::max(), *m_imageAvailableSemaphore, nullptr, &imageIndex);
+            reinterpret_cast<const vk::UniqueDevice &>(m_device)->acquireNextImageKHR(static_cast<vk::SwapchainKHR>(m_swapchain), std::numeric_limits<uint64_t>::max(), *m_imageAvailableSemaphore, nullptr, &imageIndex);
         }
         catch (const vk::OutOfDateKHRError &)
         {

@@ -9,6 +9,7 @@
 namespace bmvk
 {
     constexpr auto k_standardValidationLayerName = "VK_LAYER_LUNARG_standard_validation";
+    constexpr auto k_assistantLayerName = "VK_LAYER_LUNARG_assistant_layer";
     constexpr auto k_debugExtensionName = "VK_EXT_debug_report";
 
     Instance::Instance(const std::string& appName, const uint32_t appVersion, const std::string& engineName, const uint32_t engineVersion, const vw::util::Window & window, const bool enableValidationLayers, const DebugReport::ReportLevel reportLevel)
@@ -36,10 +37,10 @@ namespace bmvk
         }
         
         m_surface = Surface(std::move(window.createSurface(m_instance)));
-        m_physicalDevice = getSuitablePhysicalDevice(static_cast<vk::SurfaceKHR>(m_surface));
+        m_physicalDevice = getSuitablePhysicalDevice(reinterpret_cast<const vk::UniqueSurfaceKHR &>(m_surface));
     }
 
-    PhysicalDevice Instance::getSuitablePhysicalDevice(const vk::SurfaceKHR & surface) const
+    PhysicalDevice Instance::getSuitablePhysicalDevice(const vk::UniqueSurfaceKHR & surface) const
     {
         const auto physicalDevices = m_instance->enumeratePhysicalDevices();
 
@@ -134,12 +135,18 @@ namespace bmvk
         }
 
         auto hasValidationLayer{ false };
+        auto hasAssistantLayer{ false };
         for (const auto & prop : availableLayers)
         {
             if (strcmp(prop.layerName, k_standardValidationLayerName) == 0)
             {
                 hasValidationLayer = true;
-                break;
+                continue;
+            }
+
+            if (strcmp(prop.layerName, k_assistantLayerName) == 0)
+            {
+                hasAssistantLayer = true;
             }
         }
 
@@ -149,5 +156,14 @@ namespace bmvk
         }
 
         m_layerNames.emplace_back(k_standardValidationLayerName);
+        
+        if (!hasAssistantLayer)
+        {
+            std::cout << "Assistant layer is not available, continuing without it ...\n";
+        }
+        else
+        {
+            m_layerNames.emplace_back(k_assistantLayerName);
+        }
     }
 } // namespace bmvk

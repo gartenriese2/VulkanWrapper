@@ -93,7 +93,7 @@ namespace bmvk
         vk::DescriptorSetLayoutBinding samplerLayoutBinding{ 1, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment };
         std::vector<vk::DescriptorSetLayoutBinding> vec{ uboLayoutBinding, samplerLayoutBinding };
         DescriptorSetLayoutCreateInfo layoutInfo{ vec };
-        m_descriptorSetLayout = static_cast<vk::Device>(m_device).createDescriptorSetLayoutUnique(layoutInfo);
+        m_descriptorSetLayout = reinterpret_cast<const vk::UniqueDevice &>(m_device)->createDescriptorSetLayoutUnique(layoutInfo);
     }
 
     void TextureDemo::createRenderPass()
@@ -103,7 +103,7 @@ namespace bmvk
         vk::SubpassDescription subpass{ {}, vk::PipelineBindPoint::eGraphics, 0, nullptr, 1, &colorAttachmentRef };
         vk::SubpassDependency dependency{ VK_SUBPASS_EXTERNAL, 0, vk::PipelineStageFlagBits::eColorAttachmentOutput, vk::PipelineStageFlagBits::eColorAttachmentOutput,{}, vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite };
         RenderPassCreateInfo renderPassInfo{ {}, colorAttachment, subpass, dependency };
-        m_renderPass = static_cast<vk::Device>(m_device).createRenderPassUnique(renderPassInfo);
+        m_renderPass = reinterpret_cast<const vk::UniqueDevice &>(m_device)->createRenderPassUnique(renderPassInfo);
     }
 
     void TextureDemo::createGraphicsPipeline()
@@ -127,10 +127,10 @@ namespace bmvk
         vk::PipelineColorBlendStateCreateInfo colorBlending{ {}, false, vk::LogicOp::eCopy, 1, &colorBlendAttachment };
         auto descriptorSetLayout{ *m_descriptorSetLayout };
         vk::PipelineLayoutCreateInfo pipelineLayoutInfo{ {}, 1, &descriptorSetLayout };
-        m_pipelineLayout = static_cast<vk::Device>(m_device).createPipelineLayoutUnique(pipelineLayoutInfo);
+        m_pipelineLayout = reinterpret_cast<const vk::UniqueDevice &>(m_device)->createPipelineLayoutUnique(pipelineLayoutInfo);
 
         vk::GraphicsPipelineCreateInfo pipelineInfo({}, 2, shaderStages, &vertexInputInfo, &inputAssembly, nullptr, &viewportState, &rasterizer, &multisampling, nullptr, &colorBlending, nullptr, *m_pipelineLayout, *m_renderPass, 0, nullptr, -1);
-        m_graphicsPipeline = static_cast<vk::Device>(m_device).createGraphicsPipelineUnique(nullptr, pipelineInfo);
+        m_graphicsPipeline = reinterpret_cast<const vk::UniqueDevice &>(m_device)->createGraphicsPipelineUnique(nullptr, pipelineInfo);
     }
 
     void TextureDemo::createFramebuffers()
@@ -233,7 +233,7 @@ namespace bmvk
     {
         vk::DescriptorSetLayout layouts[] = { *m_descriptorSetLayout };
         vk::DescriptorSetAllocateInfo allocInfo{ *m_descriptorPool, 1, layouts };
-        m_descriptorSets = static_cast<vk::Device>(m_device).allocateDescriptorSetsUnique(allocInfo);
+        m_descriptorSets = reinterpret_cast<const vk::UniqueDevice &>(m_device)->allocateDescriptorSetsUnique(allocInfo);
 
         vk::DescriptorBufferInfo bufferInfo{ *m_uniformBuffer, 0, sizeof(UniformBufferObject) };
         const auto & sampler = reinterpret_cast<const vk::UniqueSampler &>(m_textureSampler);

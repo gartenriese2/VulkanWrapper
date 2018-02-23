@@ -20,7 +20,7 @@ namespace bmvk
         deviceFeatures.setSamplerAnisotropy(true);
         std::vector<const char *> extensionNames{ k_swapchainExtensionName };
         DeviceCreateInfo info( {}, vk_queueCreateInfo, layerNames, extensionNames, deviceFeatures );
-        return Device(std::move(m_physicalDevice.createDevice(info)), m_queueFamilyIndex);
+        return Device(std::move(m_physicalDevice.createDeviceUnique(info)), m_queueFamilyIndex);
     }
 
     uint32_t PhysicalDevice::findMemoryType(uint32_t typeFilter, vk::MemoryPropertyFlags properties) const
@@ -61,7 +61,7 @@ namespace bmvk
         return findSupportedFormat({ vk::Format::eD32Sfloat, vk::Format::eD32SfloatS8Uint, vk::Format::eD24UnormS8Uint }, vk::ImageTiling::eOptimal, vk::FormatFeatureFlagBits::eDepthStencilAttachment);
     }
 
-    std::tuple<bool, int> PhysicalDevice::isDeviceSuitable(const vk::PhysicalDevice & device, const vk::SurfaceKHR & surface)
+    std::tuple<bool, int> PhysicalDevice::isDeviceSuitable(const vk::PhysicalDevice & device, const vk::UniqueSurfaceKHR & surface)
     {
         const auto features = device.getFeatures();
         const auto properties = device.getProperties();
@@ -79,7 +79,7 @@ namespace bmvk
             ++index;
         }
 
-        const auto hasPresentationSupport{ device.getSurfaceSupportKHR(index, surface) };
+        const auto hasPresentationSupport{ device.getSurfaceSupportKHR(index, *surface) };
         const auto hasRequiredExtensions{ checkDeviceExtensionSupport(device) };
         const auto hasSwapChainSupport{ checkSwapChainSupport(device, surface) };
         const auto hasAnisotropySupport{ features.samplerAnisotropy };
@@ -92,11 +92,11 @@ namespace bmvk
         return !(std::find_if(availableExtensions.cbegin(), availableExtensions.cend(), [&](const auto & ex) { return std::strcmp(ex.extensionName, k_swapchainExtensionName) == 0; }) == availableExtensions.cend());
     }
 
-    bool PhysicalDevice::checkSwapChainSupport(const vk::PhysicalDevice & device, const vk::SurfaceKHR & surface)
+    bool PhysicalDevice::checkSwapChainSupport(const vk::PhysicalDevice & device, const vk::UniqueSurfaceKHR & surface)
     {
-        const auto capabilities{ device.getSurfaceCapabilitiesKHR(surface) };
-        const auto formats{ device.getSurfaceFormatsKHR(surface) };
-        const auto presentModes{ device.getSurfacePresentModesKHR(surface) };
+        const auto capabilities{ device.getSurfaceCapabilitiesKHR(*surface) };
+        const auto formats{ device.getSurfaceFormatsKHR(*surface) };
+        const auto presentModes{ device.getSurfacePresentModesKHR(*surface) };
         return !formats.empty() && !presentModes.empty();
     }
 

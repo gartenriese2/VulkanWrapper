@@ -120,7 +120,7 @@ namespace bmvk
         vk::SubpassDependency dependency{ VK_SUBPASS_EXTERNAL, 0, vk::PipelineStageFlagBits::eColorAttachmentOutput, vk::PipelineStageFlagBits::eColorAttachmentOutput,{}, vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite };
         std::vector<vk::AttachmentDescription> vec{ colorAttachment, depthAttachment };
         RenderPassCreateInfo renderPassInfo{ {}, vec, subpass, dependency };
-        m_renderPass = static_cast<vk::Device>(m_device).createRenderPassUnique(renderPassInfo);
+        m_renderPass = reinterpret_cast<const vk::UniqueDevice &>(m_device)->createRenderPassUnique(renderPassInfo);
     }
 
     void DragonDemo::createGraphicsPipeline()
@@ -146,7 +146,7 @@ namespace bmvk
         m_pipelineLayout = m_device.createPipelineLayout({ *m_descriptorSetLayout });
 
         vk::GraphicsPipelineCreateInfo pipelineInfo({}, 2, shaderStages, &vertexInputInfo, &inputAssembly, nullptr, &viewportState, &rasterizer, &multisampling, &depthStencil, &colorBlending, nullptr, *m_pipelineLayout, *m_renderPass, 0, nullptr, -1);
-        m_graphicsPipeline = static_cast<vk::Device>(m_device).createGraphicsPipelineUnique(nullptr, pipelineInfo);
+        m_graphicsPipeline = reinterpret_cast<const vk::UniqueDevice &>(m_device)->createGraphicsPipelineUnique(nullptr, pipelineInfo);
     }
 
     void DragonDemo::createFramebuffers()
@@ -165,7 +165,7 @@ namespace bmvk
         m_dragonModel = ml.loadModel(file, vw::scene::ModelLoader<vw::scene::VertexDescription::PositionNormalColorTexture>::NormalCreation::AssimpSmoothNormals);
         m_dragonModel.scale(glm::vec3{ 0.1f });
 
-        m_dragonModel.createBuffers(static_cast<vk::Device>(m_device), static_cast<vk::PhysicalDevice>(m_instance.getPhysicalDevice()), m_commandPool, static_cast<vk::Queue>(m_queue));
+        m_dragonModel.createBuffers(reinterpret_cast<const vk::UniqueDevice &>(m_device), static_cast<vk::PhysicalDevice>(m_instance.getPhysicalDevice()), m_commandPool, static_cast<vk::Queue>(m_queue));
     }
 
     void DragonDemo::createDepthResources()
@@ -201,7 +201,7 @@ namespace bmvk
     {
         vk::DescriptorSetLayout layouts[] = { *m_descriptorSetLayout };
         vk::DescriptorSetAllocateInfo allocInfo{ *m_descriptorPool, 1, layouts };
-        m_descriptorSets = static_cast<vk::Device>(m_device).allocateDescriptorSetsUnique(allocInfo);
+        m_descriptorSets = reinterpret_cast<const vk::UniqueDevice &>(m_device)->allocateDescriptorSetsUnique(allocInfo);
 
         vk::DescriptorBufferInfo bufferInfo{ *m_uniformBuffer, 0, sizeof(UniformBufferObject) };
         WriteDescriptorSet descriptorWrite{ m_descriptorSets[0], 0, 0, 1, vk::DescriptorType::eUniformBuffer, nullptr, &bufferInfo };

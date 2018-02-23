@@ -5,7 +5,7 @@
 
 namespace bmvk
 {
-    template <class UniqueHandle, class Handle, class Deleter>
+    template <class UniqueHandle, class Handle>
     class OptRef
     {
     public:
@@ -25,34 +25,34 @@ namespace bmvk
     private:
         std::optional<std::reference_wrapper<UniqueHandle>> m_ref;
 
-        static_assert(std::is_same_v<UniqueHandle, vk::UniqueHandle<Handle, Deleter>>);
+        static_assert(std::is_same_v<UniqueHandle, vk::UniqueHandle<Handle>>);
     };
 
-    using OptRefBuffer = OptRef<vk::UniqueBuffer, vk::Buffer, vk::BufferDeleter>;
-    using OptRefBufferView = OptRef<vk::UniqueBufferView, vk::BufferView, vk::BufferViewDeleter>;
-    using OptRefCommandBuffer = OptRef<vk::UniqueCommandBuffer, vk::CommandBuffer, vk::CommandBufferDeleter>;
-    using OptRefCommandPool = OptRef<vk::UniqueCommandPool, vk::CommandPool, vk::CommandPoolDeleter>;
-    using OptRefDescriptorPool = OptRef<vk::UniqueDescriptorPool, vk::DescriptorPool, vk::DescriptorPoolDeleter>;
-    using OptRefDescriptorSet = OptRef<vk::UniqueDescriptorSet, vk::DescriptorSet, vk::DescriptorSetDeleter>;
-    using OptRefDescriptorSetLayout = OptRef<vk::UniqueDescriptorSetLayout, vk::DescriptorSetLayout, vk::DescriptorSetLayoutDeleter>;
-    using OptRefDescriptorUpdateTemplateKHR = OptRef<vk::UniqueDescriptorUpdateTemplateKHR, vk::DescriptorUpdateTemplateKHR, vk::DescriptorUpdateTemplateKHRDeleter>;
-    using OptRefDeviceMemory = OptRef<vk::UniqueDeviceMemory, vk::DeviceMemory, vk::DeviceMemoryDeleter>;
-    using OptRefEvent = OptRef<vk::UniqueEvent, vk::Event, vk::EventDeleter>;
-    using OptRefFence = OptRef<vk::UniqueFence, vk::Fence, vk::FenceDeleter>;
-    using OptRefFramebuffer = OptRef<vk::UniqueFramebuffer, vk::Framebuffer, vk::FramebufferDeleter>;
-    using OptRefImage = OptRef<vk::UniqueImage, vk::Image, vk::ImageDeleter>;
-    using OptRefImageView = OptRef<vk::UniqueImageView, vk::ImageView, vk::ImageViewDeleter>;
-    using OptRefIndirectCommandsLayoutNVX = OptRef<vk::UniqueIndirectCommandsLayoutNVX, vk::IndirectCommandsLayoutNVX, vk::IndirectCommandsLayoutNVXDeleter>;
-    using OptRefObjectTableNVX = OptRef<vk::UniqueObjectTableNVX, vk::ObjectTableNVX, vk::ObjectTableNVXDeleter>;
-    using OptRefPipeline = OptRef<vk::UniquePipeline, vk::Pipeline, vk::PipelineDeleter>;
-    using OptRefPipelineCache = OptRef<vk::UniquePipelineCache, vk::PipelineCache, vk::PipelineCacheDeleter>;
-    using OptRefPipelineLayout = OptRef<vk::UniquePipelineLayout, vk::PipelineLayout, vk::PipelineLayoutDeleter>;
-    using OptRefQueryPool = OptRef<vk::UniqueQueryPool, vk::QueryPool, vk::QueryPoolDeleter>;
-    using OptRefRenderPass = OptRef<vk::UniqueRenderPass, vk::RenderPass, vk::RenderPassDeleter>;
-    using OptRefSampler = OptRef<vk::UniqueSampler, vk::Sampler, vk::SamplerDeleter>;
-    using OptRefSemaphore = OptRef<vk::UniqueSemaphore, vk::Semaphore, vk::SemaphoreDeleter>;
-    using OptRefShaderModule = OptRef<vk::UniqueShaderModule, vk::ShaderModule, vk::ShaderModuleDeleter>;
-    using OptRefSwapchainKHR = OptRef<vk::UniqueSwapchainKHR, vk::SwapchainKHR, vk::SwapchainKHRDeleter>;
+    using OptRefBuffer = OptRef<vk::UniqueBuffer, vk::Buffer>;
+    using OptRefBufferView = OptRef<vk::UniqueBufferView, vk::BufferView>;
+    using OptRefCommandBuffer = OptRef<vk::UniqueCommandBuffer, vk::CommandBuffer>;
+    using OptRefCommandPool = OptRef<vk::UniqueCommandPool, vk::CommandPool>;
+    using OptRefDescriptorPool = OptRef<vk::UniqueDescriptorPool, vk::DescriptorPool>;
+    using OptRefDescriptorSet = OptRef<vk::UniqueDescriptorSet, vk::DescriptorSet>;
+    using OptRefDescriptorSetLayout = OptRef<vk::UniqueDescriptorSetLayout, vk::DescriptorSetLayout>;
+    using OptRefDescriptorUpdateTemplateKHR = OptRef<vk::UniqueDescriptorUpdateTemplateKHR, vk::DescriptorUpdateTemplateKHR>;
+    using OptRefDeviceMemory = OptRef<vk::UniqueDeviceMemory, vk::DeviceMemory>;
+    using OptRefEvent = OptRef<vk::UniqueEvent, vk::Event>;
+    using OptRefFence = OptRef<vk::UniqueFence, vk::Fence>;
+    using OptRefFramebuffer = OptRef<vk::UniqueFramebuffer, vk::Framebuffer>;
+    using OptRefImage = OptRef<vk::UniqueImage, vk::Image>;
+    using OptRefImageView = OptRef<vk::UniqueImageView, vk::ImageView>;
+    using OptRefIndirectCommandsLayoutNVX = OptRef<vk::UniqueIndirectCommandsLayoutNVX, vk::IndirectCommandsLayoutNVX>;
+    using OptRefObjectTableNVX = OptRef<vk::UniqueObjectTableNVX, vk::ObjectTableNVX>;
+    using OptRefPipeline = OptRef<vk::UniquePipeline, vk::Pipeline>;
+    using OptRefPipelineCache = OptRef<vk::UniquePipelineCache, vk::PipelineCache>;
+    using OptRefPipelineLayout = OptRef<vk::UniquePipelineLayout, vk::PipelineLayout>;
+    using OptRefQueryPool = OptRef<vk::UniqueQueryPool, vk::QueryPool>;
+    using OptRefRenderPass = OptRef<vk::UniqueRenderPass, vk::RenderPass>;
+    using OptRefSampler = OptRef<vk::UniqueSampler, vk::Sampler>;
+    using OptRefSemaphore = OptRef<vk::UniqueSemaphore, vk::Semaphore>;
+    using OptRefShaderModule = OptRef<vk::UniqueShaderModule, vk::ShaderModule>;
+    using OptRefSwapchainKHR = OptRef<vk::UniqueSwapchainKHR, vk::SwapchainKHR>;
 
     template <class T>
     struct VkStructBase

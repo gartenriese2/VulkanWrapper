@@ -130,12 +130,15 @@ namespace vw::util
     vk::UniqueSurfaceKHR Window::createSurface(const vk::UniqueInstance & instance) const
     {
         const auto instance_vk{ static_cast<VkInstance>(*instance) };
-        VkSurfaceKHR surface;
-        if (glfwCreateWindowSurface(instance_vk, m_window.get(), nullptr, &surface) != VK_SUCCESS)
+        VkSurfaceKHR surface_vk;
+        if (glfwCreateWindowSurface(instance_vk, m_window.get(), nullptr, &surface_vk) != VK_SUCCESS)
         {
             throw std::runtime_error("failed to create window surface!");
         }
 
-        return vk::UniqueSurfaceKHR{ static_cast<vk::SurfaceKHR>(surface), vk::SurfaceKHRDeleter{ *instance } };
+        vk::SurfaceKHR surface(surface_vk);
+        vk::ObjectDeleter<vk::Instance> deleter(*instance);
+        vk::UniqueHandle<vk::SurfaceKHR> uniqueHandle(surface, deleter);
+        return std::move(uniqueHandle);
     }
 }

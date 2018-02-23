@@ -97,7 +97,7 @@ namespace bmvk
         vk::DescriptorSetLayoutBinding samplerLayoutBinding{ 1, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment };
         std::vector<vk::DescriptorSetLayoutBinding> vec{ uboLayoutBinding, samplerLayoutBinding };
         DescriptorSetLayoutCreateInfo layoutInfo{ vec };
-        m_descriptorSetLayout = static_cast<vk::Device>(m_device).createDescriptorSetLayoutUnique(layoutInfo);
+        m_descriptorSetLayout = reinterpret_cast<const vk::UniqueDevice &>(m_device)->createDescriptorSetLayoutUnique(layoutInfo);
     }
 
     void DepthBufferDemo::createRenderPass()
@@ -110,7 +110,7 @@ namespace bmvk
         vk::SubpassDependency dependency{ VK_SUBPASS_EXTERNAL, 0, vk::PipelineStageFlagBits::eColorAttachmentOutput, vk::PipelineStageFlagBits::eColorAttachmentOutput,{}, vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite };
         std::vector<vk::AttachmentDescription> vec{ colorAttachment, depthAttachment };
         RenderPassCreateInfo renderPassInfo{ {}, vec, subpass, dependency };
-        m_renderPass = static_cast<vk::Device>(m_device).createRenderPassUnique(renderPassInfo);
+        m_renderPass = reinterpret_cast<const vk::UniqueDevice &>(m_device)->createRenderPassUnique(renderPassInfo);
     }
 
     void DepthBufferDemo::createGraphicsPipeline()
@@ -135,10 +135,10 @@ namespace bmvk
         vk::PipelineColorBlendStateCreateInfo colorBlending{ {}, false, vk::LogicOp::eCopy, 1, &colorBlendAttachment };
         auto descriptorSetLayout{ *m_descriptorSetLayout };
         vk::PipelineLayoutCreateInfo pipelineLayoutInfo{ {}, 1, &descriptorSetLayout };
-        m_pipelineLayout = static_cast<vk::Device>(m_device).createPipelineLayoutUnique(pipelineLayoutInfo);
+        m_pipelineLayout = reinterpret_cast<const vk::UniqueDevice &>(m_device)->createPipelineLayoutUnique(pipelineLayoutInfo);
 
         vk::GraphicsPipelineCreateInfo pipelineInfo({}, 2, shaderStages, &vertexInputInfo, &inputAssembly, nullptr, &viewportState, &rasterizer, &multisampling, &depthStencil, &colorBlending, nullptr, *m_pipelineLayout, *m_renderPass, 0, nullptr, -1);
-        m_graphicsPipeline = static_cast<vk::Device>(m_device).createGraphicsPipelineUnique(nullptr, pipelineInfo);
+        m_graphicsPipeline = reinterpret_cast<const vk::UniqueDevice &>(m_device)->createGraphicsPipelineUnique(nullptr, pipelineInfo);
     }
 
     void DepthBufferDemo::createFramebuffers()
@@ -212,13 +212,13 @@ namespace bmvk
         const auto bufferMemoryPropertyFlags{ vk::MemoryPropertyFlagBits::eDeviceLocal };
 
         vk::BufferCreateInfo vertexBufferInfo{ {}, vertexBufferSize, vertexBufferUsageFlags };
-        m_vertexBuffer = static_cast<vk::Device>(m_device).createBufferUnique(vertexBufferInfo);
+        m_vertexBuffer = reinterpret_cast<const vk::UniqueDevice &>(m_device)->createBufferUnique(vertexBufferInfo);
 
         vk::BufferCreateInfo indexBufferInfo{ {}, indexBufferSize, indexBufferUsageFlags };
-        m_indexBuffer = static_cast<vk::Device>(m_device).createBufferUnique(indexBufferInfo);
+        m_indexBuffer = reinterpret_cast<const vk::UniqueDevice &>(m_device)->createBufferUnique(indexBufferInfo);
 
-        const auto vertexMemRequirements{ static_cast<vk::Device>(m_device).getBufferMemoryRequirements(*m_vertexBuffer) };
-        const auto indexMemRequirements{ static_cast<vk::Device>(m_device).getBufferMemoryRequirements(*m_indexBuffer) };
+        const auto vertexMemRequirements{ reinterpret_cast<const vk::UniqueDevice &>(m_device)->getBufferMemoryRequirements(*m_vertexBuffer) };
+        const auto indexMemRequirements{ reinterpret_cast<const vk::UniqueDevice &>(m_device)->getBufferMemoryRequirements(*m_indexBuffer) };
         const auto vertexMemoryType{ m_instance.getPhysicalDevice().findMemoryType(vertexMemRequirements.memoryTypeBits, bufferMemoryPropertyFlags) };
         const auto indexMemoryType{ m_instance.getPhysicalDevice().findMemoryType(indexMemRequirements.memoryTypeBits, bufferMemoryPropertyFlags) };
         if (vertexMemoryType == indexMemoryType)
@@ -228,15 +228,15 @@ namespace bmvk
             auto m = vertexBufferSize % alignment;
             m_combinedBufferOffset = (n + m == 0 ? 0 : 1) * alignment;
             vk::MemoryAllocateInfo allocInfo{ vertexMemRequirements.size + indexMemRequirements.size, vertexMemoryType };
-            m_combinedBufferMemory = static_cast<vk::Device>(m_device).allocateMemoryUnique(allocInfo);
+            m_combinedBufferMemory = reinterpret_cast<const vk::UniqueDevice &>(m_device)->allocateMemoryUnique(allocInfo);
         }
         else
         {
             throw std::runtime_error("memory can't be combined!");
         }
 
-        static_cast<vk::Device>(m_device).bindBufferMemory(*m_vertexBuffer, *m_combinedBufferMemory, 0);
-        static_cast<vk::Device>(m_device).bindBufferMemory(*m_indexBuffer, *m_combinedBufferMemory, m_combinedBufferOffset);
+        reinterpret_cast<const vk::UniqueDevice &>(m_device)->bindBufferMemory(*m_vertexBuffer, *m_combinedBufferMemory, 0);
+        reinterpret_cast<const vk::UniqueDevice &>(m_device)->bindBufferMemory(*m_indexBuffer, *m_combinedBufferMemory, m_combinedBufferOffset);
 
         auto cmdBuffer{ m_device.allocateCommandBuffer(m_commandPool) };
         cmdBuffer.begin(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
@@ -267,7 +267,7 @@ namespace bmvk
     {
         vk::DescriptorSetLayout layouts[] = { *m_descriptorSetLayout };
         vk::DescriptorSetAllocateInfo allocInfo{ *m_descriptorPool, 1, layouts };
-        m_descriptorSets = static_cast<vk::Device>(m_device).allocateDescriptorSetsUnique(allocInfo);
+        m_descriptorSets = reinterpret_cast<const vk::UniqueDevice &>(m_device)->allocateDescriptorSetsUnique(allocInfo);
 
         vk::DescriptorBufferInfo bufferInfo{ *m_uniformBuffer, 0, sizeof(UniformBufferObject) };
         const auto & sampler = reinterpret_cast<const vk::UniqueSampler &>(m_textureSampler);

@@ -756,7 +756,7 @@ private:
         vw::scene::ModelLoader<vw::scene::VertexDescription::PositionNormalColorTexture> ml;
         m_dragonModel = ml.loadModel("../models/stanford_dragon/dragon.obj", vw::scene::ModelLoader<vw::scene::VertexDescription::PositionNormalColorTexture>::NormalCreation::AssimpSmoothNormals);
         m_dragonModel.scale(glm::vec3{ 0.1f });
-        m_dragonModel.createBuffers(*m_device, m_physicalDevice, m_commandPool, m_graphicsQueue);
+        m_dragonModel.createBuffers(m_device, m_physicalDevice, m_commandPool, m_graphicsQueue);
 
         m_triangle = ml.loadTriangle();
     }

@@ -12,13 +12,13 @@ namespace bmvk
 
     StagingBuffer BufferFactory::createStagingBuffer(const vk::DeviceSize size) const
     {
-        Buffer buffer{ static_cast<vk::Device>(m_device), size, vk::BufferUsageFlagBits::eTransferSrc };
+        Buffer buffer{ reinterpret_cast<const vk::UniqueDevice &>(m_device), size, vk::BufferUsageFlagBits::eTransferSrc };
 
-        const auto memRequirements{ buffer.getMemoryRequirements(static_cast<vk::Device>(m_device)) };
+        const auto memRequirements{ buffer.getMemoryRequirements(reinterpret_cast<const vk::UniqueDevice &>(m_device)) };
         vk::MemoryAllocateInfo allocInfo{ memRequirements.size, findMemoryType(memRequirements.memoryTypeBits, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent) };
-        auto memory = static_cast<vk::Device>(m_device).allocateMemoryUnique(allocInfo);
+        auto memory = reinterpret_cast<const vk::UniqueDevice &>(m_device)->allocateMemoryUnique(allocInfo);
 
-        buffer.bindToMemory(static_cast<vk::Device>(m_device), memory);
+        buffer.bindToMemory(reinterpret_cast<const vk::UniqueDevice &>(m_device), memory);
 
         return StagingBuffer(m_device, std::move(buffer), std::move(memory));
     }

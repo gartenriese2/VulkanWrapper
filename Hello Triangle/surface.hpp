@@ -14,7 +14,7 @@ namespace bmvk
         Surface & operator=(Surface && other) = default;
         ~Surface() {}
 
-        explicit operator vk::SurfaceKHR() const noexcept { return *m_surface; }
+        explicit operator const vk::UniqueSurfaceKHR &() const noexcept { return m_surface; }
     private:
         vk::UniqueSurfaceKHR m_surface;
 

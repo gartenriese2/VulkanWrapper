@@ -41,25 +41,25 @@ namespace bmvk
     void Demo::createBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags properties, vk::UniqueBuffer & buffer, vk::UniqueDeviceMemory & bufferMemory) const
     {
         vk::BufferCreateInfo bufferInfo{ {}, size, usage };
-        buffer = static_cast<vk::Device>(m_device).createBufferUnique(bufferInfo);
+        buffer = reinterpret_cast<const vk::UniqueDevice &>(m_device)->createBufferUnique(bufferInfo);
 
-        const auto memRequirements{ static_cast<vk::Device>(m_device).getBufferMemoryRequirements(*buffer) };
+        const auto memRequirements{ reinterpret_cast<const vk::UniqueDevice &>(m_device)->getBufferMemoryRequirements(*buffer) };
         vk::MemoryAllocateInfo allocInfo{ memRequirements.size, m_instance.getPhysicalDevice().findMemoryType(memRequirements.memoryTypeBits, properties) };
-        bufferMemory = static_cast<vk::Device>(m_device).allocateMemoryUnique(allocInfo);
+        bufferMemory = reinterpret_cast<const vk::UniqueDevice &>(m_device)->allocateMemoryUnique(allocInfo);
 
-        static_cast<vk::Device>(m_device).bindBufferMemory(*buffer, *bufferMemory, 0);
+        reinterpret_cast<const vk::UniqueDevice &>(m_device)->bindBufferMemory(*buffer, *bufferMemory, 0);
     }
 
     void Demo::createImage(uint32_t width, uint32_t height, vk::Format format, vk::ImageTiling tiling, vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties, vk::UniqueImage & image, vk::UniqueDeviceMemory & imageMemory)
     {
         vk::ImageCreateInfo imageInfo{ {}, vk::ImageType::e2D, format, { width, height, 1 }, 1, 1, vk::SampleCountFlagBits::e1, tiling, usage, vk::SharingMode::eExclusive };
-        image = static_cast<vk::Device>(m_device).createImageUnique(imageInfo);
+        image = reinterpret_cast<const vk::UniqueDevice &>(m_device)->createImageUnique(imageInfo);
 
-        const auto memRequirements{ static_cast<vk::Device>(m_device).getImageMemoryRequirements(*image) };
+        const auto memRequirements{ reinterpret_cast<const vk::UniqueDevice &>(m_device)->getImageMemoryRequirements(*image) };
         vk::MemoryAllocateInfo allocInfo{ memRequirements.size, m_instance.getPhysicalDevice().findMemoryType(memRequirements.memoryTypeBits, properties) };
-        imageMemory = static_cast<vk::Device>(m_device).allocateMemoryUnique(allocInfo);
+        imageMemory = reinterpret_cast<const vk::UniqueDevice &>(m_device)->allocateMemoryUnique(allocInfo);
 
-        static_cast<vk::Device>(m_device).bindImageMemory(*image, *imageMemory, 0);
+        reinterpret_cast<const vk::UniqueDevice &>(m_device)->bindImageMemory(*image, *imageMemory, 0);
     }
 
     vk::UniqueImageView Demo::createImageView(const vk::UniqueImage & image, vk::Format format, vk::ImageAspectFlags aspectFlags) const
