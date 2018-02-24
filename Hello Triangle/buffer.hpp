@@ -17,6 +17,8 @@ namespace bmvk
         Buffer & operator=(Buffer &&) & = default;
         ~Buffer() {}
 
+        explicit operator const vk::UniqueBuffer &() const noexcept { return m_buffer; }
+
         vk::MemoryRequirements getMemoryRequirements(const vk::UniqueDevice & device) const;
 
         void bindToMemory(const vk::UniqueDevice & device, const vk::UniqueDeviceMemory & memory, const vk::DeviceSize offset = 0) const;

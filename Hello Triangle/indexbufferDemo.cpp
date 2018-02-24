@@ -17,7 +17,7 @@ namespace bmvk
     }
 
     IndexbufferDemo::IndexbufferDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height)
-        : Demo{ enableValidationLayers, width, height, "Indexbuffer Demo" },
+        : Demo{ enableValidationLayers, width, height, "Indexbuffer Demo", DebugReport::ReportLevel::WarningsAndAbove },
         m_swapchain{ m_instance.getPhysicalDevice(), m_instance.getSurface(), m_window, m_device },
         m_imageAvailableSemaphore{ m_device.createSemaphore() },
         m_renderFinishedSemaphore{ m_device.createSemaphore() }
@@ -186,7 +186,7 @@ namespace bmvk
         uint32_t imageIndex;
         try
         {
-            reinterpret_cast<const vk::UniqueDevice &>(m_device)->acquireNextImageKHR(static_cast<vk::SwapchainKHR>(m_swapchain), std::numeric_limits<uint64_t>::max(), *m_imageAvailableSemaphore, nullptr, &imageIndex);
+            imageIndex = m_device.acquireNextImage(m_swapchain, m_imageAvailableSemaphore);
         }
         catch (const vk::OutOfDateKHRError &)
         {
@@ -200,7 +200,7 @@ namespace bmvk
         vk::Semaphore signalSemaphores[]{ *m_renderFinishedSemaphore };
         vk::SubmitInfo submitInfo{ 1, waitSemaphores, waitStages, 1, &usedCommandBuffer, 1, signalSemaphores };
         static_cast<vk::Queue>(m_queue).submit(submitInfo, nullptr);
-        vk::SwapchainKHR swapchains[]{ static_cast<vk::SwapchainKHR>(m_swapchain) };
+        vk::SwapchainKHR swapchains[]{ *reinterpret_cast<const vk::UniqueSwapchainKHR &>(m_swapchain) };
         vk::PresentInfoKHR presentInfo{ 1, signalSemaphores, 1, swapchains, &imageIndex };
         vk::Result result;
         auto notOutOfDate{ false };

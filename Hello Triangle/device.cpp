@@ -108,7 +108,7 @@ namespace bmvk
 
     uint32_t Device::acquireNextImage(const Swapchain & swapchain, OptRefSemaphore semaphore, OptRefFence fence) const
     {
-        return m_device->acquireNextImageKHR(swapchain.get(), std::numeric_limits<uint64_t>::max(), semaphore, fence).value;
+        return m_device->acquireNextImageKHR(*reinterpret_cast<const vk::UniqueSwapchainKHR &>(swapchain), std::numeric_limits<uint64_t>::max(), semaphore, fence).value;
     }
 
     void Device::updateDescriptorSet(vk::WriteDescriptorSet set) const

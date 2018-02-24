@@ -26,19 +26,10 @@ namespace bmvk
             m_device.unmapMemory(memory);
         }
 
-        /*template<class T>
-        void fill(T & obj, size_t offset = 0) const
-        {
-            auto data{ reinterpret_cast<char *>(m_device.mapMemory(memory, sizeof obj, offset)) };
-            memcpy(data + offset, &obj, sizeof obj);
-            m_device.unmapMemory(memory);
-        }*/
-
         Buffer buffer;
         vk::UniqueDeviceMemory memory;
     private:
         Device & m_device;
-        
     };
 
     class BufferFactory

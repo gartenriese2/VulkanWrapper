@@ -232,7 +232,7 @@ namespace bmvk
         m_queue.submit(m_commandBuffers[imageIndex], m_imageAvailableSemaphore, m_renderFinishedSemaphore, vk::PipelineStageFlagBits::eColorAttachmentOutput);
 
         auto waitSemaphore{ *m_renderFinishedSemaphore };
-        auto swapchain{ static_cast<vk::SwapchainKHR>(m_swapchain) };
+        auto swapchain{ *reinterpret_cast<const vk::UniqueSwapchainKHR &>(m_swapchain) };
         auto success{ m_queue.present(waitSemaphore, swapchain, imageIndex) };
         if (!success)
         {

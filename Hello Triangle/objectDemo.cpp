@@ -366,7 +366,7 @@ namespace bmvk
         ImguiBaseDemo::drawFrame(imageIndex, m_renderFinishedSemaphore, m_renderImguiFinishedSemaphore);
 
         auto waitSemaphore{ *m_renderImguiFinishedSemaphore };
-        auto swapchain{ static_cast<vk::SwapchainKHR>(m_swapchain) };
+        auto swapchain{ *reinterpret_cast<const vk::UniqueSwapchainKHR &>(m_swapchain) };
         auto success{ m_queue.present(waitSemaphore, swapchain, imageIndex) };
         if (!success)
         {

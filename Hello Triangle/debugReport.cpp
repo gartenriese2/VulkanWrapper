@@ -41,10 +41,6 @@ namespace bmvk
 
         std::cout << messageString << std::endl;
 
-        /*if (messageString.find("OBJ_STAT Destroy Swap") != std::string::npos) {
-            std::cout << "found!" << '\n';
-        }*/
-
         return VK_FALSE;
     }
 
@@ -53,8 +49,6 @@ namespace bmvk
         static_assert(std::is_move_constructible<vk::DebugReportFlagsEXT>());
 
         vk::DebugReportCallbackCreateInfoEXT createInfo(std::move(flags), debugCallback);
-        m_uniqueCallback = std::move(instance.getInstance()->createDebugReportCallbackEXTUnique(createInfo));
-
-        std::cout << "Created debug report!\n";
+        m_uniqueCallback = std::move(instance.createDebugReportCallback(createInfo));
     }
 }

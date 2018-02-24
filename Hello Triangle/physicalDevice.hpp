@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vulkan/vulkan.hpp>
+
 #include "device.hpp"
 
 namespace bmvk
@@ -15,9 +16,8 @@ namespace bmvk
         PhysicalDevice & operator=(PhysicalDevice && other) = default;
         ~PhysicalDevice() {}
 
-        explicit operator vk::PhysicalDevice() const noexcept { return m_physicalDevice; }
+        explicit operator const vk::PhysicalDevice &() const noexcept { return m_physicalDevice; }
 
-        auto getCPhysicalDevice() noexcept { return static_cast<VkPhysicalDevice>(m_physicalDevice); }
         auto getQueueFamilyIndex() const { return m_queueFamilyIndex; }
 
         vk::SurfaceCapabilitiesKHR getSurfaceCapabilities(const vk::UniqueSurfaceKHR & surface) const { return m_physicalDevice.getSurfaceCapabilitiesKHR(*surface); }
@@ -28,7 +28,7 @@ namespace bmvk
         vk::Format findSupportedFormat(const std::vector<vk::Format> & candidates, vk::ImageTiling tiling, vk::FormatFeatureFlags features) const;
         vk::Format findDepthFormat() const;
 
-        static std::tuple<bool, int> isDeviceSuitable(const vk::PhysicalDevice & device, const vk::UniqueSurfaceKHR & surface);
+        static std::optional<int> getSuitableQueueFamilyIndex(const vk::PhysicalDevice & device, const vk::UniqueSurfaceKHR & surface);
 
         static vk::SurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<vk::SurfaceFormatKHR> & availableFormats);
         static vk::PresentModeKHR chooseSwapPresentMode(const std::vector<vk::PresentModeKHR> & availablePresentModes);

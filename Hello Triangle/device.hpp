@@ -4,13 +4,14 @@
 #include "queue.hpp"
 #include "commandbuffer.hpp"
 #include "sampler.hpp"
+//#include "vkBase.hpp"
 
 namespace bmvk
 {
     class Swapchain;
     class Shader;
 
-    class Device
+    class Device/* : public VkBase<vk::UniqueDevice>*/
     {
     public:
         explicit Device(vk::UniqueDevice && device, const uint32_t queueFamilyIndex);

@@ -28,7 +28,7 @@ namespace bmvk
         InstanceCreateInfo info{ {}, &appInfo, m_layerNames, extensionsAsCstrings };
         m_instance = vk::createInstanceUnique(info);
 
-        vkExtInitInstance(getCInstance());
+        vkExtInitInstance(static_cast<VkInstance>(*m_instance));
 
         if (enableValidationLayers)
         {
@@ -49,14 +49,12 @@ namespace bmvk
         uint32_t chosenIndex;
         for (auto physicalDevice : physicalDevices)
         {
-            bool isSuitable;
-            int queueFamilyIndex;
-            std::tie(isSuitable, queueFamilyIndex) = PhysicalDevice::isDeviceSuitable(physicalDevice, surface);
-            if (isSuitable)
+            const auto suitableQueueFamilyIndex = PhysicalDevice::getSuitableQueueFamilyIndex(physicalDevice, surface);
+            if (suitableQueueFamilyIndex.has_value())
             {
                 foundSuitablePhysicalDevice = true;
                 chosenPhysicalDevice = physicalDevice;
-                chosenIndex = queueFamilyIndex;
+                chosenIndex = suitableQueueFamilyIndex.value();
                 break;
             }
         }
@@ -67,6 +65,11 @@ namespace bmvk
         }
 
         return PhysicalDevice(chosenPhysicalDevice, chosenIndex);
+    }
+
+    vk::UniqueDebugReportCallbackEXT Instance::createDebugReportCallback(const vk::DebugReportCallbackCreateInfoEXT info) const
+    {
+        return m_instance->createDebugReportCallbackEXTUnique(info);
     }
 
     std::vector<std::string> Instance::getExtensions(const bool enableValidationLayers, const vw::util::Window & window) const

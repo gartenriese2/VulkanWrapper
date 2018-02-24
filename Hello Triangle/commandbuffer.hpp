@@ -1,8 +1,8 @@
 #pragma once
 
-#include <type_traits>
 #include <vulkan/vulkan.hpp>
-#include "vulkan_bmvk.hpp"
+
+#include <type_traits>
 
 namespace bmvk
 {

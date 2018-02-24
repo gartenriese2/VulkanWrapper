@@ -1,4 +1,5 @@
 #include "physicalDevice.hpp"
+
 #include <set>
 
 namespace bmvk
@@ -61,7 +62,7 @@ namespace bmvk
         return findSupportedFormat({ vk::Format::eD32Sfloat, vk::Format::eD32SfloatS8Uint, vk::Format::eD24UnormS8Uint }, vk::ImageTiling::eOptimal, vk::FormatFeatureFlagBits::eDepthStencilAttachment);
     }
 
-    std::tuple<bool, int> PhysicalDevice::isDeviceSuitable(const vk::PhysicalDevice & device, const vk::UniqueSurfaceKHR & surface)
+    std::optional<int> PhysicalDevice::getSuitableQueueFamilyIndex(const vk::PhysicalDevice & device, const vk::UniqueSurfaceKHR & surface)
     {
         const auto features = device.getFeatures();
         const auto properties = device.getProperties();
@@ -83,7 +84,8 @@ namespace bmvk
         const auto hasRequiredExtensions{ checkDeviceExtensionSupport(device) };
         const auto hasSwapChainSupport{ checkSwapChainSupport(device, surface) };
         const auto hasAnisotropySupport{ features.samplerAnisotropy };
-        return std::make_tuple(properties.deviceType == vk::PhysicalDeviceType::eDiscreteGpu && foundQueue && hasPresentationSupport && hasRequiredExtensions && hasSwapChainSupport && hasAnisotropySupport, index);
+        const auto isSuitable{ properties.deviceType == vk::PhysicalDeviceType::eDiscreteGpu && foundQueue && hasPresentationSupport && hasRequiredExtensions && hasSwapChainSupport && hasAnisotropySupport };
+        return isSuitable ? index : std::optional<int>{};
     }
 
     bool PhysicalDevice::checkDeviceExtensionSupport(const vk::PhysicalDevice & device)

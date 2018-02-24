@@ -16,6 +16,8 @@ namespace bmvk
         DebugReport & operator=(DebugReport &&) & = default;
         ~DebugReport() {}
 
+        explicit operator const vk::UniqueDebugReportCallbackEXT &() const noexcept { return m_uniqueCallback; }
+
         enum class ReportLevel
         {
             Everything,

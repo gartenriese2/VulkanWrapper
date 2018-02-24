@@ -19,7 +19,8 @@ namespace bmvk
         Shader & operator=(Shader && other) = default;
         ~Shader() {}
 
-        const auto & getModule() const noexcept { return m_module; }
+        explicit operator const vk::UniqueShaderModule &() const noexcept { return m_module; }
+
         vk::PipelineShaderStageCreateInfo createPipelineShaderStageCreateInfo(vk::ShaderStageFlagBits flagBits) const;
     private:
         std::vector<char> m_code;
