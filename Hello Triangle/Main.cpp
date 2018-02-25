@@ -13,11 +13,12 @@
 //#include "objectDemo.hpp"
 //#include "dragonDemo.hpp"
 //#include "coordinatesDemo.hpp"
-#include "dynamicUboDemo.hpp"
-#include "modelGroupDemo.hpp"
+//#include "dynamicUboDemo.hpp"
+//#include "modelGroupDemo.hpp"
+#include "pushConstantDemo.hpp"
 
-const int WIDTH = 800;
-const int HEIGHT = 600;
+const uint32_t WIDTH = 800;
+const uint32_t HEIGHT = 600;
 
 #ifdef NDEBUG
 const bool enableValidationLayers = false;
@@ -42,12 +43,14 @@ int main()
         //bmvk::DragonDemo app(enableValidationLayers, WIDTH, HEIGHT);
         //bmvk::CoordinatesDemo app(enableValidationLayers, WIDTH, HEIGHT);
         //bmvk::DynamicUboDemo app(enableValidationLayers, WIDTH, HEIGHT);
-        bmvk::ModelGroupDemo app(enableValidationLayers, WIDTH, HEIGHT);
+        //bmvk::ModelGroupDemo app(enableValidationLayers, WIDTH, HEIGHT);
+        bmvk::PushConstantDemo app{ enableValidationLayers, WIDTH, HEIGHT };
         app.run();
     }
     catch (const std::runtime_error & e)
     {
         std::cerr << e.what() << std::endl;
+        std::cin.ignore();
         return EXIT_FAILURE;
     }
 

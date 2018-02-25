@@ -28,6 +28,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "modelGroupDemo", "modelGrou
 		shaders\modelGroupDemo\vertex.vert = shaders\modelGroupDemo\vertex.vert
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "pushConstantDemo", "pushConstantDemo", "{C62077EF-5945-4FAC-A6D2-998F1D15239A}"
+	ProjectSection(SolutionItems) = preProject
+		shaders\pushConstantDemo\fragment.frag = shaders\pushConstantDemo\fragment.frag
+		shaders\pushConstantDemo\vertex.vert = shaders\pushConstantDemo\vertex.vert
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -91,6 +97,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{EB7E6C57-C111-46C7-BD0A-430756D6C215} = {6969592B-076A-4CF0-A43D-DCC00A626F16}
 		{D4FACE87-6926-4FBC-A3C0-C98F04AD8D44} = {EB7E6C57-C111-46C7-BD0A-430756D6C215}
+		{C62077EF-5945-4FAC-A6D2-998F1D15239A} = {EB7E6C57-C111-46C7-BD0A-430756D6C215}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {8B5B263D-9043-40FD-8243-DDAE97F2E6A1}

@@ -38,6 +38,7 @@
     <ClCompile Include="modelGroupDemo.cpp" />
     <ClCompile Include="objectDemo.cpp" />
     <ClCompile Include="physicalDevice.cpp" />
+    <ClCompile Include="pushConstantDemo.cpp" />
     <ClCompile Include="queue.cpp" />
     <ClCompile Include="sampler.cpp" />
     <ClCompile Include="shader.cpp" />
@@ -72,6 +73,7 @@
     <ClInclude Include="modelGroupDemo.hpp" />
     <ClInclude Include="objectDemo.hpp" />
     <ClInclude Include="physicalDevice.hpp" />
+    <ClInclude Include="pushConstantDemo.hpp" />
     <ClInclude Include="queue.hpp" />
     <ClInclude Include="sampler.hpp" />
     <ClInclude Include="shader.hpp" />
