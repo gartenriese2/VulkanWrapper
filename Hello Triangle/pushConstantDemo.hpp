@@ -25,12 +25,17 @@ namespace bmvk
         void run() override;
         void recreateSwapChain() override;
     private:
-        std::vector<glm::vec4> m_pushConstants;
+        std::vector<glm::vec4> m_lightPositions;
+        float m_shininess = 64.f;
+        float m_ambientWhite = 0.01f;
+        float m_screenGamma = 2.2f;
+        float m_maxLightDist = 9.f;
 
         struct UniformBufferObject {
             glm::mat4 model;
             glm::mat4 view;
             glm::mat4 proj;
+            glm::mat4 normal;
         };
 
         float m_animationTimer = 0.0f;

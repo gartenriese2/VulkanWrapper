@@ -12,9 +12,10 @@ namespace bmvk
 {
     const std::string K_VERTEX_SHADER_PATH{ "../shaders/pushConstantDemo/vertex.vert.spv" };
     const std::string K_FRAGMENT_SHADER_PATH{ "../shaders/pushConstantDemo/fragment.frag.spv" };
+    const std::string K_SCENE_PATH{ "../models/samplescene/samplescene.dae" };
 
     constexpr auto r{ 7.5f };
-    constexpr auto y{ -4.f };
+    auto y{ 0.f };
 
     PushConstantDemo::PushConstantDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height)
         : ImguiBaseDemo{ enableValidationLayers, width, height, "PushConstant Demo", DebugReport::ReportLevel::Everything },
@@ -51,13 +52,16 @@ namespace bmvk
             updateUniformBuffer();
             imguiNewFrame();
 
-            // 1. Show a simple window
-            // Tip: if we don't call ImGui::Begin()/ImGui::End() the widgets appears in a window automatically called "Debug"
             {
                 ImGui::SetNextWindowPos(ImVec2(20, 20));
-                ImGui::SetNextWindowSize(ImVec2(400, 100), ImGuiCond_Always);
+                ImGui::SetNextWindowSize(ImVec2(400, 100), ImGuiCond_Once);
                 ImGui::Begin("Performance");
                 ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", m_avgFrameTime / 1000.0, m_avgFps);
+                ImGui::SliderFloat("Light Y", &y, -4.f, 10.f, "%.1f");
+                ImGui::SliderFloat("Shiniess", &m_shininess, 1.f, 2048.f, "%.0f", 2.f);
+                ImGui::SliderFloat("Ambient White", &m_ambientWhite, 0.f, 0.2f);
+                ImGui::SliderFloat("Screen Gamma", &m_screenGamma, 0.1f, 4.f, "%.1f");
+                ImGui::SliderFloat("Maximal Light Distance", &m_maxLightDist, 1.f, 20.f, "%.1f");
                 ImGui::End();
             }
 
@@ -148,7 +152,7 @@ namespace bmvk
         vk::PipelineColorBlendStateCreateInfo colorBlending{ {}, false, vk::LogicOp::eCopy, 1, &colorBlendAttachment };
         std::vector<vk::DynamicState> dynamicStateEnables{ { vk::DynamicState::eViewport } };
         vk::PipelineDynamicStateCreateInfo dynamicState{ {}, static_cast<unsigned int>(dynamicStateEnables.size()), dynamicStateEnables.data() };
-        vk::PushConstantRange pushConstantRange{ vk::ShaderStageFlagBits::eVertex, sizeof(glm::vec4) * 0, sizeof(glm::vec4) * 6 };
+        vk::PushConstantRange pushConstantRange{ vk::ShaderStageFlagBits::eVertex, sizeof(glm::vec4) * 0, sizeof(glm::vec4) * 7 };
         m_pipelineLayout = m_device.createPipelineLayout({ *m_descriptorSetLayout }, {pushConstantRange});
 
         vk::GraphicsPipelineCreateInfo colorPipelineInfo({}, 2, shaderStages, &vertexInputInfo, &inputAssembly, nullptr, &viewportState, &rasterizer, &multisampling, &depthStencil, &colorBlending, &dynamicState, *m_pipelineLayout, *m_renderPass, 0, nullptr, -1);
@@ -168,8 +172,8 @@ namespace bmvk
     void PushConstantDemo::loadScene()
     {
         vw::scene::ModelLoader<VD> ml;
-        m_model = ml.loadModel("../models/samplescene/samplescene.dae", vw::scene::ModelLoader<VD>::NormalCreation::AssimpNormals);
-        //m_model = ml.loadModel("../models/stanford_dragon/dragon.obj", vw::scene::ModelLoader<VD>::NormalCreation::AssimpNormals);
+        m_model = ml.loadModel(K_SCENE_PATH, vw::scene::ModelLoader<VD>::NormalCreation::AssimpSmoothNormals);
+        m_model.translate({ 0.f, -4.f, 0.f });
         m_model.createBuffers(reinterpret_cast<const vk::UniqueDevice &>(m_device), reinterpret_cast<const vk::PhysicalDevice &>(m_instance.getPhysicalDevice()), m_commandPool, reinterpret_cast<const vk::Queue &>(m_queue));
     }
 
@@ -232,14 +236,15 @@ namespace bmvk
             vk::Viewport vp{ 0.f, 0.f, static_cast<float>(extent.width), static_cast<float>(extent.height), 0.f, 1.f };
             cmdBuffer.setViewport(vp);
 
-            m_pushConstants.clear();
-            m_pushConstants.emplace_back(r * 1.1 * sin_t, y, r * 1.1 * cos_t, 1.0f);
-            m_pushConstants.emplace_back(-r * sin_t, y, -r * cos_t, 1.0f);
-            m_pushConstants.emplace_back(r * 0.85f * sin_t, y, -sin_t * 2.5f, 1.5f);
-            m_pushConstants.emplace_back(0.0f, y, r * 1.25f * cos_t, 1.5f);
-            m_pushConstants.emplace_back(r * 2.25f * cos_t, y, 0.0f, 1.25f);
-            m_pushConstants.emplace_back(r * 2.5f * cos_t, y, r * 2.5f * sin_t, 1.25f);
-            cmdBuffer.pushConstants(m_pipelineLayout, vk::ShaderStageFlagBits::eVertex, 0u, m_pushConstants);
+            m_lightPositions.clear();
+            m_lightPositions.emplace_back(m_shininess, m_ambientWhite, m_screenGamma, m_maxLightDist);
+            m_lightPositions.emplace_back(r * 1.1 * sin_t, y, r * 1.1 * cos_t, 1.0f);
+            m_lightPositions.emplace_back(-r * sin_t, y, -r * cos_t, 1.0f);
+            m_lightPositions.emplace_back(r * 0.85f * sin_t, y, -sin_t * 2.5f, 1.5f);
+            m_lightPositions.emplace_back(0.0f, y, r * 1.25f * cos_t, 1.5f);
+            m_lightPositions.emplace_back(r * 2.25f * cos_t, y, 0.0f, 1.25f);
+            m_lightPositions.emplace_back(r * 2.5f * cos_t, y, r * 2.5f * sin_t, 1.25f);
+            cmdBuffer.pushConstants(m_pipelineLayout, vk::ShaderStageFlagBits::eVertex, 0u, m_lightPositions);
 
             cmdBuffer.bindPipeline(m_pipeline);
             cmdBuffer.bindDescriptorSet(m_pipelineLayout, m_descriptorSets[0]);
@@ -266,6 +271,7 @@ namespace bmvk
         ubo.view = m_camera.getViewMatrix();
         ubo.proj = m_camera.getProjMatrix();
         ubo.proj[1][1] *= -1;
+        ubo.normal = glm::inverseTranspose(ubo.view * ubo.model);
 
         m_device.copyToMemory(m_uniformBufferMemory, ubo);
     }
