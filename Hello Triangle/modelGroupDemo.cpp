@@ -23,8 +23,10 @@ namespace bmvk
         m_imageAvailableSemaphore{ m_device.createSemaphore() },
         m_renderFinishedSemaphore{ m_device.createSemaphore() },
         m_renderImguiFinishedSemaphore{ m_device.createSemaphore() },
-        m_modelGroup{ static_cast<vk::PhysicalDevice>(m_instance.getPhysicalDevice()).getProperties(), k_maxObjectInstances, 27 }
+        m_modelGroup{ static_cast<vk::PhysicalDevice>(m_instance.getPhysicalDevice()).getProperties(), k_maxObjectInstances }
     {
+        m_modelIDs = m_modelGroup.addInstances(27);
+
         setupCamera();
 
         createDescriptorSetLayout();
@@ -142,8 +144,8 @@ namespace bmvk
         const auto fragShaderStageInfo{ fragShader.createPipelineShaderStageCreateInfo(vk::ShaderStageFlagBits::eFragment) };
         vk::PipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageInfo, fragShaderStageInfo };
 
-        auto bindingDescription = vw::scene::Vertex<VD>::getBindingDescription();
-        auto attributeDescriptions = vw::scene::Vertex<VD>::getAttributeDescriptions();
+        auto bindingDescription = vw::scene::Vertex<VD_MGD>::getBindingDescription();
+        auto attributeDescriptions = vw::scene::Vertex<VD_MGD>::getAttributeDescriptions();
         vk::PipelineVertexInputStateCreateInfo vertexInputInfo{ PipelineVertexInputStateCreateInfo{ bindingDescription, attributeDescriptions } };
         vk::PipelineInputAssemblyStateCreateInfo inputAssembly{ {}, vk::PrimitiveTopology::eTriangleList };
         vk::Viewport viewport;
@@ -176,12 +178,12 @@ namespace bmvk
     {
         const auto posToCol = [](const glm::vec3 & pos) { return glm::vec3(std::max(0.f, pos.x), std::max(0.f, pos.y), std::max(0.f, pos.z)); };
 
-        const auto createSide = [&posToCol](std::vector<vw::scene::Vertex<VD>> & vertices, std::vector<uint32_t> & indices, const glm::vec3 & n, const glm::vec3 & a, const glm::vec3 & b, const glm::vec3 & c, const glm::vec3 & d, const int i)
+        const auto createSide = [&posToCol](std::vector<vw::scene::Vertex<VD_MGD>> & vertices, std::vector<uint32_t> & indices, const glm::vec3 & n, const glm::vec3 & a, const glm::vec3 & b, const glm::vec3 & c, const glm::vec3 & d, const int i)
         {
-            vertices.push_back(vw::scene::Vertex<VD>{ a, n, posToCol(a) });
-            vertices.push_back(vw::scene::Vertex<VD>{ b, n, posToCol(b) });
-            vertices.push_back(vw::scene::Vertex<VD>{ c, n, posToCol(c) });
-            vertices.push_back(vw::scene::Vertex<VD>{ d, n, posToCol(d) });
+            vertices.push_back(vw::scene::Vertex<VD_MGD>{ a, n, posToCol(a) });
+            vertices.push_back(vw::scene::Vertex<VD_MGD>{ b, n, posToCol(b) });
+            vertices.push_back(vw::scene::Vertex<VD_MGD>{ c, n, posToCol(c) });
+            vertices.push_back(vw::scene::Vertex<VD_MGD>{ d, n, posToCol(d) });
 
             indices.push_back(i);
             indices.push_back(i + 1);
@@ -191,7 +193,7 @@ namespace bmvk
             indices.push_back(i + 3);
         };
 
-        std::vector<vw::scene::Vertex<VD>> vertices;
+        std::vector<vw::scene::Vertex<VD_MGD>> vertices;
         std::vector<uint32_t> indices;
 
         // front
@@ -296,7 +298,8 @@ namespace bmvk
         const auto currentNum = std::min(static_cast<int>(k_maxObjectInstances), (m_numCubesI + 1) * (m_numCubesI + 1) * (m_numCubesI + 1));
         if (currentNum != m_modelGroup.getNumInstances())
         {
-            m_modelGroup.setNumInstances(currentNum);
+            m_modelGroup.clear();
+            m_modelIDs = m_modelGroup.addInstances(currentNum);
             m_queue.waitIdle();
             m_commandBuffers.clear();
             createCommandBuffers();
@@ -335,6 +338,10 @@ namespace bmvk
                 for (uint32_t z = 0; z < dim; ++z)
                 {
                     uint32_t index = x * dim * dim + y * dim + z;
+                    if (index >= m_modelIDs.size())
+                    {
+                        throw std::runtime_error("index does not match model id");
+                    }
 
                     // Aligned offset
                     //glm::mat4 * modelMat = reinterpret_cast<glm::mat4 *>((reinterpret_cast<uint64_t>(m_dynamicUniformBufferObject.model) + (index * m_dynamicAlignment)));
@@ -348,7 +355,7 @@ namespace bmvk
                     modelMat = glm::rotate(modelMat, m_rotations[index].x, glm::vec3(1.0f, 1.0f, 0.0f));
                     modelMat = glm::rotate(modelMat, m_rotations[index].y, glm::vec3(0.0f, 1.0f, 0.0f));
                     modelMat = glm::rotate(modelMat, m_rotations[index].z, glm::vec3(0.0f, 0.0f, 1.0f));
-                    m_modelGroup.setModelMatrix(index, modelMat);
+                    m_modelGroup.setModelMatrix(m_modelIDs[index], modelMat);
                 }
             }
         }

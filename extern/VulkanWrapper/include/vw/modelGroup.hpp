@@ -1,7 +1,10 @@
 #pragma once
 
+#include <glm/gtc/matrix_transform.hpp>
+
 #include "vertex.hpp"
 #include "util.hpp"
+#include "modelId.hpp"
 
 namespace vw::scene
 {
@@ -9,9 +12,9 @@ namespace vw::scene
     class ModelGroup
     {
     public:
-        ModelGroup(const vk::PhysicalDeviceProperties & prop, const uint32_t maxNumInstances, const uint32_t initialNumInstances)
+        ModelGroup(const vk::PhysicalDeviceProperties & prop, const uint32_t maxNumInstances)
           : m_maxNumInstances{ maxNumInstances },
-            m_numInstances{ initialNumInstances },
+            m_numInstances{ 0 },
             m_dynamicAlignment{ sizeof(glm::mat4) }
         {
             const auto minUboAlignment = prop.limits.minUniformBufferOffsetAlignment;
@@ -132,26 +135,90 @@ namespace vw::scene
             device->unmapMemory(*m_dynamicUniformBufferMemory);
         }
 
-        void setModelMatrix(const uint32_t idx, const glm::mat4 & modelMatrix)
+        void setModelMatrix(const ModelID id, const glm::mat4 & modelMatrix)
         {
+            if (!idExists(id))
+            {
+                throw std::invalid_argument("modelgroup does not contain this ID");
+            }
+
+            const auto idx{ m_idToIdxMap[id] };
             glm::mat4 * modelMat = reinterpret_cast<glm::mat4 *>((reinterpret_cast<uint64_t>(m_dynamicUniformBufferObject.model) + idx * m_dynamicAlignment));
             *modelMat = modelMatrix;
         }
 
-        void translate(const uint32_t idx, const glm::vec3 & translate)
+        void translate(const ModelID id, const glm::vec3 & translate)
         {
+            if (!idExists(id))
+            {
+                throw std::invalid_argument("modelgroup does not contain this ID");
+            }
+
+            const auto idx{ m_idToIdxMap[id] };
             glm::mat4 * modelMat = reinterpret_cast<glm::mat4 *>((reinterpret_cast<uint64_t>(m_dynamicUniformBufferObject.model) + (idx * m_dynamicAlignment)));
+            *modelMat = glm::translate(*modelMat, translate);
         }
-        void scale(const uint32_t idx, const glm::vec3 & scale) {}
-        void rotate(const uint32_t idx, const glm::vec3 & axis, const float radians) {}
+
+        void scale(const uint32_t id, const glm::vec3 & scale)
+        {
+            if (!idExists(id))
+            {
+                throw std::invalid_argument("modelgroup does not contain this ID");
+            }
+
+            const auto idx{ m_idToIdxMap[id] };
+            glm::mat4 * modelMat = reinterpret_cast<glm::mat4 *>((reinterpret_cast<uint64_t>(m_dynamicUniformBufferObject.model) + (idx * m_dynamicAlignment)));
+            *modelMat = glm::scale(*modelMat, scale);
+        }
+
+        void rotate(const uint32_t id, const glm::vec3 & axis, const float radians)
+        {
+            if (!idExists(id))
+            {
+                throw std::invalid_argument("modelgroup does not contain this ID");
+            }
+
+            const auto idx{ m_idToIdxMap[id] };
+            glm::mat4 * modelMat = reinterpret_cast<glm::mat4 *>((reinterpret_cast<uint64_t>(m_dynamicUniformBufferObject.model) + (idx * m_dynamicAlignment)));
+            *modelMat = glm::rotate(*modelMat, radians, axis);
+        }
 
         auto getNumInstances() const noexcept { return m_numInstances; }
-        void setNumInstances(const uint32_t numInstances)
+
+        ModelID addInstance()
         {
-            m_numInstances = numInstances;
+            if (m_numInstances + 1 > m_maxNumInstances)
+            {
+                throw std::invalid_argument("too many instances");
+            }
+
+            ModelID id;
+            m_idToIdxMap[id] = m_numInstances++;
+            return id;
         }
-        void addInstances(const uint32_t numAdditionalInstances) {}
+
+        std::vector<ModelID> addInstances(const uint32_t numAdditionalInstances)
+        {
+            if (m_numInstances + numAdditionalInstances > m_maxNumInstances)
+            {
+                throw std::invalid_argument("too many instances");
+            }
+
+            std::vector<ModelID> ret;
+            for (uint32_t i = 0; i < numAdditionalInstances; ++i)
+            {
+                ret.emplace_back(addInstance());
+            }
+
+            return ret;
+        }
+
+        void clear() { m_numInstances = 0; m_idToIdxMap.clear(); }
     private:
+        bool idExists(const ModelID id) const { return m_idToIdxMap.find(id) != m_idToIdxMap.end(); }
+        
+        std::unordered_map<ModelID, uint32_t, ModelID::KeyHash> m_idToIdxMap;
+
         struct DynamicUniformBufferObject
         {
             glm::mat4 * model = nullptr;

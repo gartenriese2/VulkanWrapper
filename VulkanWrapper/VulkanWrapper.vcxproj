@@ -22,7 +22,9 @@
     <ClInclude Include="camera.hpp" />
     <ClInclude Include="model.hpp" />
     <ClInclude Include="modelGroup.hpp" />
+    <ClInclude Include="modelId.hpp" />
     <ClInclude Include="modelLoader.hpp" />
+    <ClInclude Include="scene.hpp" />
     <ClInclude Include="util.hpp" />
     <ClInclude Include="vertex.hpp" />
     <ClInclude Include="window.hpp" />

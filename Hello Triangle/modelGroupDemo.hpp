@@ -11,7 +11,7 @@
 
 namespace bmvk
 {
-    const vw::scene::VertexDescription VD = vw::scene::VertexDescription::PositionNormalColor;
+    const vw::scene::VertexDescription VD_MGD = vw::scene::VertexDescription::PositionNormalColor;
 
     class ModelGroupDemo : ImguiBaseDemo
     {
@@ -29,6 +29,8 @@ namespace bmvk
 
         glm::vec3 m_rotations[k_maxObjectInstances];
         glm::vec3 m_rotationSpeeds[k_maxObjectInstances];
+
+        std::vector<vw::scene::ModelID> m_modelIDs;
 
         int m_numCubesI = 2;
 
@@ -59,7 +61,7 @@ namespace bmvk
         vk::UniqueSemaphore m_renderFinishedSemaphore;
         vk::UniqueSemaphore m_renderImguiFinishedSemaphore;
 
-        vw::scene::ModelGroup<VD> m_modelGroup;
+        vw::scene::ModelGroup<VD_MGD> m_modelGroup;
 
         void setupCamera();
 
