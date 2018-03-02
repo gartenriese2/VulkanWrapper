@@ -24,6 +24,9 @@
     <ClInclude Include="modelGroup.hpp" />
     <ClInclude Include="modelId.hpp" />
     <ClInclude Include="modelLoader.hpp" />
+    <ClInclude Include="modelRepository.hpp" />
+    <ClInclude Include="modelResource.hpp" />
+    <ClInclude Include="modelResourceId.hpp" />
     <ClInclude Include="scene.hpp" />
     <ClInclude Include="util.hpp" />
     <ClInclude Include="vertex.hpp" />
@@ -32,6 +35,8 @@
   <ItemGroup>
     <ClCompile Include="camera.cpp" />
     <ClCompile Include="model.cpp" />
+    <ClCompile Include="modelRepository.cpp" />
+    <ClCompile Include="modelResource.cpp" />
     <ClCompile Include="window.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

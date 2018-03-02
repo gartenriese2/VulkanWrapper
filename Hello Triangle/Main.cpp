@@ -14,8 +14,9 @@
 //#include "dragonDemo.hpp"
 //#include "coordinatesDemo.hpp"
 //#include "dynamicUboDemo.hpp"
-#include "modelGroupDemo.hpp"
-#include "pushConstantDemo.hpp"
+//#include "modelGroupDemo.hpp"
+//#include "pushConstantDemo.hpp"
+#include "modelRepositoryDemo.hpp"
 
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
@@ -43,8 +44,9 @@ int main()
         //bmvk::DragonDemo app(enableValidationLayers, WIDTH, HEIGHT);
         //bmvk::CoordinatesDemo app(enableValidationLayers, WIDTH, HEIGHT);
         //bmvk::DynamicUboDemo app(enableValidationLayers, WIDTH, HEIGHT);
-        bmvk::ModelGroupDemo app(enableValidationLayers, WIDTH, HEIGHT);
+        //bmvk::ModelGroupDemo app(enableValidationLayers, WIDTH, HEIGHT);
         //bmvk::PushConstantDemo app{ enableValidationLayers, WIDTH, HEIGHT };
+        bmvk::ModelRepositoryDemo app{ enableValidationLayers, WIDTH, HEIGHT };
         app.run();
     }
     catch (const std::runtime_error & e)

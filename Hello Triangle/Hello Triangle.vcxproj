@@ -36,6 +36,7 @@
     <ClCompile Include="instance.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="modelGroupDemo.cpp" />
+    <ClCompile Include="modelRepositoryDemo.cpp" />
     <ClCompile Include="objectDemo.cpp" />
     <ClCompile Include="physicalDevice.cpp" />
     <ClCompile Include="pushConstantDemo.cpp" />
@@ -71,6 +72,7 @@
     <ClInclude Include="indexbufferDemo.hpp" />
     <ClInclude Include="instance.hpp" />
     <ClInclude Include="modelGroupDemo.hpp" />
+    <ClInclude Include="modelRepositoryDemo.hpp" />
     <ClInclude Include="objectDemo.hpp" />
     <ClInclude Include="physicalDevice.hpp" />
     <ClInclude Include="pushConstantDemo.hpp" />
