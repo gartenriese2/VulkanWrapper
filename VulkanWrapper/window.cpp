@@ -31,6 +31,43 @@ namespace vw::util
         }
 
         glfwSetErrorCallback(errorFun);
+
+        glfwSetWindowUserPointer(m_window.get(), this);
+        glfwSetWindowSizeCallback(m_window.get(), [](GLFWwindow * windowPtr, int width, int height)
+        {
+            for (const auto & func : static_cast<Window *>(glfwGetWindowUserPointer(windowPtr))->m_windowSizeFuncs)
+            {
+                func(width, height);
+            }
+        });
+        glfwSetKeyCallback(m_window.get(), [](GLFWwindow * windowPtr, int key, int scancode, int action, int mods)
+        {
+            for (const auto & func : static_cast<Window *>(glfwGetWindowUserPointer(windowPtr))->m_keyFuncs)
+            {
+                func(key, scancode, action, mods);
+            }
+        });
+        glfwSetMouseButtonCallback(m_window.get(), [](GLFWwindow * windowPtr, int button, int action, int mods)
+        {
+            for (const auto & func : static_cast<Window *>(glfwGetWindowUserPointer(windowPtr))->m_mouseButtonFuncs)
+            {
+                func(button, action, mods);
+            }
+        });
+        glfwSetScrollCallback(m_window.get(), [](GLFWwindow * windowPtr, double xoffset, double yoffset)
+        {
+            for (const auto & func : static_cast<Window *>(glfwGetWindowUserPointer(windowPtr))->m_mouseScrollFuncs)
+            {
+                func(xoffset, yoffset);
+            }
+        });
+        glfwSetCursorPosCallback(m_window.get(), [](GLFWwindow * windowPtr, double xpos, double ypos)
+        {
+           for (const auto & func : static_cast<Window *>(glfwGetWindowUserPointer(windowPtr))->m_mouseCursorFuncs)
+           {
+               func(xpos, ypos);
+           }
+        });
     }
 
     Window::~Window()
@@ -90,34 +127,29 @@ namespace vw::util
         glfwSetInputMode(m_window.get(), mode, value);
     }
 
-    void Window::setWindowUserPointer(void * pointer) const
+    void Window::addWindowSizeFunc(const std::function<void(int, int)> & func)
     {
-        glfwSetWindowUserPointer(m_window.get(), pointer);
+        m_windowSizeFuncs.emplace_back(func);
     }
 
-    void Window::setWindowSizeCallback(GLFWwindowsizefun fun) const
+    void Window::addKeyFunc(const std::function<void(int, int, int, int)> & func)
     {
-        glfwSetWindowSizeCallback(m_window.get(), fun);
+        m_keyFuncs.emplace_back(func);
     }
 
-    void Window::setKeyCallback(GLFWkeyfun fun) const
+    void Window::addMouseButtonFunc(const std::function<void(int, int, int)> & func)
     {
-        glfwSetKeyCallback(m_window.get(), fun);
+        m_mouseButtonFuncs.emplace_back(func);
     }
 
-    void Window::setScrollCallback(GLFWscrollfun fun) const
+    void Window::addMouseScrollFunc(const std::function<void(double, double)> & func)
     {
-        glfwSetScrollCallback(m_window.get(), fun);
+        m_mouseScrollFuncs.emplace_back(func);
     }
 
-    void Window::setMouseButtonCallback(GLFWmousebuttonfun fun) const
+    void Window::addMouseCursorFunc(const std::function<void(double, double)> & func)
     {
-        glfwSetMouseButtonCallback(m_window.get(), fun);
-    }
-
-    void Window::setCursorPosCallback(GLFWcursorposfun fun) const
-    {
-        glfwSetCursorPosCallback(m_window.get(), fun);
+        m_mouseCursorFuncs.emplace_back(func);
     }
 
     std::vector<std::string> Window::getRequiredExtensions() const

@@ -1,53 +1,65 @@
 #include <iostream>
 #include <stdexcept>
 
-//#include "triangleDemo.hpp"
-//#include "vertexbufferDemo.hpp"
-//#include "stagingbufferDemo.hpp"
-//#include "indexbufferDemo.hpp"
-//#include "uniformbufferDemo.hpp"
-//#include "imguiDemo.hpp"
-//#include "textureDemo.hpp"
-//#include "combinedBufferDemo.hpp"
-//#include "depthBufferDemo.hpp"
-//#include "objectDemo.hpp"
-//#include "dragonDemo.hpp"
-//#include "coordinatesDemo.hpp"
-//#include "dynamicUboDemo.hpp"
-//#include "modelGroupDemo.hpp"
-//#include "pushConstantDemo.hpp"
+#include "triangleDemo.hpp"
+#include "vertexbufferDemo.hpp"
+#include "stagingbufferDemo.hpp"
+#include "indexbufferDemo.hpp"
+#include "uniformbufferDemo.hpp"
+#include "imguiDemo.hpp"
+#include "textureDemo.hpp"
+#include "combinedBufferDemo.hpp"
+#include "depthBufferDemo.hpp"
+#include "objectDemo.hpp"
+#include "dragonDemo.hpp"
+#include "coordinatesDemo.hpp"
+#include "dynamicUboDemo.hpp"
+#include "modelGroupDemo.hpp"
+#include "pushConstantDemo.hpp"
 #include "modelRepositoryDemo.hpp"
 
-const uint32_t WIDTH = 800;
-const uint32_t HEIGHT = 600;
+constexpr uint32_t k_width = 800;
+constexpr uint32_t k_height = 600;
 
 #ifdef NDEBUG
-const bool enableValidationLayers = false;
+constexpr bool k_enableValidationLayers = false;
 #else
-const bool enableValidationLayers = true;
+constexpr bool k_enableValidationLayers = true;
 #endif
+
+template<typename T>
+void runDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height)
+{
+    auto triangleDemoPtr{ std::make_unique<T>(enableValidationLayers, width, height) };
+    triangleDemoPtr->run();
+    triangleDemoPtr.reset(nullptr);
+}
+
+void runAllDemos(const bool enableValidationLayers, const uint32_t width, const uint32_t height)
+{
+    runDemo<bmvk::TriangleDemo<vw::scene::VertexDescription::NotUsed>>(enableValidationLayers, width, height);
+    runDemo<bmvk::VertexbufferDemo<vw::scene::VertexDescription::NotUsed>>(enableValidationLayers, width, height);
+    runDemo<bmvk::StagingbufferDemo<vw::scene::VertexDescription::NotUsed>>(enableValidationLayers, width, height);
+    runDemo<bmvk::IndexbufferDemo<vw::scene::VertexDescription::NotUsed>>(enableValidationLayers, width, height);
+    runDemo<bmvk::UniformbufferDemo<vw::scene::VertexDescription::NotUsed>>(enableValidationLayers, width, height);
+    runDemo<bmvk::ImguiDemo<vw::scene::VertexDescription::NotUsed>>(enableValidationLayers, width, height);
+    runDemo<bmvk::TextureDemo<vw::scene::VertexDescription::NotUsed>>(enableValidationLayers, width, height);
+    runDemo<bmvk::CombinedBufferDemo<vw::scene::VertexDescription::NotUsed>>(enableValidationLayers, width, height);
+    runDemo<bmvk::DepthBufferDemo<vw::scene::VertexDescription::NotUsed>>(enableValidationLayers, width, height);
+    runDemo<bmvk::ObjectDemo<vw::scene::VertexDescription::NotUsed>>(enableValidationLayers, width, height);
+    runDemo<bmvk::DragonDemo<vw::scene::VertexDescription::PositionNormalColorTexture>>(enableValidationLayers, width, height);
+    runDemo<bmvk::CoordinatesDemo<vw::scene::VertexDescription::PositionNormalColor>>(enableValidationLayers, width, height);
+    runDemo<bmvk::DynamicUboDemo<vw::scene::VertexDescription::PositionNormalColorTexture>>(enableValidationLayers, width, height);
+    runDemo<bmvk::ModelGroupDemo<vw::scene::VertexDescription::PositionNormalColor>>(enableValidationLayers, width, height);
+    runDemo<bmvk::PushConstantDemo<vw::scene::VertexDescription::PositionNormalColor>>(enableValidationLayers, width, height);
+    runDemo<bmvk::ModelRepositoryDemo<vw::scene::VertexDescription::PositionNormalColor>>(enableValidationLayers, width, height);
+}
 
 int main()
 {
     try
     {
-        //bmvk::TriangleDemo app(enableValidationLayers, WIDTH, HEIGHT);
-        //bmvk::VertexbufferDemo app(enableValidationLayers, WIDTH, HEIGHT);
-        //bmvk::StagingbufferDemo app(enableValidationLayers, WIDTH, HEIGHT);
-        //bmvk::IndexbufferDemo app(enableValidationLayers, WIDTH, HEIGHT);
-        //bmvk::UniformbufferDemo app(enableValidationLayers, WIDTH, HEIGHT);
-        //bmvk::ImguiDemo app(enableValidationLayers, WIDTH, HEIGHT);
-        //bmvk::TextureDemo app(enableValidationLayers, WIDTH, HEIGHT);
-        //bmvk::CombinedBufferDemo app(enableValidationLayers, WIDTH, HEIGHT);
-        //bmvk::DepthBufferDemo app(enableValidationLayers, WIDTH, HEIGHT);
-        //bmvk::ObjectDemo app(enableValidationLayers, WIDTH, HEIGHT);
-        //bmvk::DragonDemo app(enableValidationLayers, WIDTH, HEIGHT);
-        //bmvk::CoordinatesDemo app(enableValidationLayers, WIDTH, HEIGHT);
-        //bmvk::DynamicUboDemo app(enableValidationLayers, WIDTH, HEIGHT);
-        //bmvk::ModelGroupDemo app(enableValidationLayers, WIDTH, HEIGHT);
-        //bmvk::PushConstantDemo app{ enableValidationLayers, WIDTH, HEIGHT };
-        bmvk::ModelRepositoryDemo app{ enableValidationLayers, WIDTH, HEIGHT };
-        app.run();
+        runAllDemos(k_enableValidationLayers, k_width, k_height);
     }
     catch (const std::runtime_error & e)
     {

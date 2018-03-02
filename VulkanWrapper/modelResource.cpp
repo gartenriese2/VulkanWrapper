@@ -75,6 +75,7 @@ namespace vw::scene
         }
     }
 
+    template class ModelResource<VertexDescription::NotUsed>;
     template class ModelResource<VertexDescription::PositionNormalColor>;
     template class ModelResource<VertexDescription::PositionNormalColorTexture>;
 }

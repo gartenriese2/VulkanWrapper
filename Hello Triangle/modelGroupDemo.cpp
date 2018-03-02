@@ -18,7 +18,8 @@ namespace bmvk
     const std::string K_VERTEX_SHADER_PATH{ "../shaders/modelGroupDemo/vertex.vert.spv" };
     const std::string K_FRAGMENT_SHADER_PATH{ "../shaders/modelGroupDemo/fragment.frag.spv" };
 
-    ModelGroupDemo::ModelGroupDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height)
+    template <vw::scene::VertexDescription VD>
+    ModelGroupDemo<VD>::ModelGroupDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height)
         : ImguiBaseDemo{ enableValidationLayers, width, height, "ModelGroup Demo", DebugReport::ReportLevel::WarningsAndAbove },
         m_imageAvailableSemaphore{ m_device.createSemaphore() },
         m_renderFinishedSemaphore{ m_device.createSemaphore() },
@@ -42,7 +43,8 @@ namespace bmvk
         createCommandBuffers();
     }
 
-    void ModelGroupDemo::run()
+    template <vw::scene::VertexDescription VD>
+    void ModelGroupDemo<VD>::run()
     {
         while (!m_window.shouldClose())
         {
@@ -82,8 +84,15 @@ namespace bmvk
         m_device.waitIdle();
     }
 
-    void ModelGroupDemo::recreateSwapChain()
+    template <vw::scene::VertexDescription VD>
+    void ModelGroupDemo<VD>::recreateSwapChain()
     {
+        const auto[width, height] = m_window.getSize();
+        if (width == 0 || height == 0)
+        {
+            return;
+        }
+
         m_device.waitIdle();
 
         for (auto & fb : m_swapChainFramebuffers)
@@ -99,7 +108,7 @@ namespace bmvk
         m_pipelineLayout.reset(nullptr);
         m_renderPass.reset(nullptr);
 
-        ImguiBaseDemo::recreateSwapChain();
+        ImguiBaseDemo<VD>::recreateSwapChain();
 
         createRenderPass();
         createPipelines();
@@ -108,7 +117,8 @@ namespace bmvk
         createCommandBuffers();
     }
 
-    void ModelGroupDemo::setupCamera()
+    template <vw::scene::VertexDescription VD>
+    void ModelGroupDemo<VD>::setupCamera()
     {
         const glm::vec3 pos{ 0.f, 0.f, 25.f };
         const glm::vec3 dir{ 0.f, 0.f, -1.f };
@@ -116,14 +126,16 @@ namespace bmvk
         m_camera = vw::util::Camera(pos, dir, up, 45.f, m_swapchain.getRatio(), 0.01f, std::numeric_limits<float>::infinity());
     }
 
-    void ModelGroupDemo::createDescriptorSetLayout()
+    template <vw::scene::VertexDescription VD>
+    void ModelGroupDemo<VD>::createDescriptorSetLayout()
     {
         vk::DescriptorSetLayoutBinding uboLayoutBinding{ 0, vk::DescriptorType::eUniformBuffer, 1, vk::ShaderStageFlagBits::eVertex };
         vk::DescriptorSetLayoutBinding dynamicUboLayoutBinding{ 1, vk::DescriptorType::eUniformBufferDynamic, 1, vk::ShaderStageFlagBits::eVertex };
         m_descriptorSetLayout = m_device.createDescriptorSetLayout({ uboLayoutBinding, dynamicUboLayoutBinding });
     }
 
-    void ModelGroupDemo::createRenderPass()
+    template <vw::scene::VertexDescription VD>
+    void ModelGroupDemo<VD>::createRenderPass()
     {
         vk::AttachmentDescription colorAttachment{ {}, m_swapchain.getImageFormat().format, vk::SampleCountFlagBits::e1, vk::AttachmentLoadOp::eClear, vk::AttachmentStoreOp::eStore, vk::AttachmentLoadOp::eDontCare, vk::AttachmentStoreOp::eDontCare, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal };
         vk::AttachmentReference colorAttachmentRef{ 0, vk::ImageLayout::eColorAttachmentOptimal };
@@ -136,7 +148,8 @@ namespace bmvk
         m_renderPass = reinterpret_cast<const vk::UniqueDevice &>(m_device)->createRenderPassUnique(renderPassInfo);
     }
 
-    void ModelGroupDemo::createPipelines()
+    template <vw::scene::VertexDescription VD>
+    void ModelGroupDemo<VD>::createPipelines()
     {
         const Shader vertShader{ K_VERTEX_SHADER_PATH, m_device };
         const Shader fragShader{ K_FRAGMENT_SHADER_PATH, m_device };
@@ -144,8 +157,8 @@ namespace bmvk
         const auto fragShaderStageInfo{ fragShader.createPipelineShaderStageCreateInfo(vk::ShaderStageFlagBits::eFragment) };
         vk::PipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageInfo, fragShaderStageInfo };
 
-        auto bindingDescription = vw::scene::Vertex<VD_MGD>::getBindingDescription();
-        auto attributeDescriptions = vw::scene::Vertex<VD_MGD>::getAttributeDescriptions();
+        auto bindingDescription = vw::scene::Vertex<VD>::getBindingDescription();
+        auto attributeDescriptions = vw::scene::Vertex<VD>::getAttributeDescriptions();
         vk::PipelineVertexInputStateCreateInfo vertexInputInfo{ PipelineVertexInputStateCreateInfo{ bindingDescription, attributeDescriptions } };
         vk::PipelineInputAssemblyStateCreateInfo inputAssembly{ {}, vk::PrimitiveTopology::eTriangleList };
         vk::Viewport viewport;
@@ -164,7 +177,8 @@ namespace bmvk
         m_pipeline = reinterpret_cast<const vk::UniqueDevice &>(m_device)->createGraphicsPipelineUnique(nullptr, colorPipelineInfo);
     }
 
-    void ModelGroupDemo::createFramebuffers()
+    template <vw::scene::VertexDescription VD>
+    void ModelGroupDemo<VD>::createFramebuffers()
     {
         m_swapChainFramebuffers.clear();
         for (auto & uniqueImageView : m_swapchain.getImageViews())
@@ -174,16 +188,17 @@ namespace bmvk
         }
     }
 
-    void ModelGroupDemo::createModelGroup()
+    template <vw::scene::VertexDescription VD>
+    void ModelGroupDemo<VD>::createModelGroup()
     {
         const auto posToCol = [](const glm::vec3 & pos) { return glm::vec3(std::max(0.f, pos.x), std::max(0.f, pos.y), std::max(0.f, pos.z)); };
 
-        const auto createSide = [&posToCol](std::vector<vw::scene::Vertex<VD_MGD>> & vertices, std::vector<uint32_t> & indices, const glm::vec3 & n, const glm::vec3 & a, const glm::vec3 & b, const glm::vec3 & c, const glm::vec3 & d, const int i)
+        const auto createSide = [&posToCol](std::vector<vw::scene::Vertex<VD>> & vertices, std::vector<uint32_t> & indices, const glm::vec3 & n, const glm::vec3 & a, const glm::vec3 & b, const glm::vec3 & c, const glm::vec3 & d, const int i)
         {
-            vertices.push_back(vw::scene::Vertex<VD_MGD>{ a, n, posToCol(a) });
-            vertices.push_back(vw::scene::Vertex<VD_MGD>{ b, n, posToCol(b) });
-            vertices.push_back(vw::scene::Vertex<VD_MGD>{ c, n, posToCol(c) });
-            vertices.push_back(vw::scene::Vertex<VD_MGD>{ d, n, posToCol(d) });
+            vertices.push_back(vw::scene::Vertex<VD>{ a, n, posToCol(a) });
+            vertices.push_back(vw::scene::Vertex<VD>{ b, n, posToCol(b) });
+            vertices.push_back(vw::scene::Vertex<VD>{ c, n, posToCol(c) });
+            vertices.push_back(vw::scene::Vertex<VD>{ d, n, posToCol(d) });
 
             indices.push_back(i);
             indices.push_back(i + 1);
@@ -193,7 +208,7 @@ namespace bmvk
             indices.push_back(i + 3);
         };
 
-        std::vector<vw::scene::Vertex<VD_MGD>> vertices;
+        std::vector<vw::scene::Vertex<VD>> vertices;
         std::vector<uint32_t> indices;
 
         // front
@@ -219,7 +234,8 @@ namespace bmvk
         m_modelGroup.createBuffers(reinterpret_cast<const vk::UniqueDevice &>(m_device), static_cast<vk::PhysicalDevice>(m_instance.getPhysicalDevice()), m_commandPool, static_cast<vk::Queue>(m_queue));
     }
 
-    void ModelGroupDemo::createDepthResources()
+    template <vw::scene::VertexDescription VD>
+    void ModelGroupDemo<VD>::createDepthResources()
     {
         const auto depthFormat{ m_instance.getPhysicalDevice().findDepthFormat() };
         createImage(m_swapchain.getExtent().width, m_swapchain.getExtent().height, depthFormat, vk::ImageTiling::eOptimal, vk::ImageUsageFlagBits::eDepthStencilAttachment, vk::MemoryPropertyFlagBits::eDeviceLocal, m_depthImage, m_depthImageMemory);
@@ -233,7 +249,8 @@ namespace bmvk
         m_queue.waitIdle();
     }
 
-    void ModelGroupDemo::createUniformBuffer()
+    template <vw::scene::VertexDescription VD>
+    void ModelGroupDemo<VD>::createUniformBuffer()
     {
         const auto bufferSize{ sizeof(UniformBufferObject) };
         const auto uniformBufferUsageFlags{ vk::BufferUsageFlagBits::eUniformBuffer };
@@ -241,7 +258,8 @@ namespace bmvk
         createBuffer(bufferSize, uniformBufferUsageFlags, uniformBufferMemoryPropertyFlags, m_uniformBuffer, m_uniformBufferMemory);
     }
 
-    void ModelGroupDemo::createRotations()
+    template <vw::scene::VertexDescription VD>
+    void ModelGroupDemo<VD>::createRotations()
     {
         std::default_random_engine rndEngine(static_cast<unsigned int>(time(nullptr)));
         std::normal_distribution<float> rndDist(-1.0f, 1.0f);
@@ -251,7 +269,8 @@ namespace bmvk
         }
     }
 
-    void ModelGroupDemo::createDescriptorPool()
+    template <vw::scene::VertexDescription VD>
+    void ModelGroupDemo<VD>::createDescriptorPool()
     {
         vk::DescriptorPoolSize poolSize{ vk::DescriptorType::eUniformBuffer, 1 };
         vk::DescriptorPoolSize poolSize2{ vk::DescriptorType::eUniformBufferDynamic, 1 };
@@ -259,7 +278,8 @@ namespace bmvk
         m_descriptorPool = m_device.createDescriptorPool(vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet, 1, vec);
     }
 
-    void ModelGroupDemo::createDescriptorSet()
+    template <vw::scene::VertexDescription VD>
+    void ModelGroupDemo<VD>::createDescriptorSet()
     {
         vk::DescriptorSetLayout layouts[] = { *m_descriptorSetLayout };
         vk::DescriptorSetAllocateInfo allocInfo{ *m_descriptorPool, 1, layouts };
@@ -273,7 +293,8 @@ namespace bmvk
         m_device.updateDescriptorSets(vec);
     }
 
-    void ModelGroupDemo::createCommandBuffers()
+    template <vw::scene::VertexDescription VD>
+    void ModelGroupDemo<VD>::createCommandBuffers()
     {
         m_commandBuffers = m_device.allocateCommandBuffers(m_commandPool, static_cast<uint32_t>(m_swapChainFramebuffers.size()));
         for (size_t i = 0; i < m_commandBuffers.size(); ++i)
@@ -293,7 +314,8 @@ namespace bmvk
         }
     }
 
-    void ModelGroupDemo::updateNumObjects()
+    template <vw::scene::VertexDescription VD>
+    void ModelGroupDemo<VD>::updateNumObjects()
     {
         const auto currentNum = std::min(static_cast<int>(k_maxObjectInstances), (m_numCubesI + 1) * (m_numCubesI + 1) * (m_numCubesI + 1));
         if (currentNum != m_modelGroup.getNumInstances())
@@ -306,7 +328,8 @@ namespace bmvk
         }
     }
 
-    void ModelGroupDemo::updateUniformBuffer()
+    template <vw::scene::VertexDescription VD>
+    void ModelGroupDemo<VD>::updateUniformBuffer()
     {
         UniformBufferObject ubo;
         const auto extent{ m_swapchain.getExtent() };
@@ -318,7 +341,8 @@ namespace bmvk
         m_device.copyToMemory(m_uniformBufferMemory, ubo);
     }
 
-    void ModelGroupDemo::updateDynamicUniformBuffer()
+    template <vw::scene::VertexDescription VD>
+    void ModelGroupDemo<VD>::updateDynamicUniformBuffer()
     {
         // Update at max. 60 fps
         m_animationTimer += static_cast<float>(m_currentFrameTime);
@@ -365,7 +389,8 @@ namespace bmvk
         m_modelGroup.flush(reinterpret_cast<const vk::UniqueDevice &>(m_device));
     }
 
-    void ModelGroupDemo::drawFrame()
+    template <vw::scene::VertexDescription VD>
+    void ModelGroupDemo<VD>::drawFrame()
     {
         m_queue.waitIdle();
         timing(false);
@@ -382,7 +407,7 @@ namespace bmvk
         }
 
         m_queue.submit(m_commandBuffers[imageIndex], m_imageAvailableSemaphore, m_renderFinishedSemaphore, vk::PipelineStageFlagBits::eColorAttachmentOutput);
-        ImguiBaseDemo::drawFrame(imageIndex, m_renderFinishedSemaphore, m_renderImguiFinishedSemaphore);
+        ImguiBaseDemo<VD>::drawFrame(imageIndex, m_renderFinishedSemaphore, m_renderImguiFinishedSemaphore);
 
         auto waitSemaphore{ *m_renderImguiFinishedSemaphore };
         auto swapchain{ *reinterpret_cast<const vk::UniqueSwapchainKHR &>(m_swapchain) };
@@ -392,4 +417,6 @@ namespace bmvk
             recreateSwapChain();
         }
     }
+
+    template class ModelGroupDemo<vw::scene::VertexDescription::PositionNormalColor>;
 }

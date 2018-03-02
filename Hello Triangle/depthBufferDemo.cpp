@@ -5,12 +5,12 @@
 #include <glm/gtc/matrix_transform.inl>
 
 #include "shader.hpp"
-#include "bufferFactory.hpp"
 
 namespace bmvk
 {
-    DepthBufferDemo::DepthBufferDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height)
-        : ImguiBaseDemo{ enableValidationLayers, width, height, "DepthBuffer Demo", true },
+    template <vw::scene::VertexDescription VD>
+    DepthBufferDemo<VD>::DepthBufferDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height)
+        : ImguiBaseDemo{ enableValidationLayers, width, height, "DepthBuffer Demo", DebugReport::ReportLevel::WarningsAndAbove },
         m_textureSampler{ m_device.createSampler(true) },
         m_imageAvailableSemaphore{ m_device.createSemaphore() },
         m_renderFinishedSemaphore{ m_device.createSemaphore() },
@@ -30,7 +30,8 @@ namespace bmvk
         createCommandBuffers();
     }
 
-    void DepthBufferDemo::run()
+    template <vw::scene::VertexDescription VD>
+    void DepthBufferDemo<VD>::run()
     {
         while (!m_window.shouldClose())
         {
@@ -65,8 +66,15 @@ namespace bmvk
         m_device.waitIdle();
     }
 
-    void DepthBufferDemo::recreateSwapChain()
+    template <vw::scene::VertexDescription VD>
+    void DepthBufferDemo<VD>::recreateSwapChain()
     {
+        const auto[width, height] = m_window.getSize();
+        if (width == 0 || height == 0)
+        {
+            return;
+        }
+
         m_device.waitIdle();
 
         for (auto & fb : m_swapChainFramebuffers)
@@ -82,7 +90,7 @@ namespace bmvk
         m_pipelineLayout.reset(nullptr);
         m_renderPass.reset(nullptr);
 
-        ImguiBaseDemo::recreateSwapChain();
+        ImguiBaseDemo<VD>::recreateSwapChain();
 
         createRenderPass();
         createGraphicsPipeline();
@@ -91,7 +99,8 @@ namespace bmvk
         createCommandBuffers();
     }
 
-    void DepthBufferDemo::createDescriptorSetLayout()
+    template <vw::scene::VertexDescription VD>
+    void DepthBufferDemo<VD>::createDescriptorSetLayout()
     {
         vk::DescriptorSetLayoutBinding uboLayoutBinding{ 0, vk::DescriptorType::eUniformBuffer, 1, vk::ShaderStageFlagBits::eVertex };
         vk::DescriptorSetLayoutBinding samplerLayoutBinding{ 1, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment };
@@ -100,7 +109,8 @@ namespace bmvk
         m_descriptorSetLayout = reinterpret_cast<const vk::UniqueDevice &>(m_device)->createDescriptorSetLayoutUnique(layoutInfo);
     }
 
-    void DepthBufferDemo::createRenderPass()
+    template <vw::scene::VertexDescription VD>
+    void DepthBufferDemo<VD>::createRenderPass()
     {
         vk::AttachmentDescription colorAttachment{ {}, m_swapchain.getImageFormat().format, vk::SampleCountFlagBits::e1, vk::AttachmentLoadOp::eClear, vk::AttachmentStoreOp::eStore, vk::AttachmentLoadOp::eDontCare, vk::AttachmentStoreOp::eDontCare, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal };
         vk::AttachmentReference colorAttachmentRef{ 0, vk::ImageLayout::eColorAttachmentOptimal };
@@ -113,7 +123,8 @@ namespace bmvk
         m_renderPass = reinterpret_cast<const vk::UniqueDevice &>(m_device)->createRenderPassUnique(renderPassInfo);
     }
 
-    void DepthBufferDemo::createGraphicsPipeline()
+    template <vw::scene::VertexDescription VD>
+    void DepthBufferDemo<VD>::createGraphicsPipeline()
     {
         const Shader vertShader{ "../shaders/depth.vert.spv", m_device };
         const Shader fragShader{ "../shaders/depth.frag.spv", m_device };
@@ -141,7 +152,8 @@ namespace bmvk
         m_graphicsPipeline = reinterpret_cast<const vk::UniqueDevice &>(m_device)->createGraphicsPipelineUnique(nullptr, pipelineInfo);
     }
 
-    void DepthBufferDemo::createFramebuffers()
+    template <vw::scene::VertexDescription VD>
+    void DepthBufferDemo<VD>::createFramebuffers()
     {
         m_swapChainFramebuffers.clear();
         for (auto & uniqueImageView : m_swapchain.getImageViews())
@@ -151,7 +163,8 @@ namespace bmvk
         }
     }
 
-    void DepthBufferDemo::createTextureImage()
+    template <vw::scene::VertexDescription VD>
+    void DepthBufferDemo<VD>::createTextureImage()
     {
         int texWidth, texHeight, texChannels;
         auto * pixels = stbi_load("../textures/texture.jpg", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
@@ -178,12 +191,14 @@ namespace bmvk
         m_queue.waitIdle();
     }
 
-    void DepthBufferDemo::createTextureImageView()
+    template <vw::scene::VertexDescription VD>
+    void DepthBufferDemo<VD>::createTextureImageView()
     {
         m_textureImageView = createImageView(m_textureImage, vk::Format::eR8G8B8A8Unorm);
     }
 
-    void DepthBufferDemo::createDepthResources()
+    template <vw::scene::VertexDescription VD>
+    void DepthBufferDemo<VD>::createDepthResources()
     {
         const auto depthFormat{ m_instance.getPhysicalDevice().findDepthFormat() };
         createImage(m_swapchain.getExtent().width, m_swapchain.getExtent().height, depthFormat, vk::ImageTiling::eOptimal, vk::ImageUsageFlagBits::eDepthStencilAttachment, vk::MemoryPropertyFlagBits::eDeviceLocal, m_depthImage, m_depthImageMemory);
@@ -197,7 +212,8 @@ namespace bmvk
         m_queue.waitIdle();
     }
 
-    void DepthBufferDemo::createCombinedBuffer()
+    template <vw::scene::VertexDescription VD>
+    void DepthBufferDemo<VD>::createCombinedBuffer()
     {
         const auto vertexBufferSize{ sizeof vertices[0] * vertices.size() };
         const auto indexBufferSize{ sizeof indices[0] * indices.size() };
@@ -247,7 +263,8 @@ namespace bmvk
         m_queue.waitIdle();
     }
 
-    void DepthBufferDemo::createUniformBuffer()
+    template <vw::scene::VertexDescription VD>
+    void DepthBufferDemo<VD>::createUniformBuffer()
     {
         const auto bufferSize{ sizeof(UniformBufferObject) };
         const auto uniformBufferUsageFlags{ vk::BufferUsageFlagBits::eUniformBuffer };
@@ -255,7 +272,8 @@ namespace bmvk
         createBuffer(bufferSize, uniformBufferUsageFlags, uniformBufferMemoryPropertyFlags, m_uniformBuffer, m_uniformBufferMemory);
     }
 
-    void DepthBufferDemo::createDescriptorPool()
+    template <vw::scene::VertexDescription VD>
+    void DepthBufferDemo<VD>::createDescriptorPool()
     {
         vk::DescriptorPoolSize poolSize{ vk::DescriptorType::eUniformBuffer, 1 };
         vk::DescriptorPoolSize poolSizeTex{ vk::DescriptorType::eCombinedImageSampler, 1 };
@@ -263,7 +281,8 @@ namespace bmvk
         m_descriptorPool = m_device.createDescriptorPool(vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet, 1, vec);
     }
 
-    void DepthBufferDemo::createDescriptorSet()
+    template <vw::scene::VertexDescription VD>
+    void DepthBufferDemo<VD>::createDescriptorSet()
     {
         vk::DescriptorSetLayout layouts[] = { *m_descriptorSetLayout };
         vk::DescriptorSetAllocateInfo allocInfo{ *m_descriptorPool, 1, layouts };
@@ -278,7 +297,8 @@ namespace bmvk
         m_device.updateDescriptorSets(vec);
     }
 
-    void DepthBufferDemo::createCommandBuffers()
+    template <vw::scene::VertexDescription VD>
+    void DepthBufferDemo<VD>::createCommandBuffers()
     {
         m_commandBuffers = m_device.allocateCommandBuffers(m_commandPool, static_cast<uint32_t>(m_swapChainFramebuffers.size()));
         for (size_t i = 0; i < m_commandBuffers.size(); ++i)
@@ -297,7 +317,8 @@ namespace bmvk
         }
     }
 
-    void DepthBufferDemo::updateUniformBuffer()
+    template <vw::scene::VertexDescription VD>
+    void DepthBufferDemo<VD>::updateUniformBuffer()
     {
         static auto startTime = std::chrono::high_resolution_clock::now();
 
@@ -313,7 +334,8 @@ namespace bmvk
         m_device.copyToMemory(m_uniformBufferMemory, ubo);
     }
 
-    void DepthBufferDemo::drawFrame()
+    template <vw::scene::VertexDescription VD>
+    void DepthBufferDemo<VD>::drawFrame()
     {
         m_queue.waitIdle();
         timing(false);
@@ -330,7 +352,7 @@ namespace bmvk
         }
 
         m_queue.submit(m_commandBuffers[imageIndex], m_imageAvailableSemaphore, m_renderFinishedSemaphore, vk::PipelineStageFlagBits::eColorAttachmentOutput);
-        ImguiBaseDemo::drawFrame(imageIndex, m_renderFinishedSemaphore, m_renderImguiFinishedSemaphore);
+        ImguiBaseDemo<VD>::drawFrame(imageIndex, m_renderFinishedSemaphore, m_renderImguiFinishedSemaphore);
 
         auto waitSemaphore{ *m_renderImguiFinishedSemaphore };
         auto swapchain{ *reinterpret_cast<const vk::UniqueSwapchainKHR &>(m_swapchain) };
@@ -340,4 +362,6 @@ namespace bmvk
             recreateSwapChain();
         }
     }
+
+    template class DepthBufferDemo<vw::scene::VertexDescription::NotUsed>;
 }

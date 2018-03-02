@@ -9,37 +9,6 @@
 
 namespace bmvk
 {
-    static void onWindowResized(GLFWwindow * window, int width, int height)
-    {
-        if (width == 0 || height == 0)
-        {
-            return;
-        }
-
-        auto app = reinterpret_cast<ImguiBaseDemo *>(glfwGetWindowUserPointer(window));
-        app->recreateSwapChain();
-        app->setCameraRatio();
-    }
-
-    static void onMouseButton(GLFWwindow * window, int button, int action, int mods)
-    {
-        auto app = reinterpret_cast<ImguiBaseDemo *>(glfwGetWindowUserPointer(window));
-        app->imguiMouseButtonCallback(window, button, action, mods);
-    }
-
-    static void onScroll(GLFWwindow * window, double xoffset, double yoffset)
-    {
-        auto app = reinterpret_cast<ImguiBaseDemo *>(glfwGetWindowUserPointer(window));
-        app->imguiScrollCallback(window, xoffset, yoffset);
-    }
-
-    static void onKey(GLFWwindow * window, int key, int scancode, int action, int mods)
-    {
-        auto app = reinterpret_cast<ImguiBaseDemo *>(glfwGetWindowUserPointer(window));
-        app->imguiKeyCallback(window, key, scancode, action, mods);
-        app->keyCallback(key, scancode, action, mods);
-    }
-
     static uint32_t getImguiMemoryType(vk::PhysicalDevice gpu, vk::MemoryPropertyFlags properties, uint32_t type_bits)
     {
         const auto prop{ gpu.getMemoryProperties() };
@@ -54,13 +23,30 @@ namespace bmvk
         return 0xffffffff; // Unable to find memoryType
     }
 
-    ImguiBaseDemo::ImguiBaseDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height, std::string name, const DebugReport::ReportLevel reportLevel)
+    template <vw::scene::VertexDescription VD>
+    ImguiBaseDemo<VD>::ImguiBaseDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height, std::string name, const DebugReport::ReportLevel reportLevel)
       : Demo{ enableValidationLayers, width, height, name, reportLevel },
         m_swapchain{ m_instance.getPhysicalDevice(), m_instance.getSurface(), m_window.getSize(), m_device },
         m_fontSampler{ m_device.createSampler(false, -1000.f, 1000.f) }
     {
-        m_window.setWindowUserPointer(this);
-        m_window.setWindowSizeCallback(onWindowResized);
+        m_window.addWindowSizeFunc([this](int width, int height)
+        {
+            recreateSwapChain();
+            setCameraRatio();
+        });
+        m_window.addMouseButtonFunc([this](int button, int action, int mods)
+        {
+            imguiMouseButtonCallback(button, action, mods);
+        });
+        m_window.addMouseScrollFunc([this](double xoffset, double yoffset)
+        {
+            imguiScrollCallback(xoffset, yoffset);
+        });
+        m_window.addKeyFunc([this](int key, int scancode, int action, int mods)
+        {
+            imguiKeyCallback(key, scancode, action, mods);
+            keyCallback(key, scancode, action, mods);
+        });
         
         createDescriptorSetLayout();
         createRenderPass();
@@ -68,10 +54,6 @@ namespace bmvk
         createFramebuffers();
         createDescriptorPool();
         createDescriptorSet();
-
-        m_window.setMouseButtonCallback(onMouseButton);
-        m_window.setScrollCallback(onScroll);
-        m_window.setKeyCallback(onKey);
 
         uploadFonts();
 
@@ -98,7 +80,8 @@ namespace bmvk
         io.RenderDrawListsFn = nullptr;
     }
 
-    void ImguiBaseDemo::recreateSwapChain()
+    template <vw::scene::VertexDescription VD>
+    void ImguiBaseDemo<VD>::recreateSwapChain()
     {
         m_graphicsPipelineImgui.reset(nullptr);
         m_pipelineLayoutImgui.reset(nullptr);
@@ -111,13 +94,15 @@ namespace bmvk
         createFramebuffers();
     }
 
-    void ImguiBaseDemo::setCameraRatio()
+    template <vw::scene::VertexDescription VD>
+    void ImguiBaseDemo<VD>::setCameraRatio()
     {
         const auto extent{ m_swapchain.getExtent() };
         m_camera.setRatio(extent.width / static_cast<float>(extent.height));
     }
 
-    void ImguiBaseDemo::createDescriptorSetLayout()
+    template <vw::scene::VertexDescription VD>
+    void ImguiBaseDemo<VD>::createDescriptorSetLayout()
     {
         auto & sampler{ reinterpret_cast<vk::UniqueSampler &>(m_fontSampler) };
         vk::Sampler samplers[1] = { *sampler };
@@ -126,7 +111,8 @@ namespace bmvk
         m_descriptorSetLayoutImgui = reinterpret_cast<const vk::UniqueDevice &>(m_device)->createDescriptorSetLayoutUnique(layoutInfoImgui);
     }
 
-    void ImguiBaseDemo::createRenderPass()
+    template <vw::scene::VertexDescription VD>
+    void ImguiBaseDemo<VD>::createRenderPass()
     {
         vk::AttachmentDescription colorAttachmentImgui{ {}, m_swapchain.getImageFormat().format, vk::SampleCountFlagBits::e1, vk::AttachmentLoadOp::eLoad, vk::AttachmentStoreOp::eStore, vk::AttachmentLoadOp::eDontCare, vk::AttachmentStoreOp::eDontCare, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::ePresentSrcKHR };
         vk::AttachmentReference colorAttachmentRef{ 0, vk::ImageLayout::eColorAttachmentOptimal };
@@ -136,7 +122,8 @@ namespace bmvk
         m_renderPassImgui = reinterpret_cast<const vk::UniqueDevice &>(m_device)->createRenderPassUnique(renderPassInfoImgui);
     }
 
-    void ImguiBaseDemo::createGraphicsPipeline()
+    template <vw::scene::VertexDescription VD>
+    void ImguiBaseDemo<VD>::createGraphicsPipeline()
     {
         static uint32_t glslShaderVertSpv[] =
         {
@@ -246,7 +233,8 @@ namespace bmvk
         m_graphicsPipelineImgui = reinterpret_cast<const vk::UniqueDevice &>(m_device)->createGraphicsPipelineUnique(nullptr, pipelineInfoImgui);
     }
 
-    void ImguiBaseDemo::createFramebuffers()
+    template <vw::scene::VertexDescription VD>
+    void ImguiBaseDemo<VD>::createFramebuffers()
     {
         m_swapChainFramebuffers.clear();
         for (auto & uniqueImageView : m_swapchain.getImageViews())
@@ -256,7 +244,8 @@ namespace bmvk
         }
     }
 
-    void ImguiBaseDemo::createDescriptorPool()
+    template <vw::scene::VertexDescription VD>
+    void ImguiBaseDemo<VD>::createDescriptorPool()
     {
         vk::DescriptorPoolSize poolSizeImgui[11] =
         {
@@ -275,14 +264,16 @@ namespace bmvk
         m_descriptorPoolImgui = m_device.createDescriptorPool(vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet, 1000 * 11, vk::ArrayProxy<vk::DescriptorPoolSize>(11, poolSizeImgui));
     }
 
-    void ImguiBaseDemo::createDescriptorSet()
+    template <vw::scene::VertexDescription VD>
+    void ImguiBaseDemo<VD>::createDescriptorSet()
     {
         vk::DescriptorSetLayout layoutsImgui[] = { *m_descriptorSetLayoutImgui };
         vk::DescriptorSetAllocateInfo allocInfoImgui{ *m_descriptorPoolImgui, 1, layoutsImgui };
         m_descriptorSetsImgui = reinterpret_cast<const vk::UniqueDevice &>(m_device)->allocateDescriptorSetsUnique(allocInfoImgui);
     }
 
-    void ImguiBaseDemo::uploadFonts()
+    template <vw::scene::VertexDescription VD>
+    void ImguiBaseDemo<VD>::uploadFonts()
     {
         auto cmdBuffer{ m_device.allocateCommandBuffer(m_commandPool) };
         cmdBuffer.begin(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
@@ -355,7 +346,8 @@ namespace bmvk
         uploadBuffer.reset(nullptr);
     }
 
-    void ImguiBaseDemo::imguiRenderDrawLists(ImDrawData * draw_data)
+    template <vw::scene::VertexDescription VD>
+    void ImguiBaseDemo<VD>::imguiRenderDrawLists(ImDrawData * draw_data)
     {
         if (draw_data->TotalVtxCount == 0)
         {
@@ -454,7 +446,7 @@ namespace bmvk
         m_commandBufferImguiPtr->bindIndexBuffer(m_indexBufferImgui);
 
         // Setup viewport:
-        m_commandBufferImguiPtr->setViewport({ 0.f, 0.f, ImGui::GetIO().DisplaySize.x, ImGui::GetIO().DisplaySize.y, 0.f, 1.f });
+        m_commandBufferImguiPtr->setViewport({ 0.f, 0.f, std::max(1.f, ImGui::GetIO().DisplaySize.x), std::max(1.f, ImGui::GetIO().DisplaySize.y), 0.f, 1.f });
 
         // Setup scale and translation:
         m_commandBufferImguiPtr->pushConstants<float>(m_pipelineLayoutImgui, vk::ShaderStageFlagBits::eVertex, 0, std::vector<float>{ 2.f / io.DisplaySize.x, 2.f / io.DisplaySize.y });
@@ -489,7 +481,8 @@ namespace bmvk
         }
     }
 
-    void ImguiBaseDemo::drawFrame(uint32_t imageIndex, const vk::UniqueSemaphore & renderFinishedSemaphore, const vk::UniqueSemaphore & renderImguiFinishedSemaphore)
+    template <vw::scene::VertexDescription VD>
+    void ImguiBaseDemo<VD>::drawFrame(uint32_t imageIndex, const vk::UniqueSemaphore & renderFinishedSemaphore, const vk::UniqueSemaphore & renderImguiFinishedSemaphore)
     {
         m_commandBufferImguiPtr.reset();
         m_commandBufferImguiPtr = std::make_unique<CommandBuffer>(m_device.allocateCommandBuffer(m_commandPool));
@@ -505,7 +498,8 @@ namespace bmvk
         m_queue.submit(*m_commandBufferImguiPtr.get(), renderFinishedSemaphore, renderImguiFinishedSemaphore, vk::PipelineStageFlagBits::eColorAttachmentOutput);
     }
 
-    void ImguiBaseDemo::imguiNewFrame()
+    template <vw::scene::VertexDescription VD>
+    void ImguiBaseDemo<VD>::imguiNewFrame()
     {
         auto & io{ ImGui::GetIO() };
 
@@ -551,7 +545,8 @@ namespace bmvk
         ImGui::NewFrame();
     }
 
-    void ImguiBaseDemo::imguiMouseButtonCallback(GLFWwindow * window, int button, int action, int mods)
+    template <vw::scene::VertexDescription VD>
+    void ImguiBaseDemo<VD>::imguiMouseButtonCallback(int button, int action, int mods)
     {
         if (action == GLFW_PRESS && button >= 0 && button < 3)
         {
@@ -559,12 +554,14 @@ namespace bmvk
         }
     }
 
-    void ImguiBaseDemo::imguiScrollCallback(GLFWwindow * window, double xoffset, double yoffset)
+    template <vw::scene::VertexDescription VD>
+    void ImguiBaseDemo<VD>::imguiScrollCallback(double xoffset, double yoffset)
     {
         m_imguiMouseWheel += static_cast<float>(yoffset); // Use fractional mouse wheel, 1.0 unit 5 lines.
     }
 
-    void ImguiBaseDemo::imguiKeyCallback(GLFWwindow * window, int key, int scancode, int action, int mods) const
+    template <vw::scene::VertexDescription VD>
+    void ImguiBaseDemo<VD>::imguiKeyCallback(int key, int scancode, int action, int mods) const
     {
         auto & io{ ImGui::GetIO() };
         if (action == GLFW_PRESS)
@@ -584,7 +581,8 @@ namespace bmvk
         io.KeySuper = io.KeysDown[GLFW_KEY_LEFT_SUPER] || io.KeysDown[GLFW_KEY_RIGHT_SUPER];
     }
 
-    void ImguiBaseDemo::keyCallback(int key, int scancode, int action, int mods)
+    template <vw::scene::VertexDescription VD>
+    void ImguiBaseDemo<VD>::keyCallback(int key, int scancode, int action, int mods)
     {
         if (key == GLFW_KEY_W && (action == GLFW_PRESS || action == GLFW_REPEAT))
         {
@@ -641,4 +639,8 @@ namespace bmvk
             m_window.setShouldClose(true);
         }
     }
+
+    template class ImguiBaseDemo<vw::scene::VertexDescription::NotUsed>;
+    template class ImguiBaseDemo<vw::scene::VertexDescription::PositionNormalColor>;
+    template class ImguiBaseDemo<vw::scene::VertexDescription::PositionNormalColorTexture>;
 }

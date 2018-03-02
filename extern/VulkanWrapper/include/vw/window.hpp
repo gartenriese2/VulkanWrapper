@@ -8,6 +8,7 @@
 #include <string_view>
 #include <memory>
 #include <vector>
+#include <functional>
 
 namespace vw::util
 {
@@ -30,12 +31,11 @@ namespace vw::util
         std::tuple<double, double> getCursorPos() const;
         int32_t getMouseButtonState(const int32_t button) const;
         void setInputMode(const int32_t mode, const int32_t value) const;
-        void setWindowUserPointer(void * pointer) const;
-        void setWindowSizeCallback(GLFWwindowsizefun fun) const;
-        void setKeyCallback(GLFWkeyfun fun) const;
-        void setScrollCallback(GLFWscrollfun fun) const;
-        void setMouseButtonCallback(GLFWmousebuttonfun fun) const;
-        void setCursorPosCallback(GLFWcursorposfun fun) const;
+        void addWindowSizeFunc(const std::function<void(int, int)> & func);
+        void addKeyFunc(const std::function<void(int, int, int, int)> & func);
+        void addMouseButtonFunc(const std::function<void(int, int, int)> & func);
+        void addMouseScrollFunc(const std::function<void(double, double)> & func);
+        void addMouseCursorFunc(const std::function<void(double, double)> & func);
         std::vector<std::string> getRequiredExtensions() const;
         vk::UniqueSurfaceKHR createSurface(const vk::UniqueInstance & instance) const;
     private:
@@ -47,6 +47,12 @@ namespace vw::util
         };
 
         std::unique_ptr<GLFWwindow, GLFWwindowDeleter> m_window;
+
+        std::vector<std::function<void(int, int)>> m_windowSizeFuncs;
+        std::vector<std::function<void(int, int, int, int)>> m_keyFuncs;
+        std::vector<std::function<void(int, int, int)>> m_mouseButtonFuncs;
+        std::vector<std::function<void(double, double)>> m_mouseScrollFuncs;
+        std::vector<std::function<void(double, double)>> m_mouseCursorFuncs;
     };
 
     static_assert(std::is_nothrow_move_constructible_v<Window>);

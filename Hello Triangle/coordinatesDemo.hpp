@@ -11,16 +11,15 @@
 
 namespace bmvk
 {
-    const vw::scene::VertexDescription VD = vw::scene::VertexDescription::PositionNormalColor;
-
-    class CoordinatesDemo : ImguiBaseDemo
+    template <vw::scene::VertexDescription VD>
+    class CoordinatesDemo : ImguiBaseDemo<VD>
     {
     public:
         CoordinatesDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height);
         CoordinatesDemo(const CoordinatesDemo &) = delete;
         CoordinatesDemo(CoordinatesDemo && other) = default;
         CoordinatesDemo & operator=(const CoordinatesDemo &) = delete;
-        CoordinatesDemo & operator=(CoordinatesDemo &&) = delete;
+        CoordinatesDemo & operator=(CoordinatesDemo &&) = default;
 
         void run() override;
         void recreateSwapChain() override;
@@ -76,10 +75,4 @@ namespace bmvk
 
         void drawFrame();
     };
-
-    static_assert(std::is_move_constructible_v<CoordinatesDemo>);
-    static_assert(!std::is_copy_constructible_v<CoordinatesDemo>);
-    static_assert(!std::is_move_assignable_v<CoordinatesDemo>);
-    static_assert(!std::is_copy_assignable_v<CoordinatesDemo>);
 }
-#pragma once

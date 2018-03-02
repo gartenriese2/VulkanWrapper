@@ -12,6 +12,7 @@ namespace vw::scene
 {
     enum class VertexDescription
     {
+        NotUsed,
         PositionNormalColorTexture,
         PositionNormalColor
     };

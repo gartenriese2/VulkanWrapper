@@ -11,14 +11,15 @@
 
 namespace bmvk
 {
-    class DynamicUboDemo : ImguiBaseDemo
+    template <vw::scene::VertexDescription VD>
+    class DynamicUboDemo : ImguiBaseDemo<VD>
     {
     public:
         DynamicUboDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height);
         DynamicUboDemo(const DynamicUboDemo &) = delete;
         DynamicUboDemo(DynamicUboDemo && other) = default;
         DynamicUboDemo & operator=(const DynamicUboDemo &) = delete;
-        DynamicUboDemo & operator=(DynamicUboDemo &&) = delete;
+        DynamicUboDemo & operator=(DynamicUboDemo &&) = default;
         virtual ~DynamicUboDemo();
 
         void run() override;
@@ -67,7 +68,7 @@ namespace bmvk
         vk::UniqueSemaphore m_renderFinishedSemaphore;
         vk::UniqueSemaphore m_renderImguiFinishedSemaphore;
 
-        vw::scene::Model<vw::scene::VertexDescription::PositionNormalColorTexture> m_cube;
+        vw::scene::Model<VD> m_cube;
 
         void setupCamera();
 
@@ -89,10 +90,4 @@ namespace bmvk
 
         void drawFrame();
     };
-
-    static_assert(std::is_move_constructible_v<DynamicUboDemo>);
-    static_assert(!std::is_copy_constructible_v<DynamicUboDemo>);
-    static_assert(!std::is_move_assignable_v<DynamicUboDemo>);
-    static_assert(!std::is_copy_assignable_v<DynamicUboDemo>);
 }
-#pragma once

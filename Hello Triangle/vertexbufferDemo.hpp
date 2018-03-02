@@ -8,14 +8,15 @@
 
 namespace bmvk
 {
-    class VertexbufferDemo : Demo
+    template <vw::scene::VertexDescription VD>
+    class VertexbufferDemo : Demo<VD>
     {
     public:
         VertexbufferDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height);
         VertexbufferDemo(const VertexbufferDemo &) = delete;
         VertexbufferDemo(VertexbufferDemo && other) = default;
         VertexbufferDemo & operator=(const VertexbufferDemo &) = delete;
-        VertexbufferDemo & operator=(VertexbufferDemo &&) = delete;
+        VertexbufferDemo & operator=(VertexbufferDemo &&) = default;
         ~VertexbufferDemo() {}
 
         void run() override;
@@ -65,9 +66,4 @@ namespace bmvk
 
         void drawFrame();
     };
-
-    static_assert(std::is_move_constructible_v<VertexbufferDemo>);
-    static_assert(!std::is_move_assignable_v<VertexbufferDemo>);
-    static_assert(!std::is_copy_constructible_v<VertexbufferDemo>);
-    static_assert(!std::is_copy_assignable_v<VertexbufferDemo>);
 }

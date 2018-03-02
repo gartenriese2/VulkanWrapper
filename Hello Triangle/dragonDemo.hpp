@@ -11,14 +11,15 @@
 
 namespace bmvk
 {
-    class DragonDemo : ImguiBaseDemo
+    template <vw::scene::VertexDescription VD>
+    class DragonDemo : ImguiBaseDemo<VD>
     {
     public:
         DragonDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height);
         DragonDemo(const DragonDemo &) = delete;
         DragonDemo(DragonDemo && other) = default;
         DragonDemo & operator=(const DragonDemo &) = delete;
-        DragonDemo & operator=(DragonDemo &&) = delete;
+        DragonDemo & operator=(DragonDemo &&) = default;
 
         void run() override;
         void recreateSwapChain() override;
@@ -50,7 +51,7 @@ namespace bmvk
         vk::UniqueSemaphore m_renderFinishedSemaphore;
         vk::UniqueSemaphore m_renderImguiFinishedSemaphore;
 
-        vw::scene::Model<vw::scene::VertexDescription::PositionNormalColorTexture> m_dragonModel;
+        vw::scene::Model<VD> m_dragonModel;
 
         void setupCamera();
 
@@ -69,9 +70,4 @@ namespace bmvk
 
         void drawFrame();
     };
-
-    static_assert(std::is_move_constructible_v<DragonDemo>);
-    static_assert(!std::is_copy_constructible_v<DragonDemo>);
-    static_assert(!std::is_move_assignable_v<DragonDemo>);
-    static_assert(!std::is_copy_assignable_v<DragonDemo>);
 }

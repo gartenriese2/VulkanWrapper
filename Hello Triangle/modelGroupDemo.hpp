@@ -11,16 +11,15 @@
 
 namespace bmvk
 {
-    const vw::scene::VertexDescription VD_MGD = vw::scene::VertexDescription::PositionNormalColor;
-
-    class ModelGroupDemo : ImguiBaseDemo
+    template <vw::scene::VertexDescription VD>
+    class ModelGroupDemo : ImguiBaseDemo<VD>
     {
     public:
         ModelGroupDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height);
         ModelGroupDemo(const ModelGroupDemo &) = delete;
         ModelGroupDemo(ModelGroupDemo && other) = default;
         ModelGroupDemo & operator=(const ModelGroupDemo &) = delete;
-        ModelGroupDemo & operator=(ModelGroupDemo &&) = delete;
+        ModelGroupDemo & operator=(ModelGroupDemo &&) = default;
 
         void run() override;
         void recreateSwapChain() override;
@@ -61,7 +60,7 @@ namespace bmvk
         vk::UniqueSemaphore m_renderFinishedSemaphore;
         vk::UniqueSemaphore m_renderImguiFinishedSemaphore;
 
-        vw::scene::ModelGroup<VD_MGD> m_modelGroup;
+        vw::scene::ModelGroup<VD> m_modelGroup;
 
         void setupCamera();
 
@@ -83,10 +82,4 @@ namespace bmvk
 
         void drawFrame();
     };
-
-    static_assert(std::is_move_constructible_v<ModelGroupDemo>);
-    static_assert(!std::is_copy_constructible_v<ModelGroupDemo>);
-    static_assert(!std::is_move_assignable_v<ModelGroupDemo>);
-    static_assert(!std::is_copy_assignable_v<ModelGroupDemo>);
 }
-#pragma once

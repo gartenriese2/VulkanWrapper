@@ -7,22 +7,23 @@ struct ImDrawData;
 
 namespace bmvk
 {
-    class ImguiBaseDemo : protected Demo
+    template <vw::scene::VertexDescription VD>
+    class ImguiBaseDemo : protected Demo<VD>
     {
     public:
         ImguiBaseDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height, std::string name, const DebugReport::ReportLevel reportLevel);
         ImguiBaseDemo(const ImguiBaseDemo &) = delete;
         ImguiBaseDemo(ImguiBaseDemo && other) = default;
         ImguiBaseDemo & operator=(const ImguiBaseDemo &) = delete;
-        ImguiBaseDemo & operator=(ImguiBaseDemo &&) = delete;
+        ImguiBaseDemo & operator=(ImguiBaseDemo &&) = default;
         ~ImguiBaseDemo() {}
 
         virtual void recreateSwapChain();
         void setCameraRatio();
 
-        void imguiMouseButtonCallback(GLFWwindow * window, int button, int action, int mods);
-        void imguiScrollCallback(GLFWwindow * window, double xoffset, double yoffset);
-        void imguiKeyCallback(GLFWwindow * window, int key, int scancode, int action, int mods) const;
+        void imguiMouseButtonCallback(int button, int action, int mods);
+        void imguiScrollCallback(double xoffset, double yoffset);
+        void imguiKeyCallback(int key, int scancode, int action, int mods) const;
         void keyCallback(int key, int scancode, int action, int mods) override;
     protected:
         Swapchain m_swapchain;
@@ -64,9 +65,4 @@ namespace bmvk
 
         void imguiRenderDrawLists(ImDrawData * draw_data);
     };
-
-    static_assert(std::is_move_constructible_v<ImguiBaseDemo>);
-    static_assert(!std::is_move_assignable_v<ImguiBaseDemo>);
-    static_assert(!std::is_copy_constructible_v<ImguiBaseDemo>);
-    static_assert(!std::is_copy_assignable_v<ImguiBaseDemo>);
 }

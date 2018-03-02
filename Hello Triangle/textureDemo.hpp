@@ -7,14 +7,15 @@
 
 namespace bmvk
 {
-    class TextureDemo : ImguiBaseDemo
+    template <vw::scene::VertexDescription VD>
+    class TextureDemo : ImguiBaseDemo<VD>
     {
     public:
         TextureDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height);
         TextureDemo(const TextureDemo &) = delete;
         TextureDemo(TextureDemo && other) = default;
         TextureDemo & operator=(const TextureDemo &) = delete;
-        TextureDemo & operator=(TextureDemo &&) = delete;
+        TextureDemo & operator=(TextureDemo &&) = default;
         ~TextureDemo() {}
 
         void run() override;
@@ -97,9 +98,4 @@ namespace bmvk
 
         void drawFrame();
     };
-
-    static_assert(std::is_move_constructible_v<TextureDemo>);
-    static_assert(!std::is_move_assignable_v<TextureDemo>);
-    static_assert(!std::is_copy_constructible_v<TextureDemo>);
-    static_assert(!std::is_copy_assignable_v<TextureDemo>);
 }

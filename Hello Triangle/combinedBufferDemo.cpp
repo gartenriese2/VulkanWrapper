@@ -6,12 +6,12 @@
 #include <glm/gtc/matrix_transform.inl>
 
 #include "shader.hpp"
-#include "bufferFactory.hpp"
 
 namespace bmvk
 {
-    CombinedBufferDemo::CombinedBufferDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height)
-      : ImguiBaseDemo{ enableValidationLayers, width, height, "CombinedBuffer Demo", true },
+    template <vw::scene::VertexDescription VD>
+    CombinedBufferDemo<VD>::CombinedBufferDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height)
+      : ImguiBaseDemo{ enableValidationLayers, width, height, "CombinedBuffer Demo", DebugReport::ReportLevel::WarningsAndAbove },
         m_textureSampler{ m_device.createSampler(true) },
         m_imageAvailableSemaphore{ m_device.createSemaphore() },
         m_renderFinishedSemaphore{ m_device.createSemaphore() },
@@ -30,7 +30,8 @@ namespace bmvk
         createCommandBuffers();
     }
 
-    void CombinedBufferDemo::run()
+    template <vw::scene::VertexDescription VD>
+    void CombinedBufferDemo<VD>::run()
     {
         while (!m_window.shouldClose())
         {
@@ -65,8 +66,15 @@ namespace bmvk
         m_device.waitIdle();
     }
 
-    void CombinedBufferDemo::recreateSwapChain()
+    template <vw::scene::VertexDescription VD>
+    void CombinedBufferDemo<VD>::recreateSwapChain()
     {
+        const auto[width, height] = m_window.getSize();
+        if (width == 0 || height == 0)
+        {
+            return;
+        }
+
         m_device.waitIdle();
 
         for (auto & fb : m_swapChainFramebuffers)
@@ -79,7 +87,7 @@ namespace bmvk
         m_pipelineLayout.reset(nullptr);
         m_renderPass.reset(nullptr);
 
-        ImguiBaseDemo::recreateSwapChain();
+        ImguiBaseDemo<VD>::recreateSwapChain();
 
         createRenderPass();
         createGraphicsPipeline();
@@ -87,7 +95,8 @@ namespace bmvk
         createCommandBuffers();
     }
 
-    void CombinedBufferDemo::createDescriptorSetLayout()
+    template <vw::scene::VertexDescription VD>
+    void CombinedBufferDemo<VD>::createDescriptorSetLayout()
     {
         vk::DescriptorSetLayoutBinding uboLayoutBinding{ 0, vk::DescriptorType::eUniformBuffer, 1, vk::ShaderStageFlagBits::eVertex };
         vk::DescriptorSetLayoutBinding samplerLayoutBinding{ 1, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment };
@@ -96,7 +105,8 @@ namespace bmvk
         m_descriptorSetLayout = reinterpret_cast<const vk::UniqueDevice &>(m_device)->createDescriptorSetLayoutUnique(layoutInfo);
     }
 
-    void CombinedBufferDemo::createRenderPass()
+    template <vw::scene::VertexDescription VD>
+    void CombinedBufferDemo<VD>::createRenderPass()
     {
         vk::AttachmentDescription colorAttachment{ {}, m_swapchain.getImageFormat().format, vk::SampleCountFlagBits::e1, vk::AttachmentLoadOp::eClear, vk::AttachmentStoreOp::eStore, vk::AttachmentLoadOp::eDontCare, vk::AttachmentStoreOp::eDontCare, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal };
         vk::AttachmentReference colorAttachmentRef{ 0, vk::ImageLayout::eColorAttachmentOptimal };
@@ -106,7 +116,8 @@ namespace bmvk
         m_renderPass = reinterpret_cast<const vk::UniqueDevice &>(m_device)->createRenderPassUnique(renderPassInfo);
     }
 
-    void CombinedBufferDemo::createGraphicsPipeline()
+    template <vw::scene::VertexDescription VD>
+    void CombinedBufferDemo<VD>::createGraphicsPipeline()
     {
         const Shader vertShader{ "../shaders/texture.vert.spv", m_device };
         const Shader fragShader{ "../shaders/texture.frag.spv", m_device };
@@ -133,7 +144,8 @@ namespace bmvk
         m_graphicsPipeline = reinterpret_cast<const vk::UniqueDevice &>(m_device)->createGraphicsPipelineUnique(nullptr, pipelineInfo);
     }
 
-    void CombinedBufferDemo::createFramebuffers()
+    template <vw::scene::VertexDescription VD>
+    void CombinedBufferDemo<VD>::createFramebuffers()
     {
         m_swapChainFramebuffers.clear();
         for (auto & uniqueImageView : m_swapchain.getImageViews())
@@ -143,7 +155,8 @@ namespace bmvk
         }
     }
 
-    void CombinedBufferDemo::createTextureImage()
+    template <vw::scene::VertexDescription VD>
+    void CombinedBufferDemo<VD>::createTextureImage()
     {
         int texWidth, texHeight, texChannels;
         auto * pixels = stbi_load("../textures/texture.jpg", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
@@ -170,12 +183,14 @@ namespace bmvk
         m_queue.waitIdle();
     }
 
-    void CombinedBufferDemo::createTextureImageView()
+    template <vw::scene::VertexDescription VD>
+    void CombinedBufferDemo<VD>::createTextureImageView()
     {
         m_textureImageView = createImageView(m_textureImage, vk::Format::eR8G8B8A8Unorm);
     }
 
-    void CombinedBufferDemo::createCombinedBuffer()
+    template <vw::scene::VertexDescription VD>
+    void CombinedBufferDemo<VD>::createCombinedBuffer()
     {
         const auto vertexBufferSize{ sizeof vertices[0] * vertices.size() };
         const auto indexBufferSize{ sizeof indices[0] * indices.size() };
@@ -184,10 +199,6 @@ namespace bmvk
         vertexStagingBuffer.fill(vertices.data(), vertexBufferSize);
         auto indexStagingBuffer{ m_bufferFactory.createStagingBuffer(indexBufferSize) };
         indexStagingBuffer.fill(indices.data(), indexBufferSize);
-
-        /*auto stagingBuffer{ m_bufferFactory.createStagingBuffer(vertexBufferSize + indexBufferSize) };
-        stagingBuffer.fill(vertices.data(), vertexBufferSize);
-        stagingBuffer.fill(indices.data(), indexBufferSize, vertexBufferSize);*/
 
         const auto vertexBufferUsageFlags{ vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer };
         const auto indexBufferUsageFlags{ vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer };
@@ -223,14 +234,13 @@ namespace bmvk
         cmdBuffer.begin(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
         vertexStagingBuffer.buffer.copyToBuffer(cmdBuffer, m_vertexBuffer, vertexBufferSize);
         indexStagingBuffer.buffer.copyToBuffer(cmdBuffer, m_indexBuffer, indexBufferSize);
-        /*stagingBuffer.buffer.copyToBuffer(cmdBuffer, m_vertexBuffer, vertexBufferSize);
-        stagingBuffer.buffer.copyToBuffer(cmdBuffer, m_indexBuffer, indexBufferSize, vertexBufferSize);*/
         cmdBuffer.end();
         m_queue.submit(cmdBuffer);
         m_queue.waitIdle();
     }
 
-    void CombinedBufferDemo::createUniformBuffer()
+    template <vw::scene::VertexDescription VD>
+    void CombinedBufferDemo<VD>::createUniformBuffer()
     {
         const auto bufferSize{ sizeof(UniformBufferObject) };
         const auto uniformBufferUsageFlags{ vk::BufferUsageFlagBits::eUniformBuffer };
@@ -238,7 +248,8 @@ namespace bmvk
         createBuffer(bufferSize, uniformBufferUsageFlags, uniformBufferMemoryPropertyFlags, m_uniformBuffer, m_uniformBufferMemory);
     }
 
-    void CombinedBufferDemo::createDescriptorPool()
+    template <vw::scene::VertexDescription VD>
+    void CombinedBufferDemo<VD>::createDescriptorPool()
     {
         vk::DescriptorPoolSize poolSize{ vk::DescriptorType::eUniformBuffer, 1 };
         vk::DescriptorPoolSize poolSizeTex{ vk::DescriptorType::eCombinedImageSampler, 1 };
@@ -246,7 +257,8 @@ namespace bmvk
         m_descriptorPool = m_device.createDescriptorPool(vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet, 1, vec);
     }
 
-    void CombinedBufferDemo::createDescriptorSet()
+    template <vw::scene::VertexDescription VD>
+    void CombinedBufferDemo<VD>::createDescriptorSet()
     {
         vk::DescriptorSetLayout layouts[] = { *m_descriptorSetLayout };
         vk::DescriptorSetAllocateInfo allocInfo{ *m_descriptorPool, 1, layouts };
@@ -261,7 +273,8 @@ namespace bmvk
         m_device.updateDescriptorSets(vec);
     }
 
-    void CombinedBufferDemo::createCommandBuffers()
+    template <vw::scene::VertexDescription VD>
+    void CombinedBufferDemo<VD>::createCommandBuffers()
     {
         m_commandBuffers = m_device.allocateCommandBuffers(m_commandPool, static_cast<uint32_t>(m_swapChainFramebuffers.size()));
         for (size_t i = 0; i < m_commandBuffers.size(); ++i)
@@ -280,7 +293,8 @@ namespace bmvk
         }
     }
 
-    void CombinedBufferDemo::updateUniformBuffer()
+    template <vw::scene::VertexDescription VD>
+    void CombinedBufferDemo<VD>::updateUniformBuffer()
     {
         static auto startTime = std::chrono::high_resolution_clock::now();
 
@@ -296,7 +310,8 @@ namespace bmvk
         m_device.copyToMemory(m_uniformBufferMemory, ubo);
     }
 
-    void CombinedBufferDemo::drawFrame()
+    template <vw::scene::VertexDescription VD>
+    void CombinedBufferDemo<VD>::drawFrame()
     {
         m_queue.waitIdle();
         timing(false);
@@ -313,7 +328,7 @@ namespace bmvk
         }
 
         m_queue.submit(m_commandBuffers[imageIndex], m_imageAvailableSemaphore, m_renderFinishedSemaphore, vk::PipelineStageFlagBits::eColorAttachmentOutput);
-        ImguiBaseDemo::drawFrame(imageIndex, m_renderFinishedSemaphore, m_renderImguiFinishedSemaphore);
+        ImguiBaseDemo<VD>::drawFrame(imageIndex, m_renderFinishedSemaphore, m_renderImguiFinishedSemaphore);
 
         auto waitSemaphore{ *m_renderImguiFinishedSemaphore };
         auto swapchain{ *reinterpret_cast<const vk::UniqueSwapchainKHR &>(m_swapchain) };
@@ -323,4 +338,6 @@ namespace bmvk
             recreateSwapChain();
         }
     }
+
+    template class CombinedBufferDemo<vw::scene::VertexDescription::NotUsed>;
 }

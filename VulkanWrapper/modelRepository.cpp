@@ -229,6 +229,7 @@ namespace vw::scene
         return modelId;
     }
 
+    template class ModelRepository<VertexDescription::NotUsed>;
     template class ModelRepository<VertexDescription::PositionNormalColor>;
     template class ModelRepository<VertexDescription::PositionNormalColorTexture>;
 }

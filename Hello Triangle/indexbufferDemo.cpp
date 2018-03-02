@@ -5,25 +5,17 @@
 
 namespace bmvk
 {
-    static void onWindowResized(GLFWwindow * window, int width, int height)
-    {
-        if (width == 0 || height == 0)
-        {
-            return;
-        }
-
-        auto app = reinterpret_cast<IndexbufferDemo *>(glfwGetWindowUserPointer(window));
-        app->recreateSwapChain();
-    }
-
-    IndexbufferDemo::IndexbufferDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height)
+    template <vw::scene::VertexDescription VD>
+    IndexbufferDemo<VD>::IndexbufferDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height)
         : Demo{ enableValidationLayers, width, height, "Indexbuffer Demo", DebugReport::ReportLevel::WarningsAndAbove },
-        m_swapchain{ m_instance.getPhysicalDevice(), m_instance.getSurface(), m_window, m_device },
+        m_swapchain{ m_instance.getPhysicalDevice(), m_instance.getSurface(), m_window.getSize(), m_device },
         m_imageAvailableSemaphore{ m_device.createSemaphore() },
         m_renderFinishedSemaphore{ m_device.createSemaphore() }
     {
-        m_window.setWindowUserPointer(this);
-        m_window.setWindowSizeCallback(onWindowResized);
+        m_window.addWindowSizeFunc([this](int width, int height)
+        {
+            recreateSwapChain();
+        });
         createRenderPass();
         createGraphicsPipeline();
         createFramebuffers();
@@ -32,7 +24,8 @@ namespace bmvk
         createCommandBuffers();
     }
 
-    void IndexbufferDemo::run()
+    template <vw::scene::VertexDescription VD>
+    void IndexbufferDemo<VD>::run()
     {
         while (!m_window.shouldClose())
         {
@@ -44,8 +37,15 @@ namespace bmvk
         m_device.waitIdle();
     }
 
-    void IndexbufferDemo::recreateSwapChain()
+    template <vw::scene::VertexDescription VD>
+    void IndexbufferDemo<VD>::recreateSwapChain()
     {
+        const auto[width, height] = m_window.getSize();
+        if (width == 0 || height == 0)
+        {
+            return;
+        }
+
         m_device.waitIdle();
 
         for (auto & fb : m_swapChainFramebuffers)
@@ -68,7 +68,8 @@ namespace bmvk
         createCommandBuffers();
     }
 
-    void IndexbufferDemo::createRenderPass()
+    template <vw::scene::VertexDescription VD>
+    void IndexbufferDemo<VD>::createRenderPass()
     {
         vk::AttachmentDescription colorAttachment{ {}, m_swapchain.getImageFormat().format, vk::SampleCountFlagBits::e1, vk::AttachmentLoadOp::eClear, vk::AttachmentStoreOp::eStore, vk::AttachmentLoadOp::eDontCare, vk::AttachmentStoreOp::eDontCare, vk::ImageLayout::eUndefined, vk::ImageLayout::ePresentSrcKHR };
         vk::AttachmentReference colorAttachmentRef{ 0, vk::ImageLayout::eColorAttachmentOptimal };
@@ -78,7 +79,8 @@ namespace bmvk
         m_renderPass = reinterpret_cast<const vk::UniqueDevice &>(m_device)->createRenderPassUnique(renderPassInfo);
     }
 
-    void IndexbufferDemo::createGraphicsPipeline()
+    template <vw::scene::VertexDescription VD>
+    void IndexbufferDemo<VD>::createGraphicsPipeline()
     {
         const auto vertShader{ Shader("../shaders/vertexbuffer.vert.spv", m_device) };
         const auto fragShader{ Shader("../shaders/vertexbuffer.frag.spv", m_device) };
@@ -104,7 +106,8 @@ namespace bmvk
         m_graphicsPipeline = reinterpret_cast<const vk::UniqueDevice &>(m_device)->createGraphicsPipelineUnique(nullptr, pipelineInfo);
     }
 
-    void IndexbufferDemo::createFramebuffers()
+    template <vw::scene::VertexDescription VD>
+    void IndexbufferDemo<VD>::createFramebuffers()
     {
         m_swapChainFramebuffers.resize(m_swapchain.getImageViews().size());
         for (size_t i = 0; i < m_swapchain.getImageViews().size(); ++i)
@@ -115,7 +118,8 @@ namespace bmvk
         }
     }
 
-    void IndexbufferDemo::createVertexBuffer()
+    template <vw::scene::VertexDescription VD>
+    void IndexbufferDemo<VD>::createVertexBuffer()
     {
         const auto bufferSize{ sizeof(vertices[0]) * vertices.size() };
 
@@ -136,7 +140,8 @@ namespace bmvk
         copyBuffer(stagingBuffer, m_vertexBuffer, bufferSize);
     }
 
-    void IndexbufferDemo::createIndexBuffer()
+    template <vw::scene::VertexDescription VD>
+    void IndexbufferDemo<VD>::createIndexBuffer()
     {
         const auto bufferSize{ sizeof(indices[0]) * indices.size() };
 
@@ -157,7 +162,8 @@ namespace bmvk
         copyBuffer(stagingBuffer, m_indexBuffer, bufferSize);
     }
 
-    void IndexbufferDemo::createCommandBuffers()
+    template <vw::scene::VertexDescription VD>
+    void IndexbufferDemo<VD>::createCommandBuffers()
     {
         m_commandBuffers.resize(m_swapChainFramebuffers.size());
         CommandBufferAllocateInfo allocInfo{ m_commandPool, vk::CommandBufferLevel::ePrimary, static_cast<uint32_t>(m_commandBuffers.size()) };
@@ -178,7 +184,8 @@ namespace bmvk
         }
     }
 
-    void IndexbufferDemo::drawFrame()
+    template <vw::scene::VertexDescription VD>
+    void IndexbufferDemo<VD>::drawFrame()
     {
         m_queue.waitIdle();
         timing();
@@ -219,4 +226,6 @@ namespace bmvk
             recreateSwapChain();
         }
     }
+
+    template class IndexbufferDemo<vw::scene::VertexDescription::NotUsed>;
 }

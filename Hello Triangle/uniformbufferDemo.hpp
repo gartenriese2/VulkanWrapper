@@ -8,14 +8,15 @@
 
 namespace bmvk
 {
-    class UniformbufferDemo : Demo
+    template <vw::scene::VertexDescription VD>
+    class UniformbufferDemo : Demo<VD>
     {
     public:
         UniformbufferDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height);
         UniformbufferDemo(const UniformbufferDemo &) = delete;
         UniformbufferDemo(UniformbufferDemo && other) = default;
         UniformbufferDemo & operator=(const UniformbufferDemo &) = delete;
-        UniformbufferDemo & operator=(UniformbufferDemo &&) = delete;
+        UniformbufferDemo & operator=(UniformbufferDemo &&) = default;
         ~UniformbufferDemo() {}
 
         void run() override;
@@ -89,9 +90,4 @@ namespace bmvk
         void drawFrame();
         void updateUniformBuffer();
     };
-
-    static_assert(std::is_move_constructible_v<UniformbufferDemo>);
-    static_assert(!std::is_move_assignable_v<UniformbufferDemo>);
-    static_assert(!std::is_copy_constructible_v<UniformbufferDemo>);
-    static_assert(!std::is_copy_assignable_v<UniformbufferDemo>);
 }

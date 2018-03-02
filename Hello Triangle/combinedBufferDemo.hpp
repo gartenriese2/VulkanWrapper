@@ -7,14 +7,15 @@
 
 namespace bmvk
 {
-    class CombinedBufferDemo : ImguiBaseDemo
+    template <vw::scene::VertexDescription VD>
+    class CombinedBufferDemo : ImguiBaseDemo<VD>
     {
     public:
         CombinedBufferDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height);
         CombinedBufferDemo(const CombinedBufferDemo &) = delete;
         CombinedBufferDemo(CombinedBufferDemo && other) = default;
         CombinedBufferDemo & operator=(const CombinedBufferDemo &) = delete;
-        CombinedBufferDemo & operator=(CombinedBufferDemo &&) = delete;
+        CombinedBufferDemo & operator=(CombinedBufferDemo &&) = default;
 
         void run() override;
         void recreateSwapChain() override;
@@ -99,9 +100,4 @@ namespace bmvk
 
         void drawFrame();
     };
-
-    static_assert(std::is_move_constructible_v<CombinedBufferDemo>);
-    static_assert(!std::is_copy_constructible_v<CombinedBufferDemo>);
-    static_assert(!std::is_move_assignable_v<CombinedBufferDemo>);
-    static_assert(!std::is_copy_assignable_v<CombinedBufferDemo>);
 }

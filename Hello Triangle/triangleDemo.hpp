@@ -5,14 +5,15 @@
 
 namespace bmvk
 {
-    class TriangleDemo : Demo
+    template <vw::scene::VertexDescription VD>
+    class TriangleDemo : Demo<VD>
     {
     public:
         explicit TriangleDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height);
         TriangleDemo(const TriangleDemo &) = delete;
         TriangleDemo(TriangleDemo && other) = default;
         TriangleDemo & operator=(const TriangleDemo &) = delete;
-        TriangleDemo & operator=(TriangleDemo &&) = delete;
+        TriangleDemo & operator=(TriangleDemo &&) = default;
         ~TriangleDemo() {}
 
         void run() override;
@@ -34,9 +35,4 @@ namespace bmvk
         
         void drawFrame();
     };
-
-    static_assert(std::is_move_constructible_v<TriangleDemo>);
-    static_assert(!std::is_move_assignable_v<TriangleDemo>);
-    static_assert(!std::is_copy_constructible_v<TriangleDemo>);
-    static_assert(!std::is_copy_assignable_v<TriangleDemo>);
 }

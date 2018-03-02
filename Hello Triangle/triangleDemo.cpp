@@ -5,32 +5,25 @@
 
 namespace bmvk
 {
-    static void onWindowResized(GLFWwindow * window, int width, int height)
-    {
-        if (width == 0 || height == 0)
-        {
-            return;
-        }
-
-        auto app = reinterpret_cast<TriangleDemo *>(glfwGetWindowUserPointer(window));
-        app->recreateSwapChain();
-    }
-
-    TriangleDemo::TriangleDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height)
-      : Demo{ enableValidationLayers, width, height, "Triangle Demo" },
-        m_swapchain{ m_instance.getPhysicalDevice(), m_instance.getSurface(), m_window, m_device },
+    template <vw::scene::VertexDescription VD>
+    TriangleDemo<VD>::TriangleDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height)
+        : Demo<VD>{ enableValidationLayers, width, height, "Triangle Demo", DebugReport::ReportLevel::WarningsAndAbove },
+        m_swapchain{ m_instance.getPhysicalDevice(), m_instance.getSurface(), m_window.getSize(), m_device },
         m_imageAvailableSemaphore{ m_device.createSemaphore() },
         m_renderFinishedSemaphore{ m_device.createSemaphore() }
     {
-        m_window.setWindowUserPointer(this);
-        m_window.setWindowSizeCallback(onWindowResized);
+        m_window.addWindowSizeFunc([this](int width, int height)
+        {
+            recreateSwapChain();
+        });
         createRenderPass();
         createGraphicsPipeline();
         createFramebuffers();
         createCommandBuffers();
     }
 
-    void TriangleDemo::run()
+    template <vw::scene::VertexDescription VD>
+    void TriangleDemo<VD>::run()
     {
         while (!m_window.shouldClose())
         {
@@ -42,8 +35,15 @@ namespace bmvk
         m_device.waitIdle();
     }
 
-    void TriangleDemo::recreateSwapChain()
+    template <vw::scene::VertexDescription VD>
+    void TriangleDemo<VD>::recreateSwapChain()
     {
+        const auto[width, height] = m_window.getSize();
+        if (width == 0 || height == 0)
+        {
+            return;
+        }
+
         m_device.waitIdle();
 
         for (auto & fb : m_swapChainFramebuffers)
@@ -66,7 +66,8 @@ namespace bmvk
         createCommandBuffers();
     }
 
-    void TriangleDemo::createRenderPass()
+    template <vw::scene::VertexDescription VD>
+    void TriangleDemo<VD>::createRenderPass()
     {
         vk::AttachmentDescription colorAttachment{ {}, m_swapchain.getImageFormat().format, vk::SampleCountFlagBits::e1, vk::AttachmentLoadOp::eClear, vk::AttachmentStoreOp::eStore, vk::AttachmentLoadOp::eDontCare, vk::AttachmentStoreOp::eDontCare, vk::ImageLayout::eUndefined, vk::ImageLayout::ePresentSrcKHR };
         vk::AttachmentReference colorAttachmentRef{ 0, vk::ImageLayout::eColorAttachmentOptimal };
@@ -76,7 +77,8 @@ namespace bmvk
         m_renderPass = reinterpret_cast<const vk::UniqueDevice &>(m_device)->createRenderPassUnique(renderPassInfo);
     }
 
-    void TriangleDemo::createGraphicsPipeline()
+    template <vw::scene::VertexDescription VD>
+    void TriangleDemo<VD>::createGraphicsPipeline()
     {
         const auto vertShader{ Shader("../shaders/triangleshader.vert.spv", m_device) };
         const auto fragShader{ Shader("../shaders/triangleshader.frag.spv", m_device) };
@@ -100,7 +102,8 @@ namespace bmvk
         m_graphicsPipeline = reinterpret_cast<const vk::UniqueDevice &>(m_device)->createGraphicsPipelineUnique(nullptr, pipelineInfo);
     }
 
-    void TriangleDemo::createFramebuffers()
+    template <vw::scene::VertexDescription VD>
+    void TriangleDemo<VD>::createFramebuffers()
     {
         m_swapChainFramebuffers.resize(m_swapchain.getImageViews().size());
         for (size_t i = 0; i < m_swapchain.getImageViews().size(); ++i)
@@ -111,7 +114,8 @@ namespace bmvk
         }
     }
 
-    void TriangleDemo::createCommandBuffers()
+    template <vw::scene::VertexDescription VD>
+    void TriangleDemo<VD>::createCommandBuffers()
     {
         m_commandBuffers.resize(m_swapChainFramebuffers.size());
         CommandBufferAllocateInfo allocInfo{ m_commandPool, vk::CommandBufferLevel::ePrimary, static_cast<uint32_t>(m_commandBuffers.size()) };
@@ -130,7 +134,8 @@ namespace bmvk
         }
     }
 
-    void TriangleDemo::drawFrame()
+    template <vw::scene::VertexDescription VD>
+    void TriangleDemo<VD>::drawFrame()
     {
         m_queue.waitIdle();
         timing();
@@ -171,4 +176,6 @@ namespace bmvk
             recreateSwapChain();
         }
     }
+
+    template class TriangleDemo<vw::scene::VertexDescription::NotUsed>;
 }

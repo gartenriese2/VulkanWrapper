@@ -18,7 +18,8 @@ namespace bmvk
 
     const std::string K_MODEL_PATH{ "../models/stanford_dragon/dragon.obj" };
 
-    CoordinatesDemo::CoordinatesDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height)
+    template <vw::scene::VertexDescription VD>
+    CoordinatesDemo<VD>::CoordinatesDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height)
         : ImguiBaseDemo{ enableValidationLayers, width, height, "Coordinates Demo", DebugReport::ReportLevel::WarningsAndAbove },
         m_imageAvailableSemaphore{ m_device.createSemaphore() },
         m_renderFinishedSemaphore{ m_device.createSemaphore() },
@@ -39,7 +40,8 @@ namespace bmvk
         createCommandBuffers();
     }
 
-    void CoordinatesDemo::run()
+    template <vw::scene::VertexDescription VD>
+    void CoordinatesDemo<VD>::run()
     {
         while (!m_window.shouldClose())
         {
@@ -74,8 +76,15 @@ namespace bmvk
         m_device.waitIdle();
     }
 
-    void CoordinatesDemo::recreateSwapChain()
+    template <vw::scene::VertexDescription VD>
+    void CoordinatesDemo<VD>::recreateSwapChain()
     {
+        const auto[width, height] = m_window.getSize();
+        if (width == 0 || height == 0)
+        {
+            return;
+        }
+
         m_device.waitIdle();
 
         for (auto & fb : m_swapChainFramebuffers)
@@ -92,7 +101,7 @@ namespace bmvk
         m_pipelineLayout.reset(nullptr);
         m_renderPass.reset(nullptr);
 
-        ImguiBaseDemo::recreateSwapChain();
+        ImguiBaseDemo<VD>::recreateSwapChain();
 
         createRenderPass();
         createPipelines();
@@ -101,7 +110,8 @@ namespace bmvk
         createCommandBuffers();
     }
 
-    void CoordinatesDemo::setupCamera()
+    template <vw::scene::VertexDescription VD>
+    void CoordinatesDemo<VD>::setupCamera()
     {
         const glm::vec3 pos{ 0.f, 0.f, 5.f };
         const glm::vec3 dir{ 0.f, 0.f, -1.f };
@@ -110,13 +120,15 @@ namespace bmvk
         m_camera = vw::util::Camera(pos, dir, up, 45.f, extent.width / static_cast<float>(extent.height), 0.01f, std::numeric_limits<float>::infinity());
     }
 
-    void CoordinatesDemo::createDescriptorSetLayout()
+    template <vw::scene::VertexDescription VD>
+    void CoordinatesDemo<VD>::createDescriptorSetLayout()
     {
         vk::DescriptorSetLayoutBinding uboLayoutBinding{ 0, vk::DescriptorType::eUniformBuffer, 1, vk::ShaderStageFlagBits::eVertex };
         m_descriptorSetLayout = m_device.createDescriptorSetLayout({ uboLayoutBinding });
     }
 
-    void CoordinatesDemo::createRenderPass()
+    template <vw::scene::VertexDescription VD>
+    void CoordinatesDemo<VD>::createRenderPass()
     {
         vk::AttachmentDescription colorAttachment{ {}, m_swapchain.getImageFormat().format, vk::SampleCountFlagBits::e1, vk::AttachmentLoadOp::eClear, vk::AttachmentStoreOp::eStore, vk::AttachmentLoadOp::eDontCare, vk::AttachmentStoreOp::eDontCare, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal };
         vk::AttachmentReference colorAttachmentRef{ 0, vk::ImageLayout::eColorAttachmentOptimal };
@@ -129,7 +141,8 @@ namespace bmvk
         m_renderPass = reinterpret_cast<const vk::UniqueDevice &>(m_device)->createRenderPassUnique(renderPassInfo);
     }
 
-    void CoordinatesDemo::createPipelines()
+    template <vw::scene::VertexDescription VD>
+    void CoordinatesDemo<VD>::createPipelines()
     {
         const Shader vertShader{ K_VERTEX_SHADER_PATH, m_device };
         const Shader colorFragShader{ K_COLOR_FRAGMENT_SHADER_PATH, m_device };
@@ -175,7 +188,8 @@ namespace bmvk
         m_viewPosPipeline = reinterpret_cast<const vk::UniqueDevice &>(m_device)->createGraphicsPipelineUnique(nullptr, viewPosPipelineInfo);
     }
 
-    void CoordinatesDemo::createFramebuffers()
+    template <vw::scene::VertexDescription VD>
+    void CoordinatesDemo<VD>::createFramebuffers()
     {
         m_swapChainFramebuffers.clear();
         for (auto & uniqueImageView : m_swapchain.getImageViews())
@@ -185,7 +199,8 @@ namespace bmvk
         }
     }
 
-    void CoordinatesDemo::loadCube()
+    template <vw::scene::VertexDescription VD>
+    void CoordinatesDemo<VD>::loadCube()
     {
         const auto posToCol = [](const glm::vec3 & pos) { return glm::vec3(std::max(0.f, pos.x), std::max(0.f, pos.y), std::max(0.f, pos.z)); };
 
@@ -225,7 +240,8 @@ namespace bmvk
         m_cube.createBuffers(reinterpret_cast<const vk::UniqueDevice &>(m_device), static_cast<vk::PhysicalDevice>(m_instance.getPhysicalDevice()), m_commandPool, static_cast<vk::Queue>(m_queue));
     }
 
-    void CoordinatesDemo::loadDragon()
+    template <vw::scene::VertexDescription VD>
+    void CoordinatesDemo<VD>::loadDragon()
     {
         vw::scene::ModelLoader<VD> ml;
         m_dragon = ml.loadModel(K_MODEL_PATH, vw::scene::ModelLoader<VD>::NormalCreation::Explicit);
@@ -233,7 +249,8 @@ namespace bmvk
         m_dragon.createBuffers(reinterpret_cast<const vk::UniqueDevice &>(m_device), static_cast<vk::PhysicalDevice>(m_instance.getPhysicalDevice()), m_commandPool, static_cast<vk::Queue>(m_queue));
     }
 
-    void CoordinatesDemo::createDepthResources()
+    template <vw::scene::VertexDescription VD>
+    void CoordinatesDemo<VD>::createDepthResources()
     {
         const auto depthFormat{ m_instance.getPhysicalDevice().findDepthFormat() };
         createImage(m_swapchain.getExtent().width, m_swapchain.getExtent().height, depthFormat, vk::ImageTiling::eOptimal, vk::ImageUsageFlagBits::eDepthStencilAttachment, vk::MemoryPropertyFlagBits::eDeviceLocal, m_depthImage, m_depthImageMemory);
@@ -247,7 +264,8 @@ namespace bmvk
         m_queue.waitIdle();
     }
 
-    void CoordinatesDemo::createUniformBuffer()
+    template <vw::scene::VertexDescription VD>
+    void CoordinatesDemo<VD>::createUniformBuffer()
     {
         const auto bufferSize{ sizeof(UniformBufferObject) };
         const auto uniformBufferUsageFlags{ vk::BufferUsageFlagBits::eUniformBuffer };
@@ -255,14 +273,16 @@ namespace bmvk
         createBuffer(bufferSize, uniformBufferUsageFlags, uniformBufferMemoryPropertyFlags, m_uniformBuffer, m_uniformBufferMemory);
     }
 
-    void CoordinatesDemo::createDescriptorPool()
+    template <vw::scene::VertexDescription VD>
+    void CoordinatesDemo<VD>::createDescriptorPool()
     {
         vk::DescriptorPoolSize poolSize{ vk::DescriptorType::eUniformBuffer, 1 };
         std::vector<vk::DescriptorPoolSize> vec{ poolSize };
         m_descriptorPool = m_device.createDescriptorPool(vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet, 1, vec);
     }
 
-    void CoordinatesDemo::createDescriptorSet()
+    template <vw::scene::VertexDescription VD>
+    void CoordinatesDemo<VD>::createDescriptorSet()
     {
         vk::DescriptorSetLayout layouts[] = { *m_descriptorSetLayout };
         vk::DescriptorSetAllocateInfo allocInfo{ *m_descriptorPool, 1, layouts };
@@ -274,7 +294,8 @@ namespace bmvk
         m_device.updateDescriptorSets(vec);
     }
 
-    void CoordinatesDemo::createCommandBuffers()
+    template <vw::scene::VertexDescription VD>
+    void CoordinatesDemo<VD>::createCommandBuffers()
     {
         m_commandBuffers = m_device.allocateCommandBuffers(m_commandPool, static_cast<uint32_t>(m_swapChainFramebuffers.size()));
         for (size_t i = 0; i < m_commandBuffers.size(); ++i)
@@ -311,7 +332,8 @@ namespace bmvk
         }
     }
 
-    void CoordinatesDemo::updateUniformBuffer()
+    template <vw::scene::VertexDescription VD>
+    void CoordinatesDemo<VD>::updateUniformBuffer()
     {
         UniformBufferObject ubo;
         ubo.model = m_cube.getModelMatrix();
@@ -325,7 +347,8 @@ namespace bmvk
         m_device.copyToMemory(m_uniformBufferMemory, ubo);
     }
 
-    void CoordinatesDemo::drawFrame()
+    template <vw::scene::VertexDescription VD>
+    void CoordinatesDemo<VD>::drawFrame()
     {
         m_queue.waitIdle();
         timing(false);
@@ -342,7 +365,7 @@ namespace bmvk
         }
 
         m_queue.submit(m_commandBuffers[imageIndex], m_imageAvailableSemaphore, m_renderFinishedSemaphore, vk::PipelineStageFlagBits::eColorAttachmentOutput);
-        ImguiBaseDemo::drawFrame(imageIndex, m_renderFinishedSemaphore, m_renderImguiFinishedSemaphore);
+        ImguiBaseDemo<VD>::drawFrame(imageIndex, m_renderFinishedSemaphore, m_renderImguiFinishedSemaphore);
 
         auto waitSemaphore{ *m_renderImguiFinishedSemaphore };
         auto swapchain{ *reinterpret_cast<const vk::UniqueSwapchainKHR &>(m_swapchain) };
@@ -352,4 +375,6 @@ namespace bmvk
             recreateSwapChain();
         }
     }
+
+    template class CoordinatesDemo<vw::scene::VertexDescription::PositionNormalColor>;
 }

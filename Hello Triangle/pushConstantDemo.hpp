@@ -11,16 +11,15 @@
 
 namespace bmvk
 {
-    const vw::scene::VertexDescription VD = vw::scene::VertexDescription::PositionNormalColor;
-
-    class PushConstantDemo : ImguiBaseDemo
+    template <vw::scene::VertexDescription VD>
+    class PushConstantDemo : ImguiBaseDemo<VD>
     {
     public:
         PushConstantDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height);
         PushConstantDemo(const PushConstantDemo &) = delete;
         PushConstantDemo(PushConstantDemo && other) = default;
         PushConstantDemo & operator=(const PushConstantDemo &) = delete;
-        PushConstantDemo & operator=(PushConstantDemo &&) = delete;
+        PushConstantDemo & operator=(PushConstantDemo &&) = default;
 
         void run() override;
         void recreateSwapChain() override;
@@ -79,10 +78,4 @@ namespace bmvk
 
         void drawFrame();
     };
-
-    static_assert(std::is_move_constructible_v<PushConstantDemo>);
-    static_assert(!std::is_copy_constructible_v<PushConstantDemo>);
-    static_assert(!std::is_move_assignable_v<PushConstantDemo>);
-    static_assert(!std::is_copy_assignable_v<PushConstantDemo>);
 }
-#pragma once

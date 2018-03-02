@@ -1,11 +1,11 @@
 #pragma once
 
 #include <chrono>
-#include <type_traits>
 #include <vulkan/vulkan.hpp>
 
 #include <vw/camera.hpp>
 #include <vw/window.hpp>
+#include <vw/modelRepository.hpp>
 
 #include "instance.hpp"
 #include "device.hpp"
@@ -14,14 +14,15 @@
 
 namespace bmvk
 {
+    template <vw::scene::VertexDescription VD>
     class Demo
     {
     public:
-        Demo(const bool enableValidationLayers, const uint32_t width, const uint32_t height, std::string name, const DebugReport::ReportLevel reportLevel);
+        Demo(const bool enableValidationLayers, const uint32_t width, const uint32_t height, std::string name, const DebugReport::ReportLevel reportLevel, const uint32_t maxModelRepositoryInstances = 1024);
         Demo(const Demo &) = delete;
         Demo(Demo && other) = default;
         Demo & operator=(const Demo &) = delete;
-        Demo & operator=(Demo &&) = delete;
+        Demo & operator=(Demo &&) = default;
         virtual ~Demo() {}
 
         virtual void run() {}
@@ -35,6 +36,8 @@ namespace bmvk
         Queue m_queue;
         vk::UniqueCommandPool m_commandPool;
         BufferFactory m_bufferFactory;
+
+        vw::scene::ModelRepository<VD> m_modelRepository;
 
         double m_currentFrameTime = 0.0;
         double m_avgFrameTime = 0.0;
@@ -54,9 +57,4 @@ namespace bmvk
         uint32_t m_timepointCount;
         std::chrono::microseconds m_elapsedTime;
     };
-
-    static_assert(std::is_move_constructible_v<Demo>);
-    static_assert(!std::is_move_assignable_v<Demo>);
-    static_assert(!std::is_copy_constructible_v<Demo>);
-    static_assert(!std::is_copy_assignable_v<Demo>);
 }

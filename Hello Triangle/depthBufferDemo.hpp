@@ -8,14 +8,15 @@
 
 namespace bmvk
 {
-    class DepthBufferDemo : ImguiBaseDemo
+    template <vw::scene::VertexDescription VD>
+    class DepthBufferDemo : ImguiBaseDemo<VD>
     {
     public:
         DepthBufferDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height);
         DepthBufferDemo(const DepthBufferDemo &) = delete;
         DepthBufferDemo(DepthBufferDemo && other) = default;
         DepthBufferDemo & operator=(const DepthBufferDemo &) = delete;
-        DepthBufferDemo & operator=(DepthBufferDemo &&) = delete;
+        DepthBufferDemo & operator=(DepthBufferDemo &&) = default;
 
         void run() override;
         void recreateSwapChain() override;
@@ -111,9 +112,4 @@ namespace bmvk
 
         void drawFrame();
     };
-
-    static_assert(std::is_move_constructible_v<DepthBufferDemo>);
-    static_assert(!std::is_copy_constructible_v<DepthBufferDemo>);
-    static_assert(!std::is_move_assignable_v<DepthBufferDemo>);
-    static_assert(!std::is_copy_assignable_v<DepthBufferDemo>);
 }

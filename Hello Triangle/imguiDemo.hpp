@@ -7,14 +7,15 @@
 
 namespace bmvk
 {
-    class ImguiDemo : ImguiBaseDemo
+    template <vw::scene::VertexDescription VD>
+    class ImguiDemo : ImguiBaseDemo<VD>
     {
     public:
         ImguiDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height);
         ImguiDemo(const ImguiDemo &) = delete;
         ImguiDemo(ImguiDemo && other) = default;
         ImguiDemo & operator=(const ImguiDemo &) = delete;
-        ImguiDemo & operator=(ImguiDemo &&) = delete;
+        ImguiDemo & operator=(ImguiDemo &&) = default;
         ~ImguiDemo() {}
 
         void run() override;
@@ -89,9 +90,4 @@ namespace bmvk
 
         void drawFrame();
     };
-
-    static_assert(std::is_move_constructible_v<ImguiDemo>);
-    static_assert(!std::is_move_assignable_v<ImguiDemo>);
-    static_assert(!std::is_copy_constructible_v<ImguiDemo>);
-    static_assert(!std::is_copy_assignable_v<ImguiDemo>);
 }

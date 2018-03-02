@@ -7,12 +7,12 @@
 #include <glm/gtc/matrix_transform.inl>
 
 #include "shader.hpp"
-#include "bufferFactory.hpp"
 
 namespace bmvk
 {
-    ObjectDemo::ObjectDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height)
-        : ImguiBaseDemo{ enableValidationLayers, width, height, "Object Demo", true },
+    template <vw::scene::VertexDescription VD>
+    ObjectDemo<VD>::ObjectDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height)
+        : ImguiBaseDemo{ enableValidationLayers, width, height, "Object Demo", DebugReport::ReportLevel::WarningsAndAbove },
         m_textureSampler{ m_device.createSampler(true) },
         m_imageAvailableSemaphore{ m_device.createSemaphore() },
         m_renderFinishedSemaphore{ m_device.createSemaphore() },
@@ -33,7 +33,8 @@ namespace bmvk
         createCommandBuffers();
     }
 
-    void ObjectDemo::run()
+    template <vw::scene::VertexDescription VD>
+    void ObjectDemo<VD>::run()
     {
         while (!m_window.shouldClose())
         {
@@ -68,8 +69,15 @@ namespace bmvk
         m_device.waitIdle();
     }
 
-    void ObjectDemo::recreateSwapChain()
+    template <vw::scene::VertexDescription VD>
+    void ObjectDemo<VD>::recreateSwapChain()
     {
+        const auto[width, height] = m_window.getSize();
+        if (width == 0 || height == 0)
+        {
+            return;
+        }
+
         m_device.waitIdle();
 
         for (auto & fb : m_swapChainFramebuffers)
@@ -85,7 +93,7 @@ namespace bmvk
         m_pipelineLayout.reset(nullptr);
         m_renderPass.reset(nullptr);
 
-        ImguiBaseDemo::recreateSwapChain();
+        ImguiBaseDemo<VD>::recreateSwapChain();
 
         createRenderPass();
         createGraphicsPipeline();
@@ -94,14 +102,16 @@ namespace bmvk
         createCommandBuffers();
     }
 
-    void ObjectDemo::createDescriptorSetLayout()
+    template <vw::scene::VertexDescription VD>
+    void ObjectDemo<VD>::createDescriptorSetLayout()
     {
         vk::DescriptorSetLayoutBinding uboLayoutBinding{ 0, vk::DescriptorType::eUniformBuffer, 1, vk::ShaderStageFlagBits::eVertex };
         vk::DescriptorSetLayoutBinding samplerLayoutBinding{ 1, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment };
         m_descriptorSetLayout = m_device.createDescriptorSetLayout({ uboLayoutBinding, samplerLayoutBinding });
     }
 
-    void ObjectDemo::createRenderPass()
+    template <vw::scene::VertexDescription VD>
+    void ObjectDemo<VD>::createRenderPass()
     {
         vk::AttachmentDescription colorAttachment{ {}, m_swapchain.getImageFormat().format, vk::SampleCountFlagBits::e1, vk::AttachmentLoadOp::eClear, vk::AttachmentStoreOp::eStore, vk::AttachmentLoadOp::eDontCare, vk::AttachmentStoreOp::eDontCare, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal };
         vk::AttachmentReference colorAttachmentRef{ 0, vk::ImageLayout::eColorAttachmentOptimal };
@@ -114,7 +124,8 @@ namespace bmvk
         m_renderPass = reinterpret_cast<const vk::UniqueDevice &>(m_device)->createRenderPassUnique(renderPassInfo);
     }
 
-    void ObjectDemo::createGraphicsPipeline()
+    template <vw::scene::VertexDescription VD>
+    void ObjectDemo<VD>::createGraphicsPipeline()
     {
         const Shader vertShader{ "../shaders/depth.vert.spv", m_device };
         const Shader fragShader{ "../shaders/depth.frag.spv", m_device };
@@ -140,7 +151,8 @@ namespace bmvk
         m_graphicsPipeline = reinterpret_cast<const vk::UniqueDevice &>(m_device)->createGraphicsPipelineUnique(nullptr, pipelineInfo);
     }
 
-    void ObjectDemo::createFramebuffers()
+    template <vw::scene::VertexDescription VD>
+    void ObjectDemo<VD>::createFramebuffers()
     {
         m_swapChainFramebuffers.clear();
         for (auto & uniqueImageView : m_swapchain.getImageViews())
@@ -150,7 +162,8 @@ namespace bmvk
         }
     }
 
-    void ObjectDemo::createTextureImage()
+    template <vw::scene::VertexDescription VD>
+    void ObjectDemo<VD>::createTextureImage()
     {
         int texWidth, texHeight, texChannels;
         auto * pixels = stbi_load("../textures/chalet.jpg", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
@@ -177,12 +190,14 @@ namespace bmvk
         m_queue.waitIdle();
     }
 
-    void ObjectDemo::createTextureImageView()
+    template <vw::scene::VertexDescription VD>
+    void ObjectDemo<VD>::createTextureImageView()
     {
         m_textureImageView = createImageView(m_textureImage, vk::Format::eR8G8B8A8Unorm);
     }
 
-    void ObjectDemo::loadModel()
+    template <vw::scene::VertexDescription VD>
+    void ObjectDemo<VD>::loadModel()
     {
         tinyobj::attrib_t attrib;
         std::vector<tinyobj::shape_t> shapes;
@@ -216,7 +231,8 @@ namespace bmvk
         }
     }
 
-    void ObjectDemo::createDepthResources()
+    template <vw::scene::VertexDescription VD>
+    void ObjectDemo<VD>::createDepthResources()
     {
         const auto depthFormat{ m_instance.getPhysicalDevice().findDepthFormat() };
         createImage(m_swapchain.getExtent().width, m_swapchain.getExtent().height, depthFormat, vk::ImageTiling::eOptimal, vk::ImageUsageFlagBits::eDepthStencilAttachment, vk::MemoryPropertyFlagBits::eDeviceLocal, m_depthImage, m_depthImageMemory);
@@ -230,7 +246,8 @@ namespace bmvk
         m_queue.waitIdle();
     }
 
-    void ObjectDemo::createCombinedBuffer()
+    template <vw::scene::VertexDescription VD>
+    void ObjectDemo<VD>::createCombinedBuffer()
     {
         const auto vertexBufferSize{ sizeof m_vertices[0] * m_vertices.size() };
         const auto indexBufferSize{ sizeof m_indices[0] * m_indices.size() };
@@ -280,7 +297,8 @@ namespace bmvk
         m_queue.waitIdle();
     }
 
-    void ObjectDemo::createUniformBuffer()
+    template <vw::scene::VertexDescription VD>
+    void ObjectDemo<VD>::createUniformBuffer()
     {
         const auto bufferSize{ sizeof(UniformBufferObject) };
         const auto uniformBufferUsageFlags{ vk::BufferUsageFlagBits::eUniformBuffer };
@@ -288,7 +306,8 @@ namespace bmvk
         createBuffer(bufferSize, uniformBufferUsageFlags, uniformBufferMemoryPropertyFlags, m_uniformBuffer, m_uniformBufferMemory);
     }
 
-    void ObjectDemo::createDescriptorPool()
+    template <vw::scene::VertexDescription VD>
+    void ObjectDemo<VD>::createDescriptorPool()
     {
         vk::DescriptorPoolSize poolSize{ vk::DescriptorType::eUniformBuffer, 1 };
         vk::DescriptorPoolSize poolSizeTex{ vk::DescriptorType::eCombinedImageSampler, 1 };
@@ -296,7 +315,8 @@ namespace bmvk
         m_descriptorPool = m_device.createDescriptorPool(vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet, 1, vec);
     }
 
-    void ObjectDemo::createDescriptorSet()
+    template <vw::scene::VertexDescription VD>
+    void ObjectDemo<VD>::createDescriptorSet()
     {
         vk::DescriptorSetLayout layouts[] = { *m_descriptorSetLayout };
         vk::DescriptorSetAllocateInfo allocInfo{ *m_descriptorPool, 1, layouts };
@@ -311,7 +331,8 @@ namespace bmvk
         m_device.updateDescriptorSets(vec);
     }
 
-    void ObjectDemo::createCommandBuffers()
+    template <vw::scene::VertexDescription VD>
+    void ObjectDemo<VD>::createCommandBuffers()
     {
         m_commandBuffers = m_device.allocateCommandBuffers(m_commandPool, static_cast<uint32_t>(m_swapChainFramebuffers.size()));
         for (size_t i = 0; i < m_commandBuffers.size(); ++i)
@@ -330,7 +351,8 @@ namespace bmvk
         }
     }
 
-    void ObjectDemo::updateUniformBuffer()
+    template <vw::scene::VertexDescription VD>
+    void ObjectDemo<VD>::updateUniformBuffer()
     {
         static auto startTime = std::chrono::high_resolution_clock::now();
 
@@ -346,7 +368,8 @@ namespace bmvk
         m_device.copyToMemory(m_uniformBufferMemory, ubo);
     }
 
-    void ObjectDemo::drawFrame()
+    template <vw::scene::VertexDescription VD>
+    void ObjectDemo<VD>::drawFrame()
     {
         m_queue.waitIdle();
         timing(false);
@@ -363,7 +386,7 @@ namespace bmvk
         }
 
         m_queue.submit(m_commandBuffers[imageIndex], m_imageAvailableSemaphore, m_renderFinishedSemaphore, vk::PipelineStageFlagBits::eColorAttachmentOutput);
-        ImguiBaseDemo::drawFrame(imageIndex, m_renderFinishedSemaphore, m_renderImguiFinishedSemaphore);
+        ImguiBaseDemo<VD>::drawFrame(imageIndex, m_renderFinishedSemaphore, m_renderImguiFinishedSemaphore);
 
         auto waitSemaphore{ *m_renderImguiFinishedSemaphore };
         auto swapchain{ *reinterpret_cast<const vk::UniqueSwapchainKHR &>(m_swapchain) };
@@ -373,4 +396,6 @@ namespace bmvk
             recreateSwapChain();
         }
     }
+
+    template class ObjectDemo<vw::scene::VertexDescription::NotUsed>;
 }

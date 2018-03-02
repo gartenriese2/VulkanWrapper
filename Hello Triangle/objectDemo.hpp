@@ -8,14 +8,15 @@
 
 namespace bmvk
 {
-    class ObjectDemo : ImguiBaseDemo
+    template <vw::scene::VertexDescription VD>
+    class ObjectDemo : ImguiBaseDemo<VD>
     {
     public:
         ObjectDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height);
         ObjectDemo(const ObjectDemo &) = delete;
         ObjectDemo(ObjectDemo && other) = default;
         ObjectDemo & operator=(const ObjectDemo &) = delete;
-        ObjectDemo & operator=(ObjectDemo &&) = delete;
+        ObjectDemo & operator=(ObjectDemo &&) = default;
 
         void run() override;
         void recreateSwapChain() override;
@@ -98,9 +99,4 @@ namespace bmvk
 
         void drawFrame();
     };
-
-    static_assert(std::is_move_constructible_v<ObjectDemo>);
-    static_assert(!std::is_copy_constructible_v<ObjectDemo>);
-    static_assert(!std::is_move_assignable_v<ObjectDemo>);
-    static_assert(!std::is_copy_assignable_v<ObjectDemo>);
 }

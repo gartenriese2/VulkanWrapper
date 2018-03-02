@@ -14,7 +14,8 @@ namespace bmvk
     const std::string K_VERTEX_SHADER_PATH{ "../shaders/blinnphong2.vert.spv" };
     const std::string K_FRAGMENT_SHADER_PATH{ "../shaders/blinnphong.frag.spv" };
 
-    DragonDemo::DragonDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height)
+    template <vw::scene::VertexDescription VD>
+    DragonDemo<VD>::DragonDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height)
         : ImguiBaseDemo{ enableValidationLayers, width, height, "Dragon Demo", DebugReport::ReportLevel::WarningsAndAbove },
         m_imageAvailableSemaphore{ m_device.createSemaphore() },
         m_renderFinishedSemaphore{ m_device.createSemaphore() },
@@ -34,7 +35,8 @@ namespace bmvk
         createCommandBuffers();
     }
 
-    void DragonDemo::run()
+    template <vw::scene::VertexDescription VD>
+    void DragonDemo<VD>::run()
     {
         while (!m_window.shouldClose())
         {
@@ -69,8 +71,15 @@ namespace bmvk
         m_device.waitIdle();
     }
 
-    void DragonDemo::recreateSwapChain()
+    template <vw::scene::VertexDescription VD>
+    void DragonDemo<VD>::recreateSwapChain()
     {
+        const auto[width, height] = m_window.getSize();
+        if (width == 0 || height == 0)
+        {
+            return;
+        }
+
         m_device.waitIdle();
 
         for (auto & fb : m_swapChainFramebuffers)
@@ -86,7 +95,7 @@ namespace bmvk
         m_pipelineLayout.reset(nullptr);
         m_renderPass.reset(nullptr);
 
-        ImguiBaseDemo::recreateSwapChain();
+        ImguiBaseDemo<VD>::recreateSwapChain();
 
         createRenderPass();
         createGraphicsPipeline();
@@ -95,7 +104,8 @@ namespace bmvk
         createCommandBuffers();
     }
 
-    void DragonDemo::setupCamera()
+    template <vw::scene::VertexDescription VD>
+    void DragonDemo<VD>::setupCamera()
     {
         const glm::vec3 pos{ 0.f, 0.f, 5.f };
         const glm::vec3 dir{ 0.f, 0.f, -1.f };
@@ -104,13 +114,15 @@ namespace bmvk
         m_camera = vw::util::Camera(pos, dir, up, 45.f, extent.width / static_cast<float>(extent.height), 0.01f, std::numeric_limits<float>::infinity());
     }
     
-    void DragonDemo::createDescriptorSetLayout()
+    template <vw::scene::VertexDescription VD>
+    void DragonDemo<VD>::createDescriptorSetLayout()
     {
         vk::DescriptorSetLayoutBinding uboLayoutBinding{ 0, vk::DescriptorType::eUniformBuffer, 1, vk::ShaderStageFlagBits::eVertex };
         m_descriptorSetLayout = m_device.createDescriptorSetLayout({ uboLayoutBinding });
     }
 
-    void DragonDemo::createRenderPass()
+    template <vw::scene::VertexDescription VD>
+    void DragonDemo<VD>::createRenderPass()
     {
         vk::AttachmentDescription colorAttachment{ {}, m_swapchain.getImageFormat().format, vk::SampleCountFlagBits::e1, vk::AttachmentLoadOp::eClear, vk::AttachmentStoreOp::eStore, vk::AttachmentLoadOp::eDontCare, vk::AttachmentStoreOp::eDontCare, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal };
         vk::AttachmentReference colorAttachmentRef{ 0, vk::ImageLayout::eColorAttachmentOptimal };
@@ -123,7 +135,8 @@ namespace bmvk
         m_renderPass = reinterpret_cast<const vk::UniqueDevice &>(m_device)->createRenderPassUnique(renderPassInfo);
     }
 
-    void DragonDemo::createGraphicsPipeline()
+    template <vw::scene::VertexDescription VD>
+    void DragonDemo<VD>::createGraphicsPipeline()
     {
         const Shader vertShader{ K_VERTEX_SHADER_PATH, m_device };
         const Shader fragShader{ K_FRAGMENT_SHADER_PATH, m_device };
@@ -131,8 +144,8 @@ namespace bmvk
         const auto fragShaderStageInfo{ fragShader.createPipelineShaderStageCreateInfo(vk::ShaderStageFlagBits::eFragment) };
         vk::PipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageInfo, fragShaderStageInfo };
 
-        auto bindingDescription = vw::scene::Vertex<vw::scene::VertexDescription::PositionNormalColorTexture>::getBindingDescription();
-        auto attributeDescriptions = vw::scene::Vertex<vw::scene::VertexDescription::PositionNormalColorTexture>::getAttributeDescriptions();
+        auto bindingDescription = vw::scene::Vertex<VD>::getBindingDescription();
+        auto attributeDescriptions = vw::scene::Vertex<VD>::getAttributeDescriptions();
         vk::PipelineVertexInputStateCreateInfo vertexInputInfo{ PipelineVertexInputStateCreateInfo{ bindingDescription, attributeDescriptions } };
         vk::PipelineInputAssemblyStateCreateInfo inputAssembly{ {}, vk::PrimitiveTopology::eTriangleList };
         vk::Viewport viewport;
@@ -149,7 +162,8 @@ namespace bmvk
         m_graphicsPipeline = reinterpret_cast<const vk::UniqueDevice &>(m_device)->createGraphicsPipelineUnique(nullptr, pipelineInfo);
     }
 
-    void DragonDemo::createFramebuffers()
+    template <vw::scene::VertexDescription VD>
+    void DragonDemo<VD>::createFramebuffers()
     {
         m_swapChainFramebuffers.clear();
         for (auto & uniqueImageView : m_swapchain.getImageViews())
@@ -159,16 +173,18 @@ namespace bmvk
         }
     }
 
-    void DragonDemo::loadModel(std::string_view file)
+    template <vw::scene::VertexDescription VD>
+    void DragonDemo<VD>::loadModel(std::string_view file)
     {
-        vw::scene::ModelLoader<vw::scene::VertexDescription::PositionNormalColorTexture> ml;
-        m_dragonModel = ml.loadModel(file, vw::scene::ModelLoader<vw::scene::VertexDescription::PositionNormalColorTexture>::NormalCreation::AssimpSmoothNormals);
+        vw::scene::ModelLoader<VD> ml;
+        m_dragonModel = ml.loadModel(file, vw::scene::ModelLoader<VD>::NormalCreation::AssimpSmoothNormals);
         m_dragonModel.scale(glm::vec3{ 0.1f });
 
         m_dragonModel.createBuffers(reinterpret_cast<const vk::UniqueDevice &>(m_device), static_cast<vk::PhysicalDevice>(m_instance.getPhysicalDevice()), m_commandPool, static_cast<vk::Queue>(m_queue));
     }
 
-    void DragonDemo::createDepthResources()
+    template <vw::scene::VertexDescription VD>
+    void DragonDemo<VD>::createDepthResources()
     {
         const auto depthFormat{ m_instance.getPhysicalDevice().findDepthFormat() };
         createImage(m_swapchain.getExtent().width, m_swapchain.getExtent().height, depthFormat, vk::ImageTiling::eOptimal, vk::ImageUsageFlagBits::eDepthStencilAttachment, vk::MemoryPropertyFlagBits::eDeviceLocal, m_depthImage, m_depthImageMemory);
@@ -182,7 +198,8 @@ namespace bmvk
         m_queue.waitIdle();
     }
 
-    void DragonDemo::createUniformBuffer()
+    template <vw::scene::VertexDescription VD>
+    void DragonDemo<VD>::createUniformBuffer()
     {
         const auto bufferSize{ sizeof(UniformBufferObject) };
         const auto uniformBufferUsageFlags{ vk::BufferUsageFlagBits::eUniformBuffer };
@@ -190,14 +207,16 @@ namespace bmvk
         createBuffer(bufferSize, uniformBufferUsageFlags, uniformBufferMemoryPropertyFlags, m_uniformBuffer, m_uniformBufferMemory);
     }
 
-    void DragonDemo::createDescriptorPool()
+    template <vw::scene::VertexDescription VD>
+    void DragonDemo<VD>::createDescriptorPool()
     {
         vk::DescriptorPoolSize poolSize{ vk::DescriptorType::eUniformBuffer, 1 };
         std::vector<vk::DescriptorPoolSize> vec{ poolSize };
         m_descriptorPool = m_device.createDescriptorPool(vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet, 1, vec);
     }
 
-    void DragonDemo::createDescriptorSet()
+    template <vw::scene::VertexDescription VD>
+    void DragonDemo<VD>::createDescriptorSet()
     {
         vk::DescriptorSetLayout layouts[] = { *m_descriptorSetLayout };
         vk::DescriptorSetAllocateInfo allocInfo{ *m_descriptorPool, 1, layouts };
@@ -209,7 +228,8 @@ namespace bmvk
         m_device.updateDescriptorSets(vec);
     }
 
-    void DragonDemo::createCommandBuffers()
+    template <vw::scene::VertexDescription VD>
+    void DragonDemo<VD>::createCommandBuffers()
     {
         m_commandBuffers = m_device.allocateCommandBuffers(m_commandPool, static_cast<uint32_t>(m_swapChainFramebuffers.size()));
         for (size_t i = 0; i < m_commandBuffers.size(); ++i)
@@ -227,7 +247,8 @@ namespace bmvk
         }
     }
 
-    void DragonDemo::updateUniformBuffer()
+    template <vw::scene::VertexDescription VD>
+    void DragonDemo<VD>::updateUniformBuffer()
     {
         static auto startTime = std::chrono::high_resolution_clock::now();
 
@@ -247,7 +268,8 @@ namespace bmvk
         m_device.copyToMemory(m_uniformBufferMemory, ubo);
     }
 
-    void DragonDemo::drawFrame()
+    template <vw::scene::VertexDescription VD>
+    void DragonDemo<VD>::drawFrame()
     {
         m_queue.waitIdle();
         timing(false);
@@ -264,7 +286,7 @@ namespace bmvk
         }
 
         m_queue.submit(m_commandBuffers[imageIndex], m_imageAvailableSemaphore, m_renderFinishedSemaphore, vk::PipelineStageFlagBits::eColorAttachmentOutput);
-        ImguiBaseDemo::drawFrame(imageIndex, m_renderFinishedSemaphore, m_renderImguiFinishedSemaphore);
+        ImguiBaseDemo<VD>::drawFrame(imageIndex, m_renderFinishedSemaphore, m_renderImguiFinishedSemaphore);
 
         auto waitSemaphore{ *m_renderImguiFinishedSemaphore };
         auto swapchain{ *reinterpret_cast<const vk::UniqueSwapchainKHR &>(m_swapchain) };
@@ -274,4 +296,6 @@ namespace bmvk
             recreateSwapChain();
         }
     }
+
+    template class DragonDemo<vw::scene::VertexDescription::PositionNormalColorTexture>;
 }

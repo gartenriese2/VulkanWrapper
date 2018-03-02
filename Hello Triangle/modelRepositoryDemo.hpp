@@ -11,16 +11,15 @@
 
 namespace bmvk
 {
-    const vw::scene::VertexDescription VD_MRD = vw::scene::VertexDescription::PositionNormalColor;
-
-    class ModelRepositoryDemo : ImguiBaseDemo
+    template <vw::scene::VertexDescription VD>
+    class ModelRepositoryDemo : ImguiBaseDemo<VD>
     {
     public:
         ModelRepositoryDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height);
         ModelRepositoryDemo(const ModelRepositoryDemo &) = delete;
         ModelRepositoryDemo(ModelRepositoryDemo && other) = default;
         ModelRepositoryDemo & operator=(const ModelRepositoryDemo &) = delete;
-        ModelRepositoryDemo & operator=(ModelRepositoryDemo &&) = delete;
+        ModelRepositoryDemo & operator=(ModelRepositoryDemo &&) = default;
 
         void run() override;
         void recreateSwapChain() override;
@@ -62,7 +61,7 @@ namespace bmvk
         vk::UniqueSemaphore m_renderFinishedSemaphore;
         vk::UniqueSemaphore m_renderImguiFinishedSemaphore;
 
-        vw::scene::ModelRepository<VD_MRD> m_modelRepository;
+        vw::scene::ModelRepository<VD> m_modelRepository;
         vw::scene::ModelResourceID m_cubeResourceId;
 
         void setupCamera();
@@ -86,10 +85,4 @@ namespace bmvk
 
         void drawFrame();
     };
-
-    static_assert(std::is_move_constructible_v<ModelRepositoryDemo>);
-    static_assert(!std::is_copy_constructible_v<ModelRepositoryDemo>);
-    static_assert(!std::is_move_assignable_v<ModelRepositoryDemo>);
-    static_assert(!std::is_copy_assignable_v<ModelRepositoryDemo>);
 }
-#pragma once
