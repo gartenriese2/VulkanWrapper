@@ -29,6 +29,8 @@ namespace bmvk
 
         virtual void keyCallback(int key, int scancode, int action, int mods) {}
     protected:
+        static const vw::scene::VertexDescription k_vertexDescription = VD;
+
         vw::util::Camera m_camera;
         vw::util::Window m_window;
         Instance m_instance;

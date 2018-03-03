@@ -52,7 +52,7 @@ void runAllDemos(const bool enableValidationLayers, const uint32_t width, const 
     runDemo<bmvk::DynamicUboDemo<vw::scene::VertexDescription::PositionNormalColorTexture>>(enableValidationLayers, width, height);
     runDemo<bmvk::ModelGroupDemo<vw::scene::VertexDescription::PositionNormalColor>>(enableValidationLayers, width, height);
     runDemo<bmvk::PushConstantDemo<vw::scene::VertexDescription::PositionNormalColor>>(enableValidationLayers, width, height);
-    runDemo<bmvk::ModelRepositoryDemo<vw::scene::VertexDescription::PositionNormalColor>>(enableValidationLayers, width, height);
+    runDemo<bmvk::ModelRepositoryDemo>(enableValidationLayers, width, height);
 }
 
 int main()

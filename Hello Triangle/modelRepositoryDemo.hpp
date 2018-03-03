@@ -11,8 +11,7 @@
 
 namespace bmvk
 {
-    template <vw::scene::VertexDescription VD>
-    class ModelRepositoryDemo : ImguiBaseDemo<VD>
+    class ModelRepositoryDemo : ImguiBaseDemo<vw::scene::VertexDescription::PositionNormalColor>
     {
     public:
         ModelRepositoryDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height);
@@ -61,7 +60,6 @@ namespace bmvk
         vk::UniqueSemaphore m_renderFinishedSemaphore;
         vk::UniqueSemaphore m_renderImguiFinishedSemaphore;
 
-        vw::scene::ModelRepository<VD> m_modelRepository;
         vw::scene::ModelResourceID m_cubeResourceId;
 
         void setupCamera();
