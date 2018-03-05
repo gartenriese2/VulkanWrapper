@@ -11,6 +11,7 @@
 #include <random>
 #define _USE_MATH_DEFINES
 #include <math.h>
+#include <numeric>
 
 namespace bmvk
 {
@@ -19,6 +20,7 @@ namespace bmvk
 
     ModelRepositoryDemo::ModelRepositoryDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height)
         : ImguiBaseDemo{ enableValidationLayers, width, height, "ModelRepository Demo", DebugReport::ReportLevel::WarningsAndAbove },
+        m_queryPool{ reinterpret_cast<const vk::UniqueDevice &>(m_device)->createQueryPoolUnique({ {}, vk::QueryType::eTimestamp, 2 }) },
         m_imageAvailableSemaphore{ m_device.createSemaphore() },
         m_renderFinishedSemaphore{ m_device.createSemaphore() },
         m_renderImguiFinishedSemaphore{ m_device.createSemaphore() }
@@ -57,10 +59,12 @@ namespace bmvk
             // 1. Show a simple window
             // Tip: if we don't call ImGui::Begin()/ImGui::End() the widgets appears in a window automatically called "Debug"
             {
-                ImGui::SetNextWindowPos(ImVec2(20, 20));
-                ImGui::SetNextWindowSize(ImVec2(400, 100), ImGuiCond_Always);
+                ImGui::SetNextWindowPos(ImVec2(10, 10));
+                ImGui::SetNextWindowSize(ImVec2(400, 100), ImGuiCond_Once);
                 ImGui::Begin("Performance");
                 ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", m_avgFrameTime / 1000.0, m_avgFps);
+                ImGui::Text("Rendering average %.3f ms/frame", m_avgRenderFrameTime);
+                ImGui::Text("Imgui Rendering average %.3f ms/frame", m_avgImguiRenderFrameTime);
                 const char* items[] = { "1", "8", "27", "64", "125", "216", "343", "512", "729", "1000" };
                 ImGui::Combo("Number of cubes", &m_numCubesI, items, static_cast<int>(sizeof(items) / sizeof(*items)));
                 ImGui::End();
@@ -280,15 +284,22 @@ namespace bmvk
         {
             const auto & cmdBuffer{ m_commandBuffers[i] };
             cmdBuffer.begin(vk::CommandBufferUsageFlagBits::eSimultaneousUse);
+
+            const auto & cb_vk{ reinterpret_cast<const vk::UniqueCommandBuffer &>(cmdBuffer) };
+            cb_vk->resetQueryPool(*m_queryPool, 0, 2);
+            cb_vk->writeTimestamp(vk::PipelineStageFlagBits::eBottomOfPipe, *m_queryPool, 0);
+
             std::vector<vk::ClearValue> clearValues{ vk::ClearColorValue{ std::array<float, 4>{ 0.f, 0.f, 0.f, 1.f } }, vk::ClearDepthStencilValue{ 1.f, 0 } };
             cmdBuffer.beginRenderPass(m_renderPass, m_swapChainFramebuffers[i], { { 0, 0 }, m_swapchain.getExtent() }, clearValues);
             const auto extent{ m_swapchain.getExtent() };
             vk::Viewport vp{ 0.f, 0.f, static_cast<float>(extent.width), static_cast<float>(extent.height), 0.f, 1.f };
             cmdBuffer.setViewport(vp);
             cmdBuffer.bindPipeline(m_pipeline);
-            const auto & cb_vk{ reinterpret_cast<const vk::UniqueCommandBuffer &>(cmdBuffer) };
             m_modelRepository.draw(cb_vk, m_pipelineLayout, m_descriptorSets[0]);
             cmdBuffer.endRenderPass();
+
+            cb_vk->writeTimestamp(vk::PipelineStageFlagBits::eBottomOfPipe, *m_queryPool, 1);
+
             cmdBuffer.end();
         }
     }
@@ -369,7 +380,24 @@ namespace bmvk
     void ModelRepositoryDemo::drawFrame()
     {
         m_queue.waitIdle();
-        timing(false);
+
+        if (!m_firstRender)
+        {
+            auto data = new uint64_t[2];
+            reinterpret_cast<const vk::UniqueDevice &>(m_device)->getQueryPoolResults(*m_queryPool, 0, 2, sizeof(uint64_t) * 2, data, 0, vk::QueryResultFlagBits::e64);
+            auto diff = (data[1] - data[0]) * m_nanosecondsPerTimestampIncrement / 1e6f;
+            m_lastFrameTimes.emplace_back(diff);
+            delete[] data;
+        }
+        
+        timing(false, [&m_avgRenderFrameTime = m_avgRenderFrameTime, &m_lastFrameTimes = m_lastFrameTimes, &m_avgImguiRenderFrameTime = m_avgImguiRenderFrameTime, &m_lastImguiFrameTimes = m_lastImguiFrameTimes]()
+        {
+            m_avgRenderFrameTime = std::accumulate(m_lastFrameTimes.begin(), m_lastFrameTimes.end(), 0.0) / static_cast<double>(std::max(m_lastFrameTimes.size(), size_t{ 1 }));
+            m_lastFrameTimes.clear();
+
+            m_avgImguiRenderFrameTime = std::accumulate(m_lastImguiFrameTimes.begin(), m_lastImguiFrameTimes.end(), 0.0) / static_cast<double>(std::max(m_lastImguiFrameTimes.size(), size_t{ 1 }));
+            m_lastImguiFrameTimes.clear();
+        });
 
         uint32_t imageIndex;
         try
@@ -391,6 +419,11 @@ namespace bmvk
         if (!success)
         {
             recreateSwapChain();
+        }
+
+        if (m_firstRender)
+        {
+            m_firstRender = !m_firstRender;
         }
     }
 }

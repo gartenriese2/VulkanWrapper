@@ -59,7 +59,8 @@ int main()
 {
     try
     {
-        runAllDemos(k_enableValidationLayers, k_width, k_height);
+        //runAllDemos(k_enableValidationLayers, k_width, k_height);
+        runDemo<bmvk::ModelRepositoryDemo>(k_enableValidationLayers, k_width, k_height);
     }
     catch (const std::runtime_error & e)
     {

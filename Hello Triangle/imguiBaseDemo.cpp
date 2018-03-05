@@ -27,7 +27,8 @@ namespace bmvk
     ImguiBaseDemo<VD>::ImguiBaseDemo(const bool enableValidationLayers, const uint32_t width, const uint32_t height, std::string name, const DebugReport::ReportLevel reportLevel)
       : Demo{ enableValidationLayers, width, height, name, reportLevel },
         m_swapchain{ m_instance.getPhysicalDevice(), m_instance.getSurface(), m_window.getSize(), m_device },
-        m_fontSampler{ m_device.createSampler(false, -1000.f, 1000.f) }
+        m_fontSampler{ m_device.createSampler(false, -1000.f, 1000.f) },
+        m_imguiQueryPool{ reinterpret_cast<const vk::UniqueDevice &>(m_device)->createQueryPoolUnique({ {}, vk::QueryType::eTimestamp, 2 }) }
     {
         m_window.addWindowSizeFunc([this](int width, int height)
         {
@@ -484,15 +485,32 @@ namespace bmvk
     template <vw::scene::VertexDescription VD>
     void ImguiBaseDemo<VD>::drawFrame(uint32_t imageIndex, const vk::UniqueSemaphore & renderFinishedSemaphore, const vk::UniqueSemaphore & renderImguiFinishedSemaphore)
     {
+        if (!m_firstRender)
+        {
+            auto data = new uint64_t[2];
+            reinterpret_cast<const vk::UniqueDevice &>(m_device)->getQueryPoolResults(*m_imguiQueryPool, 0, 2, sizeof(uint64_t) * 2, data, 0, vk::QueryResultFlagBits::e64);
+            auto diff = (data[1] - data[0]) * m_nanosecondsPerTimestampIncrement / 1e6f;
+            m_lastImguiFrameTimes.emplace_back(diff);
+            delete[] data;
+        }
+
         m_commandBufferImguiPtr.reset();
         m_commandBufferImguiPtr = std::make_unique<CommandBuffer>(m_device.allocateCommandBuffer(m_commandPool));
         m_commandBufferImguiPtr->begin(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
+
+        const auto & cb_vk{ reinterpret_cast<const vk::UniqueCommandBuffer &>(*m_commandBufferImguiPtr) };
+        cb_vk->resetQueryPool(*m_imguiQueryPool, 0, 2);
+        cb_vk->writeTimestamp(vk::PipelineStageFlagBits::eBottomOfPipe, *m_imguiQueryPool, 0);
+
         std::vector<vk::ClearValue> clearValues{ vk::ClearColorValue{ std::array<float, 4>{ 0.f, 0.f, 0.f, 1.f } } };
         m_commandBufferImguiPtr->beginRenderPass(m_renderPassImgui, m_swapChainFramebuffers[imageIndex], { { 0, 0 }, m_swapchain.getExtent() }, clearValues);
 
         imguiRenderDrawLists(ImGui::GetDrawData());
 
         m_commandBufferImguiPtr->endRenderPass();
+
+        cb_vk->writeTimestamp(vk::PipelineStageFlagBits::eBottomOfPipe, *m_imguiQueryPool, 1);
+
         m_commandBufferImguiPtr->end();
 
         m_queue.submit(*m_commandBufferImguiPtr.get(), renderFinishedSemaphore, renderImguiFinishedSemaphore, vk::PipelineStageFlagBits::eColorAttachmentOutput);

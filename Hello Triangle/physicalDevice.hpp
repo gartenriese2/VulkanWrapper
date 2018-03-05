@@ -23,6 +23,8 @@ namespace bmvk
         vk::SurfaceCapabilitiesKHR getSurfaceCapabilities(const vk::UniqueSurfaceKHR & surface) const { return m_physicalDevice.getSurfaceCapabilitiesKHR(*surface); }
         std::vector<vk::SurfaceFormatKHR> getSurfaceFormats(const vk::UniqueSurfaceKHR & surface) const { return m_physicalDevice.getSurfaceFormatsKHR(*surface); }
         std::vector<vk::PresentModeKHR> getPresentModes(const vk::UniqueSurfaceKHR & surface) const { return m_physicalDevice.getSurfacePresentModesKHR(*surface); }
+        vk::PhysicalDeviceProperties getProperties() const { return m_physicalDevice.getProperties(); }
+
         Device createLogicalDevice(const std::vector<const char*> & layerNames) const;
         uint32_t findMemoryType(uint32_t typeFilter, vk::MemoryPropertyFlags properties) const;
         vk::Format findSupportedFormat(const std::vector<vk::Format> & candidates, vk::ImageTiling tiling, vk::FormatFeatureFlags features) const;

@@ -11,8 +11,9 @@ namespace bmvk
         m_device{ m_instance.getPhysicalDevice().createLogicalDevice(m_instance.getLayerNames()) },
         m_queue{ m_device.createQueue() },
         m_commandPool{ m_device.createCommandPool() },
-        m_bufferFactory{ m_device, static_cast<vk::PhysicalDevice>(m_instance.getPhysicalDevice()) },
+        m_bufferFactory{ m_device, reinterpret_cast<const vk::PhysicalDevice &>(m_instance.getPhysicalDevice()) },
         m_modelRepository{ reinterpret_cast<const vk::UniqueDevice &>(m_device), reinterpret_cast<const vk::PhysicalDevice &>(m_instance.getPhysicalDevice()), maxModelRepositoryInstances },
+        m_nanosecondsPerTimestampIncrement{ m_instance.getPhysicalDevice().getProperties().limits.timestampPeriod },
         m_timepoint{ std::chrono::steady_clock::now() },
         m_timepointCount{ 0 },
         m_elapsedTime{ std::chrono::microseconds::zero() }
@@ -125,7 +126,7 @@ namespace bmvk
     }
 
     template <vw::scene::VertexDescription VD>
-    void Demo<VD>::timing(const bool print)
+    void Demo<VD>::timing(const bool print, const std::function<void()> & f)
     {
         const auto microseconds = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - m_timepoint);
         m_currentFrameTime = microseconds.count() / 1000000.0;
@@ -142,6 +143,8 @@ namespace bmvk
 
             m_elapsedTime = std::chrono::microseconds::zero();
             m_timepointCount = 0;
+
+            f();
         }
 
         m_timepoint = std::chrono::steady_clock::now();

@@ -39,6 +39,10 @@ namespace bmvk
         };
 
         float m_animationTimer = 0.0f;
+        std::vector<double> m_lastFrameTimes;
+        double m_avgRenderFrameTime = 0.0;
+        double m_avgImguiRenderFrameTime = 0.0;
+        vk::UniqueQueryPool m_queryPool;
 
         vk::UniqueRenderPass m_renderPass;
         vk::UniqueDescriptorSetLayout m_descriptorSetLayout;

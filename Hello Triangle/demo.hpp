@@ -44,6 +44,8 @@ namespace bmvk
         double m_currentFrameTime = 0.0;
         double m_avgFrameTime = 0.0;
         double m_avgFps = 0.0;
+        float m_nanosecondsPerTimestampIncrement;
+        bool m_firstRender = true;
 
         void copyBuffer(vk::UniqueBuffer & srcBuffer, vk::UniqueBuffer & dstBuffer, vk::DeviceSize size) const;
         void copyBufferToImage(vk::UniqueBuffer & buffer, vk::UniqueImage & image, uint32_t width, uint32_t height) const;
@@ -52,7 +54,7 @@ namespace bmvk
         vk::UniqueImageView createImageView(const vk::UniqueImage & image, vk::Format format, vk::ImageAspectFlags aspectFlags = vk::ImageAspectFlagBits::eColor) const;
         bool hasStencilComponent(const vk::Format format) const;
         void transitionImageLayout(const CommandBuffer & cmdBuffer, const vk::UniqueImage & image, vk::Format format, vk::ImageLayout oldLayout, vk::ImageLayout newLayout) const;
-        void timing(const bool print = true);
+        void timing(const bool print = false, const std::function<void()> & f = [](){});
 
     private:
         std::chrono::steady_clock::time_point m_timepoint;

@@ -28,6 +28,8 @@ namespace bmvk
     protected:
         Swapchain m_swapchain;
 
+        std::vector<double> m_lastImguiFrameTimes;
+
         void drawFrame(uint32_t imageIndex, const vk::UniqueSemaphore & renderFinishedSemaphore, const vk::UniqueSemaphore & renderImguiFinishedSemaphore);
         void imguiNewFrame();
     private:
@@ -54,6 +56,8 @@ namespace bmvk
         double m_imguiTime = 0.0;
         std::vector<bool> m_imguiMousePressed = { false, false, false };
         float m_imguiMouseWheel = 0.f;
+
+        vk::UniqueQueryPool m_imguiQueryPool;
 
         void createDescriptorSetLayout();
         void createRenderPass();
